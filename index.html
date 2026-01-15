@@ -244,6 +244,20 @@
                 </div>
             </div>
 
+            <!-- Year Inspector Slider -->
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-100 mb-8 no-print">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">⏱️ Time Travel Inspector</h3>
+                    <span class="text-2xl font-bold text-indigo-600" id="inspectorLabel">Year 5</span>
+                </div>
+                <input type="range" min="1" max="40" value="5" id="yearSlider" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 mb-6">
+                
+                <!-- Inspector Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="inspectorGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
             <!-- Detailed Table -->
             <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -254,10 +268,12 @@
                         <thead class="bg-gray-50 text-gray-900 font-medium">
                             <tr>
                                 <th class="px-6 py-3">Strategy</th>
-                                <th class="px-6 py-3 text-right">Year 2 Net Worth</th>
-                                <th class="px-6 py-3 text-right">Year 5 Net Worth</th>
-                                <th class="px-6 py-3 text-right">Year 10 Net Worth</th>
-                                <th class="px-6 py-3 text-right">Liquid Cash (Y10)</th>
+                                <th class="px-6 py-3 text-right">Year 2</th>
+                                <th class="px-6 py-3 text-right">Year 5</th>
+                                <th class="px-6 py-3 text-right">Year 10</th>
+                                <th class="px-6 py-3 text-right">Year 15</th>
+                                <th class="px-6 py-3 text-right">Year 25</th>
+                                <th class="px-6 py-3 text-right">Year 40</th>
                             </tr>
                         </thead>
                         <tbody id="analysisTable" class="divide-y divide-gray-200">
@@ -284,6 +300,7 @@
         let deadMoneyChartInstance = null;
         let simYears = 10;
         let isCrash = false;
+        let lastSimData = null;
 
         // --- Selectors ---
         const inputs = {
@@ -423,7 +440,7 @@
             const rates = getTaxRates(V.taxBand);
             
             // Common Calcs
-            const years = simYears;
+            const years = 40; // Always simulate 40 years for data depth
             const depositAmount = V.price * V.depositPct;
             
             // --- Strategy A: Rent & Invest ---
@@ -432,14 +449,14 @@
             // PRD: "Surplus after current rent". So total budget = Savings + Rent.
             const totalMonthlyBudget = V.monthlySavings + V.rent; 
             
-            let stratA = { name: "Rent & Invest", netWorth: [], deadMoney: [], liquid: 0 };
+            let stratA = { name: "Rent & Invest", netWorth: [], deadMoney: [], liquidHistory: [] };
             let isaA = V.isa;
             let giaA = V.liquid - V.isa; 
             let basisA = giaA;
             let deadA = 0;
             
             // --- Strategy B: Buy Solo ---
-            let stratB = { name: "Buy Solo", netWorth: [], deadMoney: [], liquid: 0 };
+            let stratB = { name: "Buy Solo", netWorth: [], deadMoney: [], liquidHistory: [] };
             // Initial Costs
             const sd_B = calculateStampDuty(V.price, 'personal', V.isFTB);
             const legal = 2000; // Est
@@ -493,7 +510,7 @@
             let deadB = 0; // Cumulative
 
             // --- Strategy C: Buy + Lodger ---
-            let stratC = { name: "Buy + Lodger", netWorth: [], deadMoney: [], liquid: 0 };
+            let stratC = { name: "Buy + Lodger", netWorth: [], deadMoney: [], liquidHistory: [] };
             let isaC = isaB; // Same start
             let giaC = giaB;
             let basisC = basisB;
@@ -503,7 +520,7 @@
             let possibleC = possibleB;
 
             // --- Strategy D: Company BTL + Rent ---
-            let stratD = { name: "Co. BTL + Rent", netWorth: [], deadMoney: [], liquid: 0 };
+            let stratD = { name: "Co. BTL + Rent", netWorth: [], deadMoney: [], liquidHistory: [] };
             // Costs: Deposit, Higher Stamp Duty, Reno.
             const sd_D = calculateStampDuty(V.price, 'company', false);
             const upfrontD = depositAmount + sd_D + legal + V.reno;
@@ -790,30 +807,36 @@
                     
                     return isa + netGia + (houseV - debt) + netCoCash;
                 };
+                
+                const getLiq = (isa, gia, basis, cashCo=0) => {
+                    const gain = Math.max(0, gia - basis);
+                    const cgt = gain * rates.cgt;
+                    const divTax = Math.max(0, cashCo * rates.div);
+                    return isa + (gia - cgt) + (cashCo - divTax);
+                };
 
                 stratA.netWorth.push(getNW(isaA, giaA, basisA, 0, 0));
+                stratA.liquidHistory.push(getLiq(isaA, giaA, basisA));
                 
-                if (possibleB) stratB.netWorth.push(getNW(isaB, giaB, basisB, houseValueB, debtB));
-                else stratB.netWorth.push(0);
+                if (possibleB) {
+                    stratB.netWorth.push(getNW(isaB, giaB, basisB, houseValueB, debtB));
+                    stratB.liquidHistory.push(getLiq(isaB, giaB, basisB));
+                } else {
+                    stratB.netWorth.push(0); stratB.liquidHistory.push(0);
+                }
 
-                if (possibleC) stratC.netWorth.push(getNW(isaC, giaC, basisC, houseValueC, debtC));
-                else stratC.netWorth.push(0);
+                if (possibleC) {
+                    stratC.netWorth.push(getNW(isaC, giaC, basisC, houseValueC, debtC));
+                    stratC.liquidHistory.push(getLiq(isaC, giaC, basisC));
+                } else {
+                    stratC.netWorth.push(0); stratC.liquidHistory.push(0);
+                }
                 
-                if (possibleD) stratD.netWorth.push(getNW(isaD, giaD, basisD, houseValueD, debtD, companyCash));
-                else stratD.netWorth.push(0);
-                
-                // Dead Money Arrays
-                stratA.deadMoney.push(deadA);
-                stratB.deadMoney.push(possibleB ? deadB : 0);
-                stratC.deadMoney.push(possibleC ? deadC : 0);
-                stratD.deadMoney.push(possibleD ? deadD : 0);
-                
-                // Save Liquid for Y10
-                if (y === simYears) {
-                    stratA.liquid = isaA + giaA;
-                    stratB.liquid = isaB + giaB;
-                    stratC.liquid = isaC + giaC;
-                    stratD.liquid = isaD + giaD; 
+                if (possibleD) {
+                    stratD.netWorth.push(getNW(isaD, giaD, basisD, houseValueD, debtD, companyCash));
+                    stratD.liquidHistory.push(getLiq(isaD, giaD, basisD, companyCash));
+                } else {
+                    stratD.netWorth.push(0); stratD.liquidHistory.push(0);
                 }
             }
             
@@ -895,35 +918,26 @@
             const table = document.getElementById('analysisTable');
             table.innerHTML = '';
             
-            // Update Headers if needed?
-            // "Year 2, Year 5, Year 10" -> We should probably update the TH labels too but they are in HTML.
-            // Let's modify the TH via JS or just stick to "Year 2, Year 5, Final".
-            // Simpler: Just update the rows. 
-            // Better: Update the header row.
-            const thead = table.closest('table').querySelector('thead tr');
-            thead.children[3].innerText = `Year ${simYears} Net Worth`;
-            thead.children[4].innerText = `Liquid Cash (Y${simYears})`;
-
             const strategies = [data.stratA, data.stratB, data.stratC, data.stratD];
+            const years = [2, 5, 10, 15, 25, 40];
+            
             strategies.forEach((s, idx) => {
                 if ((idx === 1 || idx === 2) && !data.possibleB) return;
                 if (idx === 3 && !data.possibleD) return;
 
                 const tr = document.createElement('tr');
-                const fmt = (v) => '£' + Math.round(v).toLocaleString();
+                const fmt = (v) => '£' + Math.round(v/1000).toLocaleString() + 'k';
                 
-                // Safe access
-                const y2 = s.netWorth[Math.min(1, simYears-1)] || 0;
-                const y5 = s.netWorth[Math.min(4, simYears-1)] || 0;
-                const yFinal = s.netWorth[simYears-1] || 0;
+                let cells = `<td class="px-6 py-4 font-medium text-gray-900">${s.name}</td>`;
+                
+                years.forEach(y => {
+                    const val = s.netWorth[y-1] || 0;
+                    // Highlight the 'Focus' year if it matches simYears? Optional.
+                    const style = (y === simYears) ? "font-bold text-indigo-600" : "";
+                    cells += `<td class="px-6 py-4 text-right ${style}">${fmt(val)}</td>`;
+                });
 
-                tr.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-gray-900">${s.name}</td>
-                    <td class="px-6 py-4 text-right">${fmt(y2)}</td>
-                    <td class="px-6 py-4 text-right">${fmt(y5)}</td>
-                    <td class="px-6 py-4 text-right font-bold text-indigo-600">${fmt(yFinal)}</td>
-                    <td class="px-6 py-4 text-right text-gray-500">${fmt(s.liquid)}</td>
-                `;
+                tr.innerHTML = cells;
                 table.appendChild(tr);
             });
         }
@@ -1072,12 +1086,49 @@
 
             // Run Sim
             const data = simulateStrategies();
+            lastSimData = data;
+            
             updateCharts(data);
             updateTable(data);
             updateHeadline(data);
             updateInsights(getSimData());
+            updateInspector();
             updateURL();
             saveToStorage();
+        }
+
+        function updateInspector() {
+            if (!lastSimData) return;
+            const year = parseInt(document.getElementById('yearSlider').value);
+            document.getElementById('inspectorLabel').innerText = `Year ${year}`;
+            
+            const div = document.getElementById('inspectorGrid');
+            div.innerHTML = '';
+            
+            const strategies = [lastSimData.stratA, lastSimData.stratB, lastSimData.stratC, lastSimData.stratD];
+            const colors = ['border-gray-300', 'border-blue-400', 'border-green-400', 'border-purple-400'];
+            const bgs = ['bg-white', 'bg-blue-50', 'bg-green-50', 'bg-purple-50'];
+            
+            strategies.forEach((s, i) => {
+                // Visibility Check
+                if ((i===1 || i===2) && !lastSimData.possibleB) return;
+                if (i===3 && !lastSimData.possibleD) return;
+                
+                const nw = s.netWorth[year-1] || 0;
+                const liq = s.liquidHistory[year-1] || 0;
+                const equity = nw - liq;
+                
+                div.innerHTML += `
+                    <div class="p-3 rounded border-l-4 shadow-sm ${colors[i]} ${bgs[i]}">
+                        <div class="text-xs font-bold text-gray-500 uppercase mb-1">${s.name}</div>
+                        <div class="text-xl font-bold text-gray-800">£${Math.round(nw/1000).toLocaleString()}k</div>
+                        <div class="text-xs text-gray-600 mt-1 flex justify-between">
+                            <span>Liquid: £${Math.round(liq/1000)}k</span>
+                            <span>Equity: £${Math.round(equity/1000)}k</span>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         function updateInsights(V) {
@@ -1280,6 +1331,7 @@
         }
 
         // Init
+        document.getElementById('yearSlider').addEventListener('input', updateInspector);
         setupSliders();
         loadState();
         calculateAll();

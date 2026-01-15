@@ -1147,15 +1147,6 @@
 
             calculateAll();
         }
-            ['liquidAssets', 'monthlySavings', 'stockGrowth', 'currentRent', 'propertyPrice'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el && el.nextElementSibling && el.nextElementSibling.type === 'range') {
-                    el.nextElementSibling.value = el.value;
-                }
-            });
-
-            calculateAll();
-        }
         
         // --- URL State Management ---
         function updateURL() {

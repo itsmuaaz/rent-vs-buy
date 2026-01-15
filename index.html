@@ -187,7 +187,7 @@
                     <span id="stratToggleArrow" class="transform transition-transform">▶</span> 
                     <span>What do these strategies mean?</span>
                 </button>
-                <div id="stratGuide" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div id="stratGuide" class="hidden mt-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <!-- A -->
                     <div class="bg-white p-3 rounded border border-gray-200 shadow-sm">
                         <div class="font-bold text-gray-700 mb-1">A. Rent & Invest</div>
@@ -206,7 +206,12 @@
                     <!-- D -->
                     <div class="bg-white p-3 rounded border border-purple-200 shadow-sm border-l-4 border-l-purple-500">
                         <div class="font-bold text-purple-700 mb-1">D. Company BTL</div>
-                        <p class="text-xs text-gray-500">You rent personally, but use your capital to start a Ltd Company and buy a Buy-to-Let property (Tax efficient for high earners).</p>
+                        <p class="text-xs text-gray-500">You rent personally, but use your capital to start a Ltd Company and buy a BTL (Tax efficient for high earners).</p>
+                    </div>
+                    <!-- E -->
+                    <div class="bg-white p-3 rounded border border-orange-200 shadow-sm border-l-4 border-l-orange-500">
+                        <div class="font-bold text-orange-700 mb-1">E. Personal BTL</div>
+                        <p class="text-xs text-gray-500">You rent personally and buy a BTL in your own name. Simpler than a Company, but subject to Section 24 Tax rules.</p>
                     </div>
                 </div>
             </div>
@@ -949,7 +954,8 @@
                         { label: 'Rent & Invest', data: data.stratA.netWorth, borderColor: '#94a3b8', borderWidth: 2, tension: 0.3 },
                         { label: 'Buy Solo', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
                         { label: 'Buy + Lodger', data: data.stratC.netWorth, borderColor: '#10b981', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
-                        { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: !data.possibleD }
+                        { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: !data.possibleD },
+                        { label: 'Personal BTL', data: data.stratE.netWorth, borderColor: '#f97316', borderWidth: 2, tension: 0.3, hidden: !data.possibleE }
                     ]
                 },
                 options: {
@@ -974,17 +980,18 @@
                 data.stratA.deadMoney[idx],
                 data.stratB.deadMoney[idx],
                 data.stratC.deadMoney[idx],
-                data.stratD.deadMoney[idx]
+                data.stratD.deadMoney[idx],
+                data.stratE.deadMoney[idx]
             ];
             
             deadMoneyChartInstance = new Chart(ctxDM, {
                 type: 'bar',
                 data: {
-                    labels: ['Rent', 'Buy Solo', 'Buy + Lodger', 'Co. BTL'],
+                    labels: ['Rent', 'Buy Solo', 'Buy + Lodger', 'Co. BTL', 'Pers. BTL'],
                     datasets: [{
                         label: `Cumulative Cost (Year ${idx+1})`,
                         data: d5,
-                        backgroundColor: ['#94a3b8', '#3b82f6', '#10b981', '#8b5cf6']
+                        backgroundColor: ['#94a3b8', '#3b82f6', '#10b981', '#8b5cf6', '#f97316']
                     }]
                 },
                 options: {
@@ -999,7 +1006,7 @@
             const table = document.getElementById('analysisTable');
             table.innerHTML = '';
             
-            const strategies = [data.stratA, data.stratB, data.stratC, data.stratD];
+            const strategies = [data.stratA, data.stratB, data.stratC, data.stratD, data.stratE];
             const years = [2, 5, 10, 15, 25, 40];
             
             // 1. Calculate stats per column (year)
@@ -1009,6 +1016,7 @@
                 strategies.forEach((s, idx) => {
                     if ((idx === 1 || idx === 2) && !data.possibleB) return;
                     if (idx === 3 && !data.possibleD) return;
+                    if (idx === 4 && !data.possibleE) return;
                     vals.push(s.netWorth[y-1] || 0);
                 });
                 yearStats[y] = {
@@ -1020,6 +1028,7 @@
             strategies.forEach((s, idx) => {
                 if ((idx === 1 || idx === 2) && !data.possibleB) return;
                 if (idx === 3 && !data.possibleD) return;
+                if (idx === 4 && !data.possibleE) return;
 
                 const tr = document.createElement('tr');
                 const fmt = (v) => '£' + Math.round(v/1000).toLocaleString() + 'k';
@@ -1051,7 +1060,8 @@
                 {name: 'Renting', val: data.stratA.netWorth[idx], code: 'A', type: 'Rent'},
                 {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy'},
                 {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy'},
-                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy'}
+                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy'},
+                {name: 'Personal BTL', val: data.possibleE ? data.stratE.netWorth[idx] : -Infinity, code: 'E', type: 'Buy'}
             ];
             
             // Sort Descending
@@ -1062,7 +1072,7 @@
             const bestBuy = strategies.find(s => s.type === 'Buy' && s.val > -Infinity); // Top buying option
             
             // Check affordability
-            if (!data.possibleB && !data.possibleD) {
+            if (!data.possibleB && !data.possibleD && !data.possibleE) {
                 h.innerHTML = `
                     <div class="flex items-center gap-4">
                         <div class="text-4xl">⚠️</div>
@@ -1224,23 +1234,27 @@
             const div = document.getElementById('inspectorGrid');
             div.innerHTML = '';
             
-            const strategies = [lastSimData.stratA, lastSimData.stratB, lastSimData.stratC, lastSimData.stratD];
+            const strategies = [lastSimData.stratA, lastSimData.stratB, lastSimData.stratC, lastSimData.stratD, lastSimData.stratE];
+            const colors = ['border-gray-300', 'border-blue-400', 'border-green-400', 'border-purple-400', 'border-orange-400'];
+            const bgs = ['bg-white', 'bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-orange-50'];
             
             // 1. Determine Ranks for current year
             let validVals = [];
             strategies.forEach((s, i) => {
                 if ((i===1 || i===2) && !lastSimData.possibleB) return;
                 if (i===3 && !lastSimData.possibleD) return;
+                if (i===4 && !lastSimData.possibleE) return;
                 validVals.push(s.netWorth[year-1] || 0);
             });
             
             const maxVal = Math.max(...validVals);
-            const minVal = Math.min(...validVals);
+            const minVal = Math.Min(...validVals);
             
             strategies.forEach((s, i) => {
                 // Visibility Check
                 if ((i===1 || i===2) && !lastSimData.possibleB) return;
                 if (i===3 && !lastSimData.possibleD) return;
+                if (i===4 && !lastSimData.possibleE) return;
                 
                 const nw = s.netWorth[year-1] || 0;
                 const liq = s.liquidHistory[year-1] || 0;

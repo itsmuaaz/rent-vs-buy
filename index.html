@@ -790,8 +790,17 @@
                     stratD.liquid = isaD + giaD; 
                 }
             }
+            
+            // Calculate Breakeven (First year where strategy > Rent)
+            const be = {B: null, C: null, D: null};
+            for (let i=0; i<simYears; i++) {
+                const rentNW = stratA.netWorth[i];
+                if (possibleB && be.B === null && stratB.netWorth[i] > rentNW) be.B = i + 1;
+                if (possibleC && be.C === null && stratC.netWorth[i] > rentNW) be.C = i + 1;
+                if (possibleD && be.D === null && stratD.netWorth[i] > rentNW) be.D = i + 1;
+            }
 
-            return { stratA, stratB, stratC, stratD, possibleB, possibleD };
+            return { stratA, stratB, stratC, stratD, possibleB, possibleD, be };
         }
 
         function updateCharts(data) {
@@ -900,10 +909,10 @@
             const idx = Math.min(4, simYears-1);
             
             const y5 = [
-                {name: 'Renting', val: data.stratA.netWorth[idx]},
-                {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[idx] : -1},
-                {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -1},
-                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -1}
+                {name: 'Renting', val: data.stratA.netWorth[idx], code: 'A'},
+                {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[idx] : -1, code: 'B'},
+                {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -1, code: 'C'},
+                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -1, code: 'D'}
             ];
             y5.sort((a,b) => b.val - a.val);
             const winner = y5[0];
@@ -917,6 +926,13 @@
                 msg = `Renting is the winner by ${yearLabel}, beating property by £${Math.round(diff/1000)}k.`;
             } else {
                 msg = `${winner.name} makes you £${Math.round(diff/1000)}k wealthier than Renting by ${yearLabel}.`;
+                // Add Breakeven info
+                const beY = data.be[winner.code];
+                if (beY) {
+                    msg += ` <span class="block mt-1 font-semibold text-yellow-200">Breakeven vs Renting: Year ${beY}</span>`;
+                } else if (winner.val > baseline) {
+                    msg += ` <span class="block mt-1 font-semibold text-yellow-200">Wins immediately (Year 1)</span>`;
+                }
             }
             
             h.innerHTML = `<h2 class="text-2xl font-bold mb-2">${winner.name} Wins 🏆</h2><p class="opacity-90">${msg}</p>`;

@@ -911,6 +911,7 @@
             updateTable(data);
             updateHeadline(data);
             updateURL();
+            saveToStorage();
         }
 
         function applyPreset(name) {
@@ -948,18 +949,40 @@
             const newUrl = `${window.location.pathname}?${params.toString()}`;
             window.history.replaceState({}, '', newUrl);
         }
-
-        function loadFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.keys().next().done) return; // No params
-
+        
+        function saveToStorage() {
+            const data = {};
             for (const [key, el] of Object.entries(inputs)) {
-                if (params.has(key)) {
-                    if (el.type === 'checkbox') {
-                        el.checked = params.get(key) === 'true';
-                    } else {
-                        el.value = params.get(key);
+                data[key] = (el.type === 'checkbox') ? el.checked : el.value;
+            }
+            localStorage.setItem('rentVsBuyData', JSON.stringify(data));
+        }
+
+        function loadState() {
+            const params = new URLSearchParams(window.location.search);
+            const hasParams = !params.keys().next().done;
+
+            if (hasParams) {
+                // Priority 1: URL
+                for (const [key, el] of Object.entries(inputs)) {
+                    if (params.has(key)) {
+                        if (el.type === 'checkbox') el.checked = params.get(key) === 'true';
+                        else el.value = params.get(key);
                     }
+                }
+            } else {
+                // Priority 2: Local Storage
+                const saved = localStorage.getItem('rentVsBuyData');
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        for (const [key, val] of Object.entries(data)) {
+                            if (inputs[key]) {
+                                if (inputs[key].type === 'checkbox') inputs[key].checked = val;
+                                else inputs[key].value = val;
+                            }
+                        }
+                    } catch (e) { console.error("LS Load error", e); }
                 }
             }
         }
@@ -1013,7 +1036,7 @@
 
         // Init
         setupSliders();
-        loadFromURL();
+        loadState();
         calculateAll();
 
     </script>

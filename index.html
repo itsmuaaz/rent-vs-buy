@@ -293,101 +293,48 @@
 
         function calculateStampDuty(price, type, isFTB) {
             // 2025 Rules
-            let duty = 0;
-            
-            if (type === 'company') {
-                // Standard + 5%
-                // Rates: 0-250k: 5%, 250k-925k: 10%, 925k-1.5m: 15%, >1.5m: 17% (Base 0/5/10/12 + 5 surcharge)
-                // Actually, standard is: 0-250:0%, 250-925:5%, 925-1.5:10%
-                // Surcharge adds 5% to ALL bands.
-                // 0 - 250k: 5%
-                if (price > 250000) {
-                    duty += 250000 * 0.05;
-                    if (price > 925000) {
-                        duty += (925000 - 250000) * 0.10;
-                        if (price > 1500000) {
-                            duty += (1500000 - 925000) * 0.15;
-                            duty += (price - 1500000) * 0.17; 
-                        } else {
-                            duty += (price - 250000) * 0.10;
-                        }
-                    } else {
-                        duty += (price - 250000) * 0.10; // Wait, 5% base + 5% surcharge = 10%?
-                        // Standard: 0-250k: 0%. 250k-925k: 5%.
-                        // Company Surcharge is +5% (previously 3%, now 5% per 2024 budget/rumors in PRD context? PRD says "Standard rates + 5% Surcharge").
-                        // So: 0-250k: 5%. 250k-925k: 10%. 925k+: 15%.
-                        // Let's stick to simple bands for Company:
-                        // 0-250k: 5%
-                        // 250k-925k: 10%
-                        // 925k-1.5m: 15%
-                        // >1.5m: 17%
-                        
-                         // Let's implement iterative calc
-                        let remaining = price;
-                        // Band 1: 0 - 250k @ 5%
-                        let b1 = Math.min(remaining, 250000);
-                        duty += b1 * 0.05;
-                        remaining -= b1;
-                        
-                        if (remaining > 0) {
-                             // Band 2: 250k - 925k @ 10%
-                             let b2 = Math.min(remaining, 925000 - 250000);
-                             duty += b2 * 0.10;
-                             remaining -= b2;
-                        }
-                        
-                        if (remaining > 0) {
-                             // Band 3: 925k - 1.5m @ 15%
-                             let b3 = Math.min(remaining, 1500000 - 925000);
-                             duty += b3 * 0.15;
-                             remaining -= b3;
-                        }
-
-                        if (remaining > 0) {
-                             // Band 4: > 1.5m @ 17%
-                             duty += remaining * 0.17;
-                        }
-                        return duty;
-                    }
-                } else {
-                    return price * 0.05;
-                }
-            }
-            
-            // Personal
-            if (isFTB && price <= 625000) {
-                // 0% up to 425k
+            // Personal FTB: 0% up to 425k, 5% to 625k. (If > 625k, standard rules apply).
+            if (type === 'personal' && isFTB && price <= 625000) {
                 if (price <= 425000) return 0;
-                // 5% on 425k to 625k
                 return (price - 425000) * 0.05;
-            } else {
-                // Standard Mover
-                // 0-250k: 0%
-                // 250k-925k: 5%
-                // 925k-1.5m: 10%
-                // >1.5m: 12%
-                let remaining = price;
-                let d = 0;
-                
-                // Band 1
-                let b1 = Math.min(remaining, 250000);
-                remaining -= b1;
-                
-                if (remaining > 0) {
-                    let b2 = Math.min(remaining, 925000 - 250000);
-                    d += b2 * 0.05;
-                    remaining -= b2;
-                }
-                if (remaining > 0) {
-                    let b3 = Math.min(remaining, 1500000 - 925000);
-                    d += b3 * 0.10;
-                    remaining -= b3;
-                }
-                if (remaining > 0) {
-                    d += remaining * 0.12;
-                }
-                return d;
             }
+
+            // Standard Bands (Mover)
+            // 0 - 250k: 0%
+            // 250k - 925k: 5%
+            // 925k - 1.5m: 10%
+            // 1.5m+: 12%
+            
+            const bands = [
+                { limit: 250000, rate: 0.00 },
+                { limit: 925000, rate: 0.05 },
+                { limit: 1500000, rate: 0.10 },
+                { limit: Infinity, rate: 0.12 }
+            ];
+
+            let tax = 0;
+            let remaining = price;
+            let prevLimit = 0;
+
+            for (const band of bands) {
+                // Determine rate for this band
+                let rate = band.rate;
+                if (type === 'company') rate += 0.05; // 5% Surcharge on ALL bands
+
+                // Determine taxable amount in this band
+                const width = band.limit - prevLimit;
+                const taxable = Math.min(remaining, width);
+                
+                if (taxable > 0) {
+                    tax += taxable * rate;
+                    remaining -= taxable;
+                }
+                
+                prevLimit = band.limit;
+                if (remaining <= 0) break;
+            }
+            
+            return tax;
         }
 
         function calculateMortgage(principal, rate, years) {

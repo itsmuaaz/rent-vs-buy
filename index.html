@@ -793,6 +793,65 @@
                     deadD += yDead;
                     if (y===1) deadD += (sd_D + legal);
                 }
+                
+                // --- E: Personal BTL ---
+                if (possibleE) {
+                    let annualRentA = 0; // Personal Rent cost
+                    let currentRentY = V.rent * Math.pow(1 + V.rentInf, y-1);
+                    
+                    // BTL Income
+                    let btlYield = 0.05;
+                    let btlRentAnnual = (y === 1 ? (V.reno>0?V.postValue:V.price) : houseValueE) * btlYield;
+                    
+                    let btlInterestAnnual = 0;
+                    
+                    for (let m=0; m<12; m++) {
+                        let surplus = totalMonthlyBudget - currentRentY; // Base surplus
+                        
+                        // BTL Mortgage
+                        let interest = debtE * (V.rateC/100/12); // Use Co rate
+                        let principal = monthlyPaymentE - interest;
+                        if (debtE > 0) debtE -= principal;
+                        btlInterestAnnual += interest;
+                        
+                        let toISA = Math.min(surplus, 20000/12);
+                        let toGIA = Math.max(0, surplus - toISA);
+                        isaE = (isaE + toISA) * stockM;
+                        giaE = (giaE + toGIA) * stockM;
+                        basisE += toGIA;
+                    }
+                    
+                    // End of Year BTL Tax & Cashflow Adjustment
+                    let btlMaint = houseValueE * 0.01;
+                    let grossProfit = btlRentAnnual - btlMaint; 
+                    
+                    // Section 24 Tax
+                    let taxLiability = grossProfit * rates.income; 
+                    let taxCredit = btlInterestAnnual * 0.20;
+                    let finalTax = Math.max(0, taxLiability - taxCredit);
+                    
+                    // Net Cashflow from BTL
+                    let netBTL = btlRentAnnual - btlInterestAnnual - btlMaint - finalTax;
+                    
+                    // Inject Net BTL Cash into Portfolio
+                    if (netBTL > 0) {
+                        giaE += netBTL;
+                        basisE += netBTL;
+                    } else {
+                        let loss = -netBTL;
+                        if (giaE >= loss) { giaE -= loss; basisE -= loss; }
+                        else {
+                            let rem = loss - giaE; giaE = 0; basisE = 0; isaE -= rem;
+                        }
+                    }
+                    
+                    houseValueE *= propGrowth;
+                    
+                    // Dead Money: Personal Rent + BTL Interest + BTL Maint + Tax - BTL Rent
+                    let yDead = (currentRentY * 12) + btlInterestAnnual + btlMaint + finalTax - btlRentAnnual;
+                    deadE += yDead;
+                    if (y===1) deadE += (sd_E + legal);
+                }
 
                 // --- Snapshots ---
                 // Calculate Net Worths (Post-Tax Estimations for Chart?)
@@ -846,6 +905,14 @@
                     stratD.netWorth.push(0); stratD.liquidHistory.push(0); stratD.deadMoney.push(0);
                 }
                 
+                if (possibleE) {
+                    stratE.netWorth.push(getNW(isaE, giaE, basisE, houseValueE, debtE, 0));
+                    stratE.liquidHistory.push(getLiq(isaE, giaE, basisE));
+                    stratE.deadMoney.push(deadE);
+                } else {
+                    stratE.netWorth.push(0); stratE.liquidHistory.push(0); stratE.deadMoney.push(0);
+                }
+                
                 // Dead Money (A/B/C)
                 stratA.deadMoney.push(deadA);
                 if (possibleB) stratB.deadMoney.push(deadB); else stratB.deadMoney.push(0);
@@ -853,15 +920,16 @@
             }
             
             // Calculate Breakeven (First year where strategy > Rent)
-            const be = {B: null, C: null, D: null};
+            const be = {B: null, C: null, D: null, E: null};
             for (let i=0; i<simYears; i++) {
                 const rentNW = stratA.netWorth[i];
                 if (possibleB && be.B === null && stratB.netWorth[i] > rentNW) be.B = i + 1;
                 if (possibleC && be.C === null && stratC.netWorth[i] > rentNW) be.C = i + 1;
                 if (possibleD && be.D === null && stratD.netWorth[i] > rentNW) be.D = i + 1;
+                if (possibleE && be.E === null && stratE.netWorth[i] > rentNW) be.E = i + 1;
             }
 
-            return { stratA, stratB, stratC, stratD, possibleB, possibleD, be };
+            return { stratA, stratB, stratC, stratD, stratE, possibleB, possibleD, possibleE, be };
         }
 
         function updateCharts(data) {

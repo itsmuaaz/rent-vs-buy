@@ -157,9 +157,10 @@
             <!-- Presets -->
             <div class="flex flex-wrap gap-3 mb-6 items-center no-print">
                 <span class="text-sm font-medium text-gray-500 py-2">Presets:</span>
-                <button onclick="applyPreset('london')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-blue-50 hover:border-blue-400 transition shadow-sm" title="High Rent, High Price, Zone 2/3">🇬🇧 London FTB</button>
-                <button onclick="applyPreset('north')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-green-50 hover:border-green-400 transition shadow-sm" title="Manchester/Leeds: Accessible entry, good yield">🏗️ Northern Investor</button>
-                <button onclick="applyPreset('henry')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-purple-50 hover:border-purple-400 transition shadow-sm" title="High Earner, Not Rich Yet. High surplus, low deposit.">🚀 High Earner</button>
+                <button onclick="applyPreset('nomad')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 hover:border-gray-400 transition shadow-sm" title="Strategy A Winner: Low Rent, High Stock Return">🌍 Digital Nomad</button>
+                <button onclick="applyPreset('london')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-blue-50 hover:border-blue-400 transition shadow-sm" title="Strategy B Winner: High Rent makes buying efficient">🇬🇧 London Pro</button>
+                <button onclick="applyPreset('starter')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-green-50 hover:border-green-400 transition shadow-sm" title="Strategy C Winner: Lodger income boosts affordability">🏠 Smart Starter</button>
+                <button onclick="applyPreset('landlord')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-purple-50 hover:border-purple-400 transition shadow-sm" title="Strategy D Winner: Tax efficient for high earners">🏗️ Portfolio Landlord</button>
                 <button onclick="toggleCrash()" id="btnCrash" class="ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1 has-tooltip border-b-0" style="border-bottom: 0;">
                     📉 Stress Test
                     <span class="tooltip w-48 font-normal normal-case bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Simulates Year 1 Market Crash: Stocks -20%, Property -10%</span>
@@ -1087,17 +1088,29 @@
 
         function applyPreset(name) {
             const data = {
+                nomad: {
+                    // Strat A Wins: Cheap Rent, High Stock Growth
+                    liquidAssets: 100000, isaBalance: 20000, monthlySavings: 2000, stockGrowth: 12,
+                    currentRent: 800, propertyPrice: 350000, renoCost: 0, isFTB: true,
+                    lodgerIncome: 0, taxBand: 'basic'
+                },
                 london: {
-                    liquidAssets: 60000, isaBalance: 20000, monthlySavings: 1200, stockGrowth: 8,
-                    currentRent: 2200, propertyPrice: 450000, renoCost: 5000, isFTB: true
+                    // Strat B Wins: High Rent costs make buying attractive despite high price
+                    liquidAssets: 100000, isaBalance: 30000, monthlySavings: 1500, stockGrowth: 7,
+                    currentRent: 2400, propertyPrice: 500000, renoCost: 10000, isFTB: true,
+                    lodgerIncome: 0, taxBand: 'higher'
                 },
-                north: {
-                    liquidAssets: 40000, isaBalance: 10000, monthlySavings: 800, stockGrowth: 8,
-                    currentRent: 950, propertyPrice: 220000, renoCost: 15000, isFTB: true
+                starter: {
+                    // Strat C Wins: Lodger income is crucial for affordability
+                    liquidAssets: 35000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8,
+                    currentRent: 1200, propertyPrice: 280000, renoCost: 5000, isFTB: true,
+                    lodgerIncome: 625, lodgerYears: 5, taxBand: 'basic'
                 },
-                henry: {
-                    liquidAssets: 25000, isaBalance: 0, monthlySavings: 4000, stockGrowth: 10,
-                    currentRent: 2500, propertyPrice: 600000, renoCost: 0, isFTB: false
+                landlord: {
+                    // Strat D Wins: Personal rent high (lifestyle), but investing in cheaper BTL via Co
+                    liquidAssets: 60000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8,
+                    currentRent: 2500, propertyPrice: 200000, renoCost: 15000, isFTB: false,
+                    lodgerIncome: 0, taxBand: 'additional'
                 }
             };
 
@@ -1113,6 +1126,9 @@
             if (set.propertyPrice !== undefined) inputs.propertyPrice.value = set.propertyPrice;
             if (set.renoCost !== undefined) inputs.renoCost.value = set.renoCost;
             if (set.isFTB !== undefined) inputs.isFTB.checked = set.isFTB;
+            if (set.lodgerIncome !== undefined) inputs.lodgerIncome.value = set.lodgerIncome;
+            if (set.lodgerYears !== undefined) inputs.lodgerYears.value = set.lodgerYears || 2;
+            if (set.taxBand !== undefined) inputs.taxBand.value = set.taxBand;
 
             // Sync Sliders (Trigger 'input' event or manually set range value)
             ['liquidAssets', 'monthlySavings', 'stockGrowth', 'currentRent', 'propertyPrice'].forEach(id => {

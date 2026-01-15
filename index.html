@@ -34,7 +34,10 @@
             <h1 class="text-xl font-bold text-slate-800 tracking-tight">
                 🇬🇧 UK Property Strategy Simulator <span class="text-sm font-normal text-gray-500 ml-2 hidden sm:inline">Rent vs. Buy vs. Hack vs. Company</span>
             </h1>
-            <div class="text-sm text-gray-500">v1.0</div>
+            <div class="flex items-center gap-3">
+                <button onclick="copyShareLink()" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition">Share 🔗</button>
+                <div class="text-sm text-gray-500">v1.1</div>
+            </div>
         </div>
     </header>
 
@@ -907,6 +910,7 @@
             updateCharts(data);
             updateTable(data);
             updateHeadline(data);
+            updateURL();
         }
 
         function applyPreset(name) {
@@ -929,8 +933,48 @@
             }
             calculateAll();
         }
+        
+        // --- URL State Management ---
+        function updateURL() {
+            const params = new URLSearchParams();
+            for (const [key, el] of Object.entries(inputs)) {
+                if (el.type === 'checkbox') {
+                    params.set(key, el.checked);
+                } else {
+                    params.set(key, el.value);
+                }
+            }
+            // Update URL without reloading
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', newUrl);
+        }
+
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.keys().next().done) return; // No params
+
+            for (const [key, el] of Object.entries(inputs)) {
+                if (params.has(key)) {
+                    if (el.type === 'checkbox') {
+                        el.checked = params.get(key) === 'true';
+                    } else {
+                        el.value = params.get(key);
+                    }
+                }
+            }
+        }
+
+        function copyShareLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const btn = document.querySelector('header button');
+                const orig = btn.innerText;
+                btn.innerText = "Copied! ✅";
+                setTimeout(() => btn.innerText = orig, 2000);
+            });
+        }
 
         // Init
+        loadFromURL();
         calculateAll();
 
     </script>

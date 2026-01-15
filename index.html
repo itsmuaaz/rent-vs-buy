@@ -948,6 +948,12 @@
             let msg = "";
             const yearLabel = `Year ${idx+1}`;
             
+            // Check affordability first
+            if (!data.possibleB && !data.possibleD) {
+                h.innerHTML = `<h2 class="text-2xl font-bold mb-2">Renting (Default)</h2><p class="opacity-90">Insufficient liquid assets to afford the upfront costs of Buying. Renting is your only option.</p>`;
+                return;
+            }
+            
             if (winner.name === 'Renting') {
                 msg = `Renting is the winner by ${yearLabel}, beating property by £${Math.round(diff/1000)}k.`;
             } else {
@@ -1092,25 +1098,25 @@
                     // Strat A Wins: Cheap Rent, High Stock Growth
                     liquidAssets: 100000, isaBalance: 20000, monthlySavings: 2000, stockGrowth: 12,
                     currentRent: 800, propertyPrice: 350000, renoCost: 0, isFTB: true,
-                    lodgerIncome: 0, taxBand: 'basic'
+                    lodgerIncome: 0, taxBand: 'basic', depositPercent: 25
                 },
                 london: {
                     // Strat B Wins: High Rent costs make buying attractive despite high price
-                    liquidAssets: 100000, isaBalance: 30000, monthlySavings: 1500, stockGrowth: 7,
+                    liquidAssets: 130000, isaBalance: 30000, monthlySavings: 1500, stockGrowth: 7,
                     currentRent: 2400, propertyPrice: 500000, renoCost: 10000, isFTB: true,
-                    lodgerIncome: 0, taxBand: 'higher'
+                    lodgerIncome: 0, taxBand: 'higher', depositPercent: 20
                 },
                 starter: {
                     // Strat C Wins: Lodger income is crucial for affordability
-                    liquidAssets: 35000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8,
+                    liquidAssets: 40000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8,
                     currentRent: 1200, propertyPrice: 280000, renoCost: 5000, isFTB: true,
-                    lodgerIncome: 625, lodgerYears: 5, taxBand: 'basic'
+                    lodgerIncome: 625, lodgerYears: 5, taxBand: 'basic', depositPercent: 10
                 },
                 landlord: {
                     // Strat D Wins: Personal rent high (lifestyle), but investing in cheaper BTL via Co
-                    liquidAssets: 60000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8,
+                    liquidAssets: 90000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8,
                     currentRent: 2500, propertyPrice: 200000, renoCost: 15000, isFTB: false,
-                    lodgerIncome: 0, taxBand: 'additional'
+                    lodgerIncome: 0, taxBand: 'additional', depositPercent: 25
                 }
             };
 
@@ -1125,12 +1131,22 @@
             if (set.currentRent !== undefined) inputs.currentRent.value = set.currentRent;
             if (set.propertyPrice !== undefined) inputs.propertyPrice.value = set.propertyPrice;
             if (set.renoCost !== undefined) inputs.renoCost.value = set.renoCost;
+            if (set.depositPercent !== undefined) inputs.depositPercent.value = set.depositPercent;
             if (set.isFTB !== undefined) inputs.isFTB.checked = set.isFTB;
             if (set.lodgerIncome !== undefined) inputs.lodgerIncome.value = set.lodgerIncome;
             if (set.lodgerYears !== undefined) inputs.lodgerYears.value = set.lodgerYears || 2;
             if (set.taxBand !== undefined) inputs.taxBand.value = set.taxBand;
 
             // Sync Sliders (Trigger 'input' event or manually set range value)
+            ['liquidAssets', 'monthlySavings', 'stockGrowth', 'currentRent', 'propertyPrice'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.nextElementSibling && el.nextElementSibling.type === 'range') {
+                    el.nextElementSibling.value = el.value;
+                }
+            });
+
+            calculateAll();
+        }
             ['liquidAssets', 'monthlySavings', 'stockGrowth', 'currentRent', 'propertyPrice'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && el.nextElementSibling && el.nextElementSibling.type === 'range') {

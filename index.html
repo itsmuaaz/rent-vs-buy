@@ -899,8 +899,8 @@
             if (deadMoneyChartInstance) deadMoneyChartInstance.destroy();
             const ctxDM = document.getElementById('deadMoneyChart').getContext('2d');
             
-            // Safe index access
-            const idx = Math.min(4, simYears - 1);
+            // Show Cumulative Dead Money at the end of the selected horizon
+            const idx = simYears - 1;
             const d5 = [
                 data.stratA.deadMoney[idx],
                 data.stratB.deadMoney[idx],

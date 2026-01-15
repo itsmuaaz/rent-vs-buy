@@ -431,16 +431,23 @@
             const labels = Array.from({length: simYears}, (_, i) => `Year ${i+1}`);
             document.getElementById('nwTitle').innerText = `Net Worth Projection (${simYears} Years)`;
             document.getElementById('dmTitle').innerText = `Cumulative "Dead Money" (${simYears} Years)`;
+            
+            let datasets = [
+                { label: 'Rent & Invest', data: data.stratA.netWorth, borderColor: '#94a3b8', borderWidth: 2, tension: 0.3 },
+                { label: 'Buy & Live In', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB }
+            ];
+            if (isAdvanced) {
+                datasets.push(
+                    { label: 'Buy + Lodger', data: data.stratC.netWorth, borderColor: '#10b981', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
+                    { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: !data.possibleD },
+                    { label: 'Personal BTL', data: data.stratE.netWorth, borderColor: '#f97316', borderWidth: 2, tension: 0.3, hidden: !data.possibleE },
+                    { label: 'Home + Co. BTL', data: data.stratF.netWorth, borderColor: '#eab308', borderWidth: 2, tension: 0.3, hidden: !data.possibleF }
+                );
+            }
+
             if (netWorthChartInstance) netWorthChartInstance.destroy();
             netWorthChartInstance = new Chart(document.getElementById('netWorthChart').getContext('2d'), {
-                type: 'line', data: { labels, datasets: [
-                    { label: 'Rent & Invest', data: data.stratA.netWorth, borderColor: '#94a3b8', borderWidth: 2, tension: 0.3 },
-                    { label: 'Buy & Live In', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
-                    { label: 'Buy + Lodger', data: data.stratC.netWorth, borderColor: '#10b981', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleB) },
-                    { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleD) },
-                    { label: 'Personal BTL', data: data.stratE.netWorth, borderColor: '#f97316', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleE) },
-                    { label: 'Home + Co. BTL', data: data.stratF.netWorth, borderColor: '#eab308', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleF) }
-                ]},
+                type: 'line', data: { labels, datasets },
                 options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
             });
             if (deadMoneyChartInstance) deadMoneyChartInstance.destroy();

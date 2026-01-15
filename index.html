@@ -930,44 +930,76 @@
         
         function updateHeadline(data) {
             const h = document.getElementById('headline');
-            // Winner at Year 5 or Final?
-            // PRD said "Winner by Year 5". Let's stick to that, or use simYears if < 5.
-            const idx = Math.min(4, simYears-1);
+            const idx = simYears - 1; // Use selected horizon
             
-            const y5 = [
-                {name: 'Renting', val: data.stratA.netWorth[idx], code: 'A'},
-                {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[idx] : -1, code: 'B'},
-                {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -1, code: 'C'},
-                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -1, code: 'D'}
+            // Collect End-State Values
+            const strategies = [
+                {name: 'Renting', val: data.stratA.netWorth[idx], code: 'A', type: 'Rent'},
+                {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy'},
+                {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy'},
+                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy'}
             ];
-            y5.sort((a,b) => b.val - a.val);
-            const winner = y5[0];
-            const baseline = data.stratA.netWorth[idx];
             
-            let diff = winner.val - baseline;
-            let msg = "";
-            const yearLabel = `Year ${idx+1}`;
+            // Sort Descending
+            strategies.sort((a,b) => b.val - a.val);
             
-            // Check affordability first
+            const winner = strategies[0];
+            const rentStrat = strategies.find(s => s.code === 'A');
+            const bestBuy = strategies.find(s => s.type === 'Buy' && s.val > -Infinity); // Top buying option
+            
+            // Check affordability
             if (!data.possibleB && !data.possibleD) {
-                h.innerHTML = `<h2 class="text-2xl font-bold mb-2">Renting (Default)</h2><p class="opacity-90">Insufficient liquid assets to afford the upfront costs of Buying. Renting is your only option.</p>`;
+                h.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="text-4xl">⚠️</div>
+                        <div>
+                            <h2 class="text-2xl font-bold">Renting is the only option</h2>
+                            <p class="text-white opacity-90">Insufficient liquid assets to afford the upfront costs of Buying.</p>
+                        </div>
+                    </div>`;
                 return;
             }
-            
-            if (winner.name === 'Renting') {
-                msg = `Renting is the winner by ${yearLabel}, beating property by £${Math.round(diff/1000)}k.`;
+
+            let title, desc, subtext;
+            let diff = 0;
+
+            if (winner.type === 'Rent') {
+                // Rent Wins
+                const runnerUp = strategies[1]; // Likely a Buy option
+                diff = winner.val - (runnerUp.val > -Infinity ? runnerUp.val : 0);
+                title = "Renting is the Wealthier Choice 🏖️";
+                desc = `Projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${runnerUp.name} after ${simYears} years.`;
+                subtext = "Investing the surplus in the stock market outperforms property equity in this scenario.";
             } else {
-                msg = `${winner.name} makes you £${Math.round(diff/1000)}k wealthier than Renting by ${yearLabel}.`;
-                // Add Breakeven info
+                // Buy Wins
+                diff = winner.val - rentStrat.val;
+                title = `${winner.name} Wins 🏡`;
+                desc = `Projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting after ${simYears} years.`;
+                
+                // Context
                 const beY = data.be[winner.code];
                 if (beY) {
-                    msg += ` <span class="block mt-1 font-semibold text-yellow-200">Breakeven vs Renting: Year ${beY}</span>`;
-                } else if (winner.val > baseline) {
-                    msg += ` <span class="block mt-1 font-semibold text-yellow-200">Wins immediately (Year 1)</span>`;
+                    subtext = `✅ Breakeven vs Renting occurs in <strong>Year ${beY}</strong>.`;
+                } else if (winner.val > rentStrat.val) {
+                    subtext = `✅ ${winner.name} is cheaper/better starting from <strong>Year 1</strong>.`;
+                } else {
+                    subtext = `⚠️ Warning: Even by Year ${simYears}, this barely beats renting.`;
                 }
             }
-            
-            h.innerHTML = `<h2 class="text-2xl font-bold mb-2">${winner.name} Wins 🏆</h2><p class="opacity-90">${msg}</p>`;
+
+            h.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold leading-tight">${title}</h2>
+                        <p class="text-lg mt-1">${desc}</p>
+                        <p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p>
+                    </div>
+                    <div class="hidden md:block text-right">
+                        <div class="text-sm uppercase tracking-wider opacity-70">Projected Gain</div>
+                        <div class="text-3xl font-bold">+£${Math.round(diff/1000).toLocaleString()}k</div>
+                    </div>
+                </div>
+            `;
         }
         
         function setHorizon(y) {

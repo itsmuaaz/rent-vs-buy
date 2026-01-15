@@ -146,11 +146,12 @@
         <!-- Main Content: Outputs -->
         <main class="flex-1 md:overflow-y-auto p-4 md:p-8 pb-32 md:pb-32 bg-gray-50">
             <!-- Presets -->
-            <div class="flex flex-wrap gap-3 mb-6">
+            <div class="flex flex-wrap gap-3 mb-6 items-center">
                 <span class="text-sm font-medium text-gray-500 py-2">Presets:</span>
                 <button onclick="applyPreset('google')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 hover:border-blue-400 transition shadow-sm">👨‍💻 The Tech Professional</button>
                 <button onclick="applyPreset('safe')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 hover:border-green-400 transition shadow-sm">🛡️ The Safe Play</button>
                 <button onclick="applyPreset('empire')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 hover:border-purple-400 transition shadow-sm">👑 The Empire Builder</button>
+                <button onclick="toggleCrash()" id="btnCrash" class="ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1">📉 Stress Test</button>
             </div>
 
             <!-- Headline -->
@@ -223,6 +224,7 @@
         let netWorthChartInstance = null;
         let deadMoneyChartInstance = null;
         let simYears = 10;
+        let isCrash = false;
 
         // --- Selectors ---
         const inputs = {
@@ -532,10 +534,13 @@
 
             for (let y = 1; y <= years; y++) {
                 // Growth Factors
-                const stockM = (1 + V.stockGrowth / 12);
-                const propGrowth = 1.03; // Assume 3% capital appreciation for property? Or input?
-                // PRD doesn't give Prop Growth input. Let's assume 3% standard or match rent inflation?
-                // We'll use 3% fixed for capital appreciation to keep it sane.
+                let stockM = (1 + V.stockGrowth / 12);
+                let propGrowth = 1.03; // Assume 3%
+                
+                if (isCrash && y === 1) {
+                    stockM = Math.pow(0.80, 1/12); // -20% annual equivalent
+                    propGrowth = 0.90; // -10% immediate drop
+                }
                 
                 // --- A: Rent ---
                 let annualRentA = 0;
@@ -928,6 +933,19 @@
             if (y === 10) { b10.className = active; b25.className = inactive; }
             else { b10.className = inactive; b25.className = active; }
             
+            calculateAll();
+        }
+
+        function toggleCrash() {
+            isCrash = !isCrash;
+            const btn = document.getElementById('btnCrash');
+            if (isCrash) {
+                btn.className = "ml-auto px-4 py-2 bg-red-600 border border-red-700 text-white rounded-full text-sm hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300";
+                btn.innerHTML = "📉 Crash Active";
+            } else {
+                btn.className = "ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1";
+                btn.innerHTML = "📉 Stress Test";
+            }
             calculateAll();
         }
 

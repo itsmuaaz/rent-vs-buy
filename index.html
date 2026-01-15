@@ -921,6 +921,21 @@
             const strategies = [data.stratA, data.stratB, data.stratC, data.stratD];
             const years = [2, 5, 10, 15, 25, 40];
             
+            // 1. Calculate stats per column (year)
+            const yearStats = {};
+            years.forEach(y => {
+                let vals = [];
+                strategies.forEach((s, idx) => {
+                    if ((idx === 1 || idx === 2) && !data.possibleB) return;
+                    if (idx === 3 && !data.possibleD) return;
+                    vals.push(s.netWorth[y-1] || 0);
+                });
+                yearStats[y] = {
+                    max: Math.max(...vals),
+                    min: Math.min(...vals)
+                };
+            });
+            
             strategies.forEach((s, idx) => {
                 if ((idx === 1 || idx === 2) && !data.possibleB) return;
                 if (idx === 3 && !data.possibleD) return;
@@ -932,9 +947,13 @@
                 
                 years.forEach(y => {
                     const val = s.netWorth[y-1] || 0;
-                    // Highlight the 'Focus' year if it matches simYears? Optional.
-                    const style = (y === simYears) ? "font-bold text-indigo-600" : "";
-                    cells += `<td class="px-6 py-4 text-right ${style}">${fmt(val)}</td>`;
+                    const stats = yearStats[y];
+                    
+                    let style = "text-gray-600";
+                    if (val === stats.max) style = "font-bold text-green-700 bg-green-50 rounded-lg";
+                    else if (val === stats.min) style = "text-red-600 bg-red-50 rounded-lg";
+                    
+                    cells += `<td class="px-6 py-4 text-right"><span class="px-2 py-1 ${style}">${fmt(val)}</span></td>`;
                 });
 
                 tr.innerHTML = cells;
@@ -1106,8 +1125,17 @@
             div.innerHTML = '';
             
             const strategies = [lastSimData.stratA, lastSimData.stratB, lastSimData.stratC, lastSimData.stratD];
-            const colors = ['border-gray-300', 'border-blue-400', 'border-green-400', 'border-purple-400'];
-            const bgs = ['bg-white', 'bg-blue-50', 'bg-green-50', 'bg-purple-50'];
+            
+            // 1. Determine Ranks for current year
+            let validVals = [];
+            strategies.forEach((s, i) => {
+                if ((i===1 || i===2) && !lastSimData.possibleB) return;
+                if (i===3 && !lastSimData.possibleD) return;
+                validVals.push(s.netWorth[year-1] || 0);
+            });
+            
+            const maxVal = Math.max(...validVals);
+            const minVal = Math.min(...validVals);
             
             strategies.forEach((s, i) => {
                 // Visibility Check
@@ -1118,13 +1146,30 @@
                 const liq = s.liquidHistory[year-1] || 0;
                 const equity = nw - liq;
                 
+                // Determine Color & Badge
+                let colorClass = "border-gray-200 bg-white";
+                let badge = "";
+                
+                if (nw === maxVal) {
+                    colorClass = "border-green-500 bg-green-50 ring-1 ring-green-500";
+                    badge = '<span class="ml-auto text-[10px] font-bold text-green-700 bg-green-200 px-2 py-0.5 rounded-full tracking-wider">BEST</span>';
+                } else if (nw === minVal && validVals.length > 1) {
+                    colorClass = "border-red-300 bg-red-50 opacity-90";
+                    badge = '<span class="ml-auto text-[10px] font-bold text-red-700 bg-red-200 px-2 py-0.5 rounded-full tracking-wider">WORST</span>';
+                } else {
+                    colorClass = "border-gray-300 bg-gray-50";
+                }
+                
                 div.innerHTML += `
-                    <div class="p-3 rounded border-l-4 shadow-sm ${colors[i]} ${bgs[i]}">
-                        <div class="text-xs font-bold text-gray-500 uppercase mb-1">${s.name}</div>
+                    <div class="p-3 rounded border-l-4 shadow-sm ${colorClass} transition-all duration-200">
+                        <div class="flex items-center mb-2">
+                            <div class="text-xs font-bold text-gray-500 uppercase truncate pr-2">${s.name}</div>
+                            ${badge}
+                        </div>
                         <div class="text-xl font-bold text-gray-800">£${Math.round(nw/1000).toLocaleString()}k</div>
-                        <div class="text-xs text-gray-600 mt-1 flex justify-between">
-                            <span>Liquid: £${Math.round(liq/1000)}k</span>
-                            <span>Equity: £${Math.round(equity/1000)}k</span>
+                        <div class="text-xs text-gray-500 mt-2 flex justify-between border-t border-black/5 pt-2">
+                            <span title="Liquid Cash">💵 £${Math.round(liq/1000)}k</span>
+                            <span title="Property Equity">🏠 £${Math.round(equity/1000)}k</span>
                         </div>
                     </div>
                 `;

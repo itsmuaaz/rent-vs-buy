@@ -578,6 +578,82 @@
             // PRD: "Dead Money" for Buy = Interest + Fees + Maint.
             // For Strat D: Personal Rent + Company Interest.
 
+            // --- Strategy E: Personal BTL + Rent ---
+            let stratE = { name: "Personal BTL", netWorth: [], deadMoney: [], liquidHistory: [] };
+            // Costs: Deposit, Higher Stamp Duty (Surcharge), Reno.
+            const sd_E = calculateStampDuty(V.price, 'additional', false);
+            const upfrontE = depositAmount + sd_E + legal + V.reno;
+            let possibleE = true;
+            if (upfrontE > V.liquid) possibleE = false;
+
+            let isaE = V.isa;
+            let giaE = V.liquid - V.isa;
+            
+            if (possibleE) {
+                let cost = upfrontE;
+                if (giaE >= cost) { giaE -= cost; cost = 0; }
+                else { cost -= giaE; giaE = 0; isaE -= cost; }
+            }
+            let basisE = giaE;
+            
+            let mortgageE = V.price - depositAmount; // BTL Mortgage
+            let debtE = mortgageE;
+            let houseValueE = (V.reno > 0) ? V.postValue : V.price;
+            let deadE = 0;
+
+            // --- F: Home + Co. BTL ---
+            let stratF = { name: "Home + Co. BTL", netWorth: [], deadMoney: [], liquidHistory: [] };
+            let possibleF = true;
+            let hasBTL_F = false;
+            
+            // 1. Buy Home
+            const sd_F1 = calculateStampDuty(V.price, 'personal', V.isFTB);
+            const upfrontF1 = depositAmount + sd_F1 + legal + V.reno;
+            
+            if (upfrontF1 > V.liquid) possibleF = false;
+            
+            let isaF = V.isa;
+            let giaF = V.liquid - V.isa;
+            let basisF = giaF;
+            
+            if (possibleF) {
+                let cost = upfrontF1;
+                if (giaF >= cost) { giaF -= cost; cost = 0; }
+                else { cost -= giaF; giaF = 0; isaF -= cost; } // Basis update?
+                // Simplified basis update:
+                basisF = giaF; 
+            }
+            
+            let mortgageF1 = V.price - depositAmount; 
+            let debtF1 = mortgageF1;
+            let valF1 = (V.reno > 0) ? V.postValue : V.price;
+            
+            // 2. Buy BTL (Company)
+            // Assumption: BTL Price = Home Price (user input). 
+            // In reality often smaller, but we use what we have.
+            const sd_F2 = calculateStampDuty(V.price, 'company', false); 
+            const upfrontF2 = depositAmount + sd_F2 + legal; // No reno on BTL
+            
+            let debtF2 = 0;
+            let valF2 = 0;
+            let coCashF = 0;
+            
+            if (possibleF) {
+                let totalLiq = isaF + giaF; // Available
+                if (totalLiq >= upfrontF2) {
+                    hasBTL_F = true;
+                    let cost = upfrontF2;
+                    if (giaF >= cost) { giaF -= cost; cost = 0; }
+                    else { cost -= giaF; giaF = 0; isaF -= cost; }
+                    basisF = giaF;
+                    
+                    debtF2 = V.price - depositAmount;
+                    valF2 = V.price;
+                }
+            }
+            
+            let deadF = 0;
+
             // --- Simulation Loop ---
             const monthlyPaymentB = calculateMortgage(mortgageB, V.rateP, V.term);
             const monthlyPaymentC = calculateMortgage(mortgageB, V.rateP, V.term); // Same mortgage

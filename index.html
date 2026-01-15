@@ -972,8 +972,47 @@
                 setTimeout(() => btn.innerText = orig, 2000);
             });
         }
+        
+        // --- UX Features ---
+        function setupSliders() {
+            const config = {
+                liquidAssets: { min: 0, max: 500000, step: 1000 },
+                monthlySavings: { min: 0, max: 5000, step: 50 },
+                stockGrowth: { min: 0, max: 15, step: 0.1 },
+                currentRent: { min: 0, max: 4000, step: 50 },
+                propertyPrice: { min: 100000, max: 1000000, step: 5000 }
+            };
+            
+            for (const [id, cfg] of Object.entries(config)) {
+                const numInput = document.getElementById(id);
+                if (!numInput) continue;
+                
+                const range = document.createElement('input');
+                range.type = 'range';
+                range.min = cfg.min;
+                range.max = cfg.max;
+                range.step = cfg.step;
+                range.value = numInput.value;
+                range.className = "w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600";
+                
+                // Sync Range -> Number
+                range.addEventListener('input', (e) => {
+                    numInput.value = e.target.value;
+                    calculateAll();
+                });
+                
+                // Sync Number -> Range
+                numInput.addEventListener('input', (e) => {
+                    range.value = e.target.value;
+                });
+                
+                // Insert
+                numInput.parentNode.appendChild(range);
+            }
+        }
 
         // Init
+        setupSliders();
         loadFromURL();
         calculateAll();
 

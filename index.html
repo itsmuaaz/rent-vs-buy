@@ -1153,7 +1153,12 @@
                         backgroundColor: dmData.map(i => i.c)
                     }]
                 },
-
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } }
+                }
+            });
         }
         
         function updateTable(data) {

@@ -161,18 +161,23 @@
                 <button onclick="applyPreset('london')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-blue-50 hover:border-blue-400 transition shadow-sm" title="Strategy B Winner: High Rent makes buying efficient">🇬🇧 London Pro</button>
                 <button onclick="applyPreset('starter')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-green-50 hover:border-green-400 transition shadow-sm" title="Strategy C Winner: Lodger income boosts affordability">🏠 Smart Starter</button>
                 <button onclick="applyPreset('landlord')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-purple-50 hover:border-purple-400 transition shadow-sm" title="Strategy D Winner: Tax efficient for high earners">🏗️ Portfolio Landlord</button>
-                <button onclick="toggleCrash()" id="btnCrash" class="ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1 has-tooltip border-b-0" style="border-bottom: 0;">
-                    📉 Stress Test
-                    <span class="tooltip w-48 font-normal normal-case bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Simulates Year 1 Market Crash: Stocks -20%, Property -10%</span>
-                </button>
+                <div class="ml-auto flex gap-2">
+                    <button onclick="toggleStockCrash()" id="btnStockCrash" class="px-3 py-2 bg-white border border-red-200 text-red-700 rounded-full text-xs font-medium hover:bg-red-50 transition shadow-sm flex items-center gap-1 has-tooltip" style="border-bottom: 0;">
+                        📉 Stock Crash
+                        <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -30% Drop</span>
+                    </button>
+                    <button onclick="togglePropCrash()" id="btnPropCrash" class="px-3 py-2 bg-white border border-orange-200 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-50 transition shadow-sm flex items-center gap-1 has-tooltip" style="border-bottom: 0;">
+                        🏠 Property Crash
+                        <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -15% Drop</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Crash Banner (Hidden by default) -->
             <div id="crashBanner" class="hidden mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-3 transition-all no-print">
-                <span class="text-2xl">📉</span>
-                <div>
-                    <h4 class="font-bold text-red-800 text-sm">Market Crash Simulation Active</h4>
-                    <p class="text-xs text-red-700 mt-1">This scenario applies a severe shock in <strong>Year 1</strong>: Your Stock Portfolio drops by <strong>20%</strong> and Property Value drops by <strong>10%</strong>. Normal growth resumes in Year 2. Use this to test if your strategy survives a recession.</p>
+                <span class="text-2xl">⚠️</span>
+                <div id="crashMsg">
+                    <!-- Populated by JS -->
                 </div>
             </div>
 
@@ -299,7 +304,8 @@
         let netWorthChartInstance = null;
         let deadMoneyChartInstance = null;
         let simYears = 10;
-        let isCrash = false;
+        let isStockCrash = false;
+        let isPropCrash = false;
         let lastSimData = null;
 
         // --- Selectors ---
@@ -562,11 +568,11 @@
             for (let y = 1; y <= years; y++) {
                 // Growth Factors
                 let stockM = (1 + V.stockGrowth / 12);
-                let propGrowth = 1.03; // Assume 3%
+                let propGrowth = 1.03; 
                 
-                if (isCrash && y === 1) {
-                    stockM = Math.pow(0.80, 1/12); // -20% annual equivalent
-                    propGrowth = 0.90; // -10% immediate drop
+                if (y === 1) {
+                    if (isStockCrash) stockM = Math.pow(0.70, 1/12); // -30%
+                    if (isPropCrash) propGrowth = 0.85; // -15%
                 }
                 
                 // --- A: Rent ---
@@ -1049,40 +1055,59 @@
             calculateAll();
         }
 
-        function toggleCrash() {
-            isCrash = !isCrash;
-            const btn = document.getElementById('btnCrash');
-            const banner = document.getElementById('crashBanner');
-            const tooltipHTML = '<span class="tooltip w-48 font-normal normal-case bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Simulates Year 1 Market Crash: Stocks -20%, Property -10%</span>';
-            
-            if (isCrash) {
-                btn.className = "ml-auto px-4 py-2 bg-red-600 border border-red-700 text-white rounded-full text-sm hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300 has-tooltip border-b-0";
-                btn.innerHTML = `📉 Crash Active ${tooltipHTML}`;
-                banner.classList.remove('hidden');
-            } else {
-                btn.className = "ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1 has-tooltip border-b-0";
-                btn.innerHTML = `📉 Stress Test ${tooltipHTML}`;
-                banner.classList.add('hidden');
-            }
-            // Ensure style override
-            btn.style.borderBottom = "0";
-            
+        function toggleStockCrash() {
+            isStockCrash = !isStockCrash;
+            updateCrashUI();
             calculateAll();
         }
 
-        function toggleStrategies() {
-            const div = document.getElementById('stratGuide');
-            const arrow = document.getElementById('stratToggleArrow');
-            if (div.classList.contains('hidden')) {
-                div.classList.remove('hidden');
-                arrow.classList.add('rotate-90');
+        function togglePropCrash() {
+            isPropCrash = !isPropCrash;
+            updateCrashUI();
+            calculateAll();
+        }
+
+        function updateCrashUI() {
+            const banner = document.getElementById('crashBanner');
+            const msg = document.getElementById('crashMsg');
+            const btnS = document.getElementById('btnStockCrash');
+            const btnP = document.getElementById('btnPropCrash');
+            
+            // Stock Button Style
+            if (isStockCrash) {
+                btnS.className = "px-3 py-2 bg-red-600 border border-red-700 text-white rounded-full text-xs font-medium hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300 has-tooltip";
+                btnS.innerHTML = `📉 Stock Active <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -30% Drop</span>`;
             } else {
-                div.classList.add('hidden');
-                arrow.classList.remove('rotate-90');
+                btnS.className = "px-3 py-2 bg-white border border-red-200 text-red-700 rounded-full text-xs font-medium hover:bg-red-50 transition shadow-sm flex items-center gap-1 has-tooltip";
+                btnS.innerHTML = `📉 Stock Crash <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -30% Drop</span>`;
+            }
+            btnS.style.borderBottom = "0";
+
+            // Prop Button Style
+            if (isPropCrash) {
+                btnP.className = "px-3 py-2 bg-orange-600 border border-orange-700 text-white rounded-full text-xs font-medium hover:bg-orange-700 transition shadow-sm flex items-center gap-1 ring-2 ring-orange-300 has-tooltip";
+                btnP.innerHTML = `🏠 Prop Active <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -15% Drop</span>`;
+            } else {
+                btnP.className = "px-3 py-2 bg-white border border-orange-200 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-50 transition shadow-sm flex items-center gap-1 has-tooltip";
+                btnP.innerHTML = `🏠 Prop Crash <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -15% Drop</span>`;
+            }
+            btnP.style.borderBottom = "0";
+
+            // Banner Logic
+            if (!isStockCrash && !isPropCrash) {
+                banner.classList.add('hidden');
+            } else {
+                banner.classList.remove('hidden');
+                let txt = '<h4 class="font-bold text-red-800 text-sm">Simulation Active: Year 1 Shock</h4><p class="text-xs text-red-700 mt-1">';
+                if (isStockCrash) txt += '📉 <strong>Stock Market Crash (-30%)</strong> applied.<br>';
+                if (isPropCrash) txt += '🏠 <strong>Property Market Crash (-15%)</strong> applied.<br>';
+                txt += 'Use this to test resilience against negative equity and sequence of returns risk.</p>';
+                msg.innerHTML = txt;
             }
         }
 
         function calculateAll() {
+
             // Check liquidity constraint
             const V = getSimData();
             // Upfront B/C

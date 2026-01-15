@@ -241,7 +241,7 @@
 
                 <!-- Dead Money Chart -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Cumulative "Dead Money" (5 Years)</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4" id="dmTitle">Cumulative "Dead Money"</h3>
                     <div class="relative h-72 w-full">
                         <canvas id="deadMoneyChart"></canvas>
                     </div>
@@ -868,6 +868,7 @@
             const labels = Array.from({length: simYears}, (_, i) => `Year ${i+1}`);
             
             document.getElementById('nwTitle').innerText = `Net Worth Projection (${simYears} Years)`;
+            document.getElementById('dmTitle').innerText = `Cumulative "Dead Money" (${simYears} Years)`;
 
             // Net Worth Chart
             if (netWorthChartInstance) netWorthChartInstance.destroy();

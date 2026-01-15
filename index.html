@@ -24,6 +24,14 @@
         .tooltip { visibility: hidden; width: 200px; background-color: #1f2937; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 100; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; pointer-events: none; }
         .has-tooltip:hover .tooltip { visibility: visible; opacity: 1; }
         .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1f2937 transparent transparent transparent; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body, main { height: auto !important; overflow: visible !important; display: block !important; }
+            aside { display: none; }
+            #headline { break-inside: avoid; border: 1px solid #ddd; background: #fff !important; color: #000 !important; }
+            canvas { max-height: 300px !important; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans md:h-screen flex flex-col md:overflow-hidden">
@@ -34,7 +42,8 @@
             <h1 class="text-xl font-bold text-slate-800 tracking-tight">
                 🇬🇧 UK Property Strategy Simulator <span class="text-sm font-normal text-gray-500 ml-2 hidden sm:inline">Rent vs. Buy vs. Hack vs. Company</span>
             </h1>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 no-print">
+                <button onclick="window.print()" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200 transition">Print / PDF 🖨️</button>
                 <button onclick="copyShareLink()" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition">Share 🔗</button>
                 <div class="text-sm text-gray-500">v1.1</div>
             </div>
@@ -43,7 +52,7 @@
 
     <div class="flex flex-col md:flex-row flex-1 min-h-0 overflow-auto md:overflow-hidden">
         <!-- Sidebar: Inputs -->
-        <aside class="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-gray-200 md:overflow-y-auto flex-shrink-0 p-4 pb-8 md:pb-32">
+        <aside class="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-gray-200 md:overflow-y-auto flex-shrink-0 p-4 pb-8 md:pb-32 no-print">
             <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Configuration</h2>
             
             <!-- Section 1: Financial Profile -->
@@ -146,7 +155,7 @@
         <!-- Main Content: Outputs -->
         <main class="flex-1 md:overflow-y-auto p-4 md:p-8 pb-32 md:pb-32 bg-gray-50">
             <!-- Presets -->
-            <div class="flex flex-wrap gap-3 mb-6 items-center">
+            <div class="flex flex-wrap gap-3 mb-6 items-center no-print">
                 <span class="text-sm font-medium text-gray-500 py-2">Presets:</span>
                 <button onclick="applyPreset('google')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 hover:border-blue-400 transition shadow-sm">👨‍💻 The Tech Professional</button>
                 <button onclick="applyPreset('safe')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 hover:border-green-400 transition shadow-sm">🛡️ The Safe Play</button>
@@ -161,7 +170,7 @@
             </div>
 
             <!-- Chart Controls -->
-            <div class="flex justify-between items-center mb-2">
+            <div class="flex justify-between items-center mb-2 no-print">
                 <h3 class="text-lg font-semibold text-gray-700">Projections</h3>
                 <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
                     <button onclick="setHorizon(10)" id="btn10y" class="px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition">10 Years</button>

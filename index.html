@@ -65,15 +65,16 @@
             <div class="mb-6">
                 <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">1. Financial Profile</h3>
                 <div class="input-group">
-                    <label class="input-label">Liquid Assets (£)</label>
+                    <label class="input-label"><span class="has-tooltip">Total Investable Capital (£)<span class="tooltip">Total cash/stocks available for Deposit or Investment.</span></span></label>
                     <input type="number" id="liquidAssets" class="input-field" value="50000">
                 </div>
                 <div class="input-group">
-                    <label class="input-label">ISA Balance (£) <span class="text-xs text-gray-400">(Tax Free)</span></label>
+                    <label class="input-label">Of which is ISA (£) <span class="text-xs text-gray-400">(Tax Free)</span></label>
                     <input type="number" id="isaBalance" class="input-field" value="20000">
+                    <div id="giaDisplay" class="text-xs text-gray-500 mt-1 italic"></div>
                 </div>
                 <div class="input-group">
-                    <label class="input-label">Monthly Surplus (£)</label>
+                    <label class="input-label"><span class="has-tooltip">Monthly Investment (£)<span class="tooltip">Allocated to stocks. Fills £20k/yr ISA first, then GIA (Taxable).</span></span></label>
                     <input type="number" id="monthlySavings" class="input-field" value="1000">
                 </div>
                 <div class="input-group">
@@ -1370,11 +1371,23 @@
             }
         }
 
-        function calculateAll() {
+                function calculateAll() {
 
-            // Check liquidity constraint
-            const V = getSimData();
-            // Upfront B/C
+                    // Check liquidity constraint
+
+                    const V = getSimData();
+
+                    
+
+                    // Update UI Helper
+
+                    const giaVal = Math.max(0, V.liquid - V.isa);
+
+                    document.getElementById('giaDisplay').innerText = `Remaining £${Math.round(giaVal).toLocaleString()} is in GIA (Taxable)`;
+
+        
+
+                    // Upfront B/C
             const sdB = calculateStampDuty(V.price, 'personal', V.isFTB);
             const upfrontB = (V.price*V.depositPct) + sdB + 2000 + V.reno;
             

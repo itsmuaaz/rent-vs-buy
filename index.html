@@ -637,7 +637,7 @@
                             giaB = (giaB + toGIA) * stockM;
                         }
                     }
-                    houseValueB *= 1.03; // Apprec
+                    houseValueB *= propGrowth; // Apprec
                     deadB += annualInterest + annualMaint;
                     if (y===1) deadB += (sd_B + legal); // Buying costs in Y1
                 }
@@ -684,7 +684,7 @@
                             giaC = (giaC + toGIA) * stockM;
                         }
                     }
-                    houseValueC *= 1.03;
+                    houseValueC *= propGrowth;
                     // Dead Money: Interest + Maint - NetLodger
                     // (Note: Buying costs added in Y1)
                     let lodgerAnnualNet = (y <= V.lodgerYears) ? ((V.lodgerInc * 12) - ((V.lodgerInc*12 > 7500) ? (V.lodgerInc*12 - 7500)*rates.income : 0)) : 0;
@@ -716,8 +716,6 @@
                     // Let's assume BTL Yield is 5% of Property Value.
                     let btlYield = 0.05;
                     let coRentAnnual = (y === 1 ? (V.reno>0?V.postValue:V.price) : houseValueD) * btlYield;
-                    // Inflate Co Rent?
-                    coRentAnnual *= Math.pow(1.03, y-1);
                     
                     let coInterestAnnual = 0;
                     // Interest Only usually for BTL? PRD said "Amortization 30".
@@ -752,7 +750,7 @@
                     // Let's assume 0% for simplicity, or it pays down debt?
                     // Just add to Net Worth.
                     
-                    houseValueD *= 1.03;
+                    houseValueD *= propGrowth;
                     
                     // Dead Money
                     // Personal Rent + Company Interest + Company Tax + Co Maint - Co Rent (Income)

@@ -169,6 +169,9 @@
                 <p class="opacity-90">Adjust inputs to see your financial future.</p>
             </div>
 
+            <!-- Smart Insights -->
+            <div id="insights" class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 no-print"></div>
+
             <!-- Chart Controls -->
             <div class="flex justify-between items-center mb-2 no-print">
                 <h3 class="text-lg font-semibold text-gray-700">Projections</h3>
@@ -1000,8 +1003,53 @@
             updateCharts(data);
             updateTable(data);
             updateHeadline(data);
+            updateInsights(getSimData());
             updateURL();
             saveToStorage();
+        }
+
+        function updateInsights(V) {
+            const div = document.getElementById('insights');
+            div.innerHTML = '';
+            
+            const tips = [];
+            
+            // 1. Rent vs Price Yield
+            const annualRent = V.rent * 12;
+            const yield = (annualRent / V.price) * 100;
+            if (yield < 3.5) {
+                tips.push({icon: '📉', title: 'Low Rental Yield', text: `Rent is only ${yield.toFixed(1)}% of property price. Renting is likely mathematically superior unless property appreciates fast.`});
+            } else if (yield > 6) {
+                tips.push({icon: '📈', title: 'High Rental Yield', text: `Rent is ${yield.toFixed(1)}% of price. Buying effectively saves you a high yield cost.`});
+            }
+            
+            // 2. Stock Optimism
+            if (V.stockGrowth > 10) {
+                tips.push({icon: '🚀', title: 'Aggressive Stocks', text: `${(V.stockGrowth*100).toFixed(1)}% growth is historically high. Standard S&P500 inflation-adjusted is ~7%.`});
+            }
+            
+            // 3. Leverage
+            if (V.depositPct < 0.15) {
+                tips.push({icon: '⚖️', title: 'High Leverage', text: `Low deposit (${(V.depositPct*100).toFixed(0)}%) amplifies gains but also losses (negative equity risk).`});
+            }
+            
+            // 4. Rate Risk
+            if (V.rateP > 6) {
+                tips.push({icon: '💸', title: 'Expensive Debt', text: `${V.rateP}% interest is high. Overpaying the mortgage might beat stock returns.`});
+            }
+
+            // Render
+            tips.forEach(t => {
+                div.innerHTML += `
+                    <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3">
+                        <span class="text-2xl">${t.icon}</span>
+                        <div>
+                            <h4 class="font-bold text-blue-900 text-sm">${t.title}</h4>
+                            <p class="text-xs text-blue-800 leading-relaxed">${t.text}</p>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         function applyPreset(name) {

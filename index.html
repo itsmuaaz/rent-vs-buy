@@ -159,11 +159,20 @@
                 <p class="opacity-90">Adjust inputs to see your financial future.</p>
             </div>
 
+            <!-- Chart Controls -->
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-semibold text-gray-700">Projections</h3>
+                <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
+                    <button onclick="setHorizon(10)" id="btn10y" class="px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition">10 Years</button>
+                    <button onclick="setHorizon(25)" id="btn25y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">25 Years</button>
+                </div>
+            </div>
+
             <!-- Charts Container -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
                 <!-- Net Worth Chart -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Net Worth Projection (10 Years)</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4" id="nwTitle">Net Worth Projection (10 Years)</h3>
                     <div class="relative h-72 w-full">
                         <canvas id="netWorthChart"></canvas>
                     </div>
@@ -213,6 +222,7 @@
         // --- Constants & Global Vars ---
         let netWorthChartInstance = null;
         let deadMoneyChartInstance = null;
+        let simYears = 10;
 
         // --- Selectors ---
         const inputs = {
@@ -405,7 +415,7 @@
             const rates = getTaxRates(V.taxBand);
             
             // Common Calcs
-            const years = 10;
+            const years = simYears;
             const depositAmount = V.price * V.depositPct;
             
             // --- Strategy A: Rent & Invest ---
@@ -768,13 +778,11 @@
                 stratD.deadMoney.push(possibleD ? deadD : 0);
                 
                 // Save Liquid for Y10
-                if (y === 10) {
+                if (y === simYears) {
                     stratA.liquid = isaA + giaA;
                     stratB.liquid = isaB + giaB;
                     stratC.liquid = isaC + giaC;
-                    stratD.liquid = isaD + giaD; // Personal liquid only? Or extract company cash?
-                    // Usually "Liquid" means accessible. Company cash requires tax to extract.
-                    // Let's count Personal only for "Liquid Cash" column.
+                    stratD.liquid = isaD + giaD; 
                 }
             }
 
@@ -782,8 +790,10 @@
         }
 
         function updateCharts(data) {
-            const labels = Array.from({length: 10}, (_, i) => `Year ${i+1}`);
+            const labels = Array.from({length: simYears}, (_, i) => `Year ${i+1}`);
             
+            document.getElementById('nwTitle').innerText = `Net Worth Projection (${simYears} Years)`;
+
             // Net Worth Chart
             if (netWorthChartInstance) netWorthChartInstance.destroy();
             const ctxNW = document.getElementById('netWorthChart').getContext('2d');
@@ -806,15 +816,21 @@
                 }
             });
 
-            // Dead Money Chart (Bar - 5 Years only)
+            // Dead Money Chart (Bar - 5 Years only, or scale?)
+            // Keep 5 years for Dead Money comparison as it's "Unrecoverable Cost" usually relevant in short/medium term.
+            // Or maybe 10? Let's stick to 5 for now as per PRD "The 'Dead Money' Bar Chart... over 5 years".
+            // Just ensure we don't crash if simYears < 5 (unlikely).
+            
             if (deadMoneyChartInstance) deadMoneyChartInstance.destroy();
             const ctxDM = document.getElementById('deadMoneyChart').getContext('2d');
-            // Extract Year 5 cumulative
+            
+            // Safe index access
+            const idx = Math.min(4, simYears - 1);
             const d5 = [
-                data.stratA.deadMoney[4],
-                data.stratB.deadMoney[4],
-                data.stratC.deadMoney[4],
-                data.stratD.deadMoney[4]
+                data.stratA.deadMoney[idx],
+                data.stratB.deadMoney[idx],
+                data.stratC.deadMoney[idx],
+                data.stratD.deadMoney[idx]
             ];
             
             deadMoneyChartInstance = new Chart(ctxDM, {
@@ -822,7 +838,7 @@
                 data: {
                     labels: ['Rent', 'Buy Solo', 'Buy + Lodger', 'Co. BTL'],
                     datasets: [{
-                        label: '5-Year Unrecoverable Cost',
+                        label: `Cumulative Cost (Year ${idx+1})`,
                         data: d5,
                         backgroundColor: ['#94a3b8', '#3b82f6', '#10b981', '#8b5cf6']
                     }]
@@ -839,20 +855,33 @@
             const table = document.getElementById('analysisTable');
             table.innerHTML = '';
             
+            // Update Headers if needed?
+            // "Year 2, Year 5, Year 10" -> We should probably update the TH labels too but they are in HTML.
+            // Let's modify the TH via JS or just stick to "Year 2, Year 5, Final".
+            // Simpler: Just update the rows. 
+            // Better: Update the header row.
+            const thead = table.closest('table').querySelector('thead tr');
+            thead.children[3].innerText = `Year ${simYears} Net Worth`;
+            thead.children[4].innerText = `Liquid Cash (Y${simYears})`;
+
             const strategies = [data.stratA, data.stratB, data.stratC, data.stratD];
             strategies.forEach((s, idx) => {
-                // Check possibility
                 if ((idx === 1 || idx === 2) && !data.possibleB) return;
                 if (idx === 3 && !data.possibleD) return;
 
                 const tr = document.createElement('tr');
                 const fmt = (v) => '£' + Math.round(v).toLocaleString();
                 
+                // Safe access
+                const y2 = s.netWorth[Math.min(1, simYears-1)] || 0;
+                const y5 = s.netWorth[Math.min(4, simYears-1)] || 0;
+                const yFinal = s.netWorth[simYears-1] || 0;
+
                 tr.innerHTML = `
                     <td class="px-6 py-4 font-medium text-gray-900">${s.name}</td>
-                    <td class="px-6 py-4 text-right">${fmt(s.netWorth[1])}</td>
-                    <td class="px-6 py-4 text-right">${fmt(s.netWorth[4])}</td>
-                    <td class="px-6 py-4 text-right font-bold text-indigo-600">${fmt(s.netWorth[9])}</td>
+                    <td class="px-6 py-4 text-right">${fmt(y2)}</td>
+                    <td class="px-6 py-4 text-right">${fmt(y5)}</td>
+                    <td class="px-6 py-4 text-right font-bold text-indigo-600">${fmt(yFinal)}</td>
                     <td class="px-6 py-4 text-right text-gray-500">${fmt(s.liquid)}</td>
                 `;
                 table.appendChild(tr);
@@ -861,27 +890,45 @@
         
         function updateHeadline(data) {
             const h = document.getElementById('headline');
-            // Find winner at Year 5
+            // Winner at Year 5 or Final?
+            // PRD said "Winner by Year 5". Let's stick to that, or use simYears if < 5.
+            const idx = Math.min(4, simYears-1);
+            
             const y5 = [
-                {name: 'Renting', val: data.stratA.netWorth[4]},
-                {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[4] : -1},
-                {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[4] : -1},
-                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[4] : -1}
+                {name: 'Renting', val: data.stratA.netWorth[idx]},
+                {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[idx] : -1},
+                {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -1},
+                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -1}
             ];
             y5.sort((a,b) => b.val - a.val);
             const winner = y5[0];
-            const baseline = data.stratA.netWorth[4];
+            const baseline = data.stratA.netWorth[idx];
             
             let diff = winner.val - baseline;
             let msg = "";
+            const yearLabel = `Year ${idx+1}`;
             
             if (winner.name === 'Renting') {
-                msg = `Renting is the winner by Year 5, beating property by £${Math.round(diff/1000)}k.`;
+                msg = `Renting is the winner by ${yearLabel}, beating property by £${Math.round(diff/1000)}k.`;
             } else {
-                msg = `${winner.name} makes you £${Math.round(diff/1000)}k wealthier than Renting by Year 5.`;
+                msg = `${winner.name} makes you £${Math.round(diff/1000)}k wealthier than Renting by ${yearLabel}.`;
             }
             
             h.innerHTML = `<h2 class="text-2xl font-bold mb-2">${winner.name} Wins 🏆</h2><p class="opacity-90">${msg}</p>`;
+        }
+        
+        function setHorizon(y) {
+            simYears = y;
+            const b10 = document.getElementById('btn10y');
+            const b25 = document.getElementById('btn25y');
+            
+            const active = "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition";
+            const inactive = "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
+            
+            if (y === 10) { b10.className = active; b25.className = inactive; }
+            else { b10.className = inactive; b25.className = active; }
+            
+            calculateAll();
         }
 
         function calculateAll() {

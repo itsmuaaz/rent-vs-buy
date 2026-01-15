@@ -1581,15 +1581,10 @@
             if (set.lodgerYears !== undefined) inputs.lodgerYears.value = set.lodgerYears || 2;
             if (set.taxBand !== undefined) inputs.taxBand.value = set.taxBand;
 
-            // Sync Sliders (Trigger 'input' event or manually set range value)
-            ['liquidAssets', 'monthlySavings', 'stockGrowth', 'currentRent', 'propertyPrice'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el && el.nextElementSibling && el.nextElementSibling.type === 'range') {
-                    el.nextElementSibling.value = el.value;
-                }
-            });
-
             calculateAll();
+        }
+        
+        // --- URL State Management ---            calculateAll();
         }
         
         // --- URL State Management ---

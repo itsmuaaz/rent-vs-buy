@@ -215,8 +215,11 @@
             <div class="flex justify-between items-center mb-2 no-print">
                 <h3 class="text-lg font-semibold text-gray-700">Projections</h3>
                 <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
-                    <button onclick="setHorizon(10)" id="btn10y" class="px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition">10 Years</button>
-                    <button onclick="setHorizon(25)" id="btn25y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">25 Years</button>
+                    <button onclick="setHorizon(5)" id="btn5y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">5y</button>
+                    <button onclick="setHorizon(10)" id="btn10y" class="px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition">10y</button>
+                    <button onclick="setHorizon(15)" id="btn15y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">15y</button>
+                    <button onclick="setHorizon(25)" id="btn25y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">25y</button>
+                    <button onclick="setHorizon(40)" id="btn40y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">40y</button>
                 </div>
             </div>
 
@@ -618,8 +621,10 @@
 
         function setHorizon(y) {
             simYears = y;
-            document.getElementById('btn10y').className = y === 10 ? "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition" : "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
-            document.getElementById('btn25y').className = y === 25 ? "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition" : "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
+            [5, 10, 15, 25, 40].forEach(b => {
+                const btn = document.getElementById(`btn${b}y`);
+                if (btn) btn.className = y === b ? "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition" : "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
+            });
             calculateAll();
         }
 

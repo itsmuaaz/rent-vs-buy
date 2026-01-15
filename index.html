@@ -163,6 +163,36 @@
                 <button onclick="toggleCrash()" id="btnCrash" class="ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1">📉 Stress Test</button>
             </div>
 
+            <!-- Strategy Guide (Collapsible) -->
+            <div class="mb-8 no-print">
+                <button onclick="toggleStrategies()" class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none">
+                    <span id="stratToggleArrow" class="transform transition-transform">▶</span> 
+                    <span>What do these strategies mean?</span>
+                </button>
+                <div id="stratGuide" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- A -->
+                    <div class="bg-white p-3 rounded border border-gray-200 shadow-sm">
+                        <div class="font-bold text-gray-700 mb-1">A. Rent & Invest</div>
+                        <p class="text-xs text-gray-500">You continue renting. All surplus cash (savings + deposit money) is invested in the Stock Market (ISA & GIA).</p>
+                    </div>
+                    <!-- B -->
+                    <div class="bg-white p-3 rounded border border-blue-200 shadow-sm border-l-4 border-l-blue-500">
+                        <div class="font-bold text-blue-700 mb-1">B. Buy Solo</div>
+                        <p class="text-xs text-gray-500">You buy a home in your name and live alone. You build equity but pay mortgage interest and maintenance costs.</p>
+                    </div>
+                    <!-- C -->
+                    <div class="bg-white p-3 rounded border border-green-200 shadow-sm border-l-4 border-l-green-500">
+                        <div class="font-bold text-green-700 mb-1">C. Buy + Lodger</div>
+                        <p class="text-xs text-gray-500">You buy a home and rent out a spare room. The income is Tax-Free (up to £7,500/yr) and offsets your mortgage.</p>
+                    </div>
+                    <!-- D -->
+                    <div class="bg-white p-3 rounded border border-purple-200 shadow-sm border-l-4 border-l-purple-500">
+                        <div class="font-bold text-purple-700 mb-1">D. Company BTL</div>
+                        <p class="text-xs text-gray-500">You rent personally, but use your capital to start a Ltd Company and buy a Buy-to-Let property (Tax efficient for high earners).</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Headline -->
             <div id="headline" class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-8">
                 <h2 class="text-2xl font-bold mb-2">Calculating...</h2>
@@ -946,6 +976,18 @@
                 btn.innerHTML = "📉 Stress Test";
             }
             calculateAll();
+        }
+
+        function toggleStrategies() {
+            const div = document.getElementById('stratGuide');
+            const arrow = document.getElementById('stratToggleArrow');
+            if (div.classList.contains('hidden')) {
+                div.classList.remove('hidden');
+                arrow.classList.add('rotate-90');
+            } else {
+                div.classList.add('hidden');
+                arrow.classList.remove('rotate-90');
+            }
         }
 
         function calculateAll() {

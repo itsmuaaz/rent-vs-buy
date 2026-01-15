@@ -160,7 +160,19 @@
                 <button onclick="applyPreset('london')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-blue-50 hover:border-blue-400 transition shadow-sm" title="High Rent, High Price, Zone 2/3">🇬🇧 London FTB</button>
                 <button onclick="applyPreset('north')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-green-50 hover:border-green-400 transition shadow-sm" title="Manchester/Leeds: Accessible entry, good yield">🏗️ Northern Investor</button>
                 <button onclick="applyPreset('henry')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-purple-50 hover:border-purple-400 transition shadow-sm" title="High Earner, Not Rich Yet. High surplus, low deposit.">🚀 High Earner</button>
-                <button onclick="toggleCrash()" id="btnCrash" class="ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1">📉 Stress Test</button>
+                <button onclick="toggleCrash()" id="btnCrash" class="ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1 has-tooltip border-b-0" style="border-bottom: 0;">
+                    📉 Stress Test
+                    <span class="tooltip w-48 font-normal normal-case bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Simulates Year 1 Market Crash: Stocks -20%, Property -10%</span>
+                </button>
+            </div>
+
+            <!-- Crash Banner (Hidden by default) -->
+            <div id="crashBanner" class="hidden mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-3 transition-all no-print">
+                <span class="text-2xl">📉</span>
+                <div>
+                    <h4 class="font-bold text-red-800 text-sm">Market Crash Simulation Active</h4>
+                    <p class="text-xs text-red-700 mt-1">This scenario applies a severe shock in <strong>Year 1</strong>: Your Stock Portfolio drops by <strong>20%</strong> and Property Value drops by <strong>10%</strong>. Normal growth resumes in Year 2. Use this to test if your strategy survives a recession.</p>
+                </div>
             </div>
 
             <!-- Strategy Guide (Collapsible) -->
@@ -968,13 +980,21 @@
         function toggleCrash() {
             isCrash = !isCrash;
             const btn = document.getElementById('btnCrash');
+            const banner = document.getElementById('crashBanner');
+            const tooltipHTML = '<span class="tooltip w-48 font-normal normal-case bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Simulates Year 1 Market Crash: Stocks -20%, Property -10%</span>';
+            
             if (isCrash) {
-                btn.className = "ml-auto px-4 py-2 bg-red-600 border border-red-700 text-white rounded-full text-sm hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300";
-                btn.innerHTML = "📉 Crash Active";
+                btn.className = "ml-auto px-4 py-2 bg-red-600 border border-red-700 text-white rounded-full text-sm hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300 has-tooltip border-b-0";
+                btn.innerHTML = `📉 Crash Active ${tooltipHTML}`;
+                banner.classList.remove('hidden');
             } else {
-                btn.className = "ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1";
-                btn.innerHTML = "📉 Stress Test";
+                btn.className = "ml-auto px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-full text-sm hover:bg-red-100 transition shadow-sm flex items-center gap-1 has-tooltip border-b-0";
+                btn.innerHTML = `📉 Stress Test ${tooltipHTML}`;
+                banner.classList.add('hidden');
             }
+            // Ensure style override
+            btn.style.borderBottom = "0";
+            
             calculateAll();
         }
 

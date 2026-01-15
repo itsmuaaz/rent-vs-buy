@@ -45,7 +45,7 @@
             <div class="flex items-center gap-3 no-print">
                 <button onclick="window.print()" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200 transition">Print / PDF 🖨️</button>
                 <button onclick="copyShareLink()" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition">Share 🔗</button>
-                <div class="text-sm text-gray-500">v1.1</div>
+                <div class="text-sm text-gray-500">v1.2</div>
             </div>
         </div>
     </header>
@@ -57,7 +57,7 @@
                 <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Configuration</h2>
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" id="advancedToggle" onchange="toggleAdvanced()" class="w-4 h-4 text-indigo-600 rounded">
-                    <span class="text-xs font-medium text-gray-500">Advanced</span>
+                    <span class="text-xs font-medium text-gray-500">⚙️ Advanced</span>
                 </label>
             </div>
             
@@ -164,67 +164,41 @@
             <!-- Presets -->
             <div class="flex flex-wrap gap-3 mb-6 items-center no-print">
                 <span class="text-sm font-medium text-gray-500 py-2">Presets:</span>
-                <button onclick="applyPreset('nomad')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 hover:border-gray-400 transition shadow-sm" title="Strategy A Winner: Low Rent, High Stock Return">🌍 Digital Nomad</button>
-                <button onclick="applyPreset('london')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-blue-50 hover:border-blue-400 transition shadow-sm" title="Strategy B Winner: High Rent makes buying efficient">🇬🇧 London Pro</button>
-                <button onclick="applyPreset('starter')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-green-50 hover:border-green-400 transition shadow-sm" title="Strategy C Winner: Lodger income boosts affordability">🏠 Smart Starter</button>
-                <button onclick="applyPreset('landlord')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-purple-50 hover:border-purple-400 transition shadow-sm" title="Strategy D Winner: Tax efficient for high earners">🏗️ Portfolio Landlord</button>
+                <button onclick="applyPreset('nomad')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 transition shadow-sm" title="Strategy A: Low Rent, High Stocks">🌍 Digital Nomad</button>
+                <button onclick="applyPreset('london')" class="px-4 py-2 bg-white border border-blue-200 rounded-full text-sm hover:bg-blue-50 transition shadow-sm" title="Strategy B: High Rent Efficiency">🇬🇧 London Pro</button>
+                <button onclick="applyPreset('starter')" class="px-4 py-2 bg-white border border-green-200 rounded-full text-sm hover:bg-green-50 transition shadow-sm" title="Strategy C: Affordability via Lodger">🏠 Smart Starter</button>
+                <button onclick="applyPreset('landlord')" class="px-4 py-2 bg-white border border-purple-200 rounded-full text-sm hover:bg-purple-50 transition shadow-sm" title="Strategy D: Tax Optimization">🏗️ Portfolio Landlord</button>
                 <div class="ml-auto flex gap-2">
                     <button onclick="toggleStockCrash()" id="btnStockCrash" class="px-3 py-2 bg-white border border-red-200 text-red-700 rounded-full text-xs font-medium hover:bg-red-50 transition shadow-sm flex items-center gap-1 has-tooltip" style="border-bottom: 0;">
                         📉 Stock Crash
                         <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -30% Drop</span>
                     </button>
                     <button onclick="togglePropCrash()" id="btnPropCrash" class="px-3 py-2 bg-white border border-orange-200 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-50 transition shadow-sm flex items-center gap-1 has-tooltip" style="border-bottom: 0;">
-                        🏠 Property Crash
+                        🏠 Prop Crash
                         <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -15% Drop</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Crash Banner (Hidden by default) -->
+            <!-- Crash Banner -->
             <div id="crashBanner" class="hidden mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-3 transition-all no-print">
                 <span class="text-2xl">⚠️</span>
-                <div id="crashMsg">
-                    <!-- Populated by JS -->
-                </div>
+                <div id="crashMsg"></div>
             </div>
 
-            <!-- Strategy Guide (Collapsible) -->
+            <!-- Strategy Guide -->
             <div class="mb-8 no-print">
                 <button onclick="toggleStrategies()" class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none">
                     <span id="stratToggleArrow" class="transform transition-transform">▶</span> 
                     <span>What do these strategies mean?</span>
                 </button>
                 <div id="stratGuide" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- A -->
-                    <div class="bg-white p-3 rounded border border-gray-200 shadow-sm">
-                        <div class="font-bold text-gray-700 mb-1">A. Rent & Invest</div>
-                        <p class="text-xs text-gray-500">You continue renting. All surplus cash (savings + deposit money) is invested in the Stock Market (ISA & GIA).</p>
-                    </div>
-                    <!-- B -->
-                    <div class="bg-white p-3 rounded border border-blue-200 shadow-sm border-l-4 border-l-blue-500">
-                        <div class="font-bold text-blue-700 mb-1">B. Buy & Live In</div>
-                        <p class="text-xs text-gray-500">You buy a home in your name and live alone. You build equity but pay mortgage interest and maintenance costs.</p>
-                    </div>
-                    <!-- C -->
-                    <div class="bg-white p-3 rounded border border-green-200 shadow-sm border-l-4 border-l-green-500 advanced-only">
-                        <div class="font-bold text-green-700 mb-1">C. Buy + Lodger</div>
-                        <p class="text-xs text-gray-500">You buy a home and rent out a spare room. The income is Tax-Free (up to £7,500/yr) and offsets your mortgage.</p>
-                    </div>
-                    <!-- D -->
-                    <div class="bg-white p-3 rounded border border-purple-200 shadow-sm border-l-4 border-l-purple-500 advanced-only">
-                        <div class="font-bold text-purple-700 mb-1">D. Company BTL</div>
-                        <p class="text-xs text-gray-500">You rent personally, but use your capital to start a Ltd Company and buy a BTL (Tax efficient for high earners).</p>
-                    </div>
-                    <!-- E -->
-                    <div class="bg-white p-3 rounded border border-orange-200 shadow-sm border-l-4 border-l-orange-500 advanced-only">
-                        <div class="font-bold text-orange-700 mb-1">E. Personal BTL</div>
-                        <p class="text-xs text-gray-500">You rent personally and buy a BTL in your own name. Simpler than a Company, but subject to Section 24 Tax rules.</p>
-                    </div>
-                    <!-- F -->
-                    <div class="bg-white p-3 rounded border border-yellow-200 shadow-sm border-l-4 border-l-yellow-500 advanced-only">
-                        <div class="font-bold text-yellow-700 mb-1">F. Home + Co. BTL</div>
-                        <p class="text-xs text-gray-500">You buy a main home to live in AND use remaining cash to buy a BTL via a Company. High capital required.</p>
-                    </div>
+                    <div class="bg-white p-3 rounded border border-gray-200 shadow-sm"><div class="font-bold text-gray-700 mb-1">A. Rent & Invest</div><p class="text-xs text-gray-500">Continue renting. All surplus cash is invested in the Stock Market.</p></div>
+                    <div class="bg-white p-3 rounded border border-blue-200 shadow-sm border-l-4 border-l-blue-500"><div class="font-bold text-blue-700 mb-1">B. Buy & Live In</div><p class="text-xs text-gray-500">Buy a home in your name and live there. Building equity vs paying interest.</p></div>
+                    <div class="bg-white p-3 rounded border border-green-200 shadow-sm border-l-4 border-l-green-500 advanced-only hidden"><div class="font-bold text-green-700 mb-1">C. Buy + Lodger</div><p class="text-xs text-gray-500">Rent out a room. Income is Tax-Free (up to £7.5k/yr) and offsets mortgage.</p></div>
+                    <div class="bg-white p-3 rounded border border-purple-200 shadow-sm border-l-4 border-l-purple-500 advanced-only hidden"><div class="font-bold text-purple-700 mb-1">D. Company BTL</div><p class="text-xs text-gray-500">Rent personally, use a Ltd Company to buy a rental property (Tax efficient).</p></div>
+                    <div class="bg-white p-3 rounded border border-orange-200 shadow-sm border-l-4 border-l-orange-500 advanced-only hidden"><div class="font-bold text-orange-700 mb-1">E. Personal BTL</div><p class="text-xs text-gray-500">Rent personally, buy BTL in your own name. Subject to Section 24 Tax.</p></div>
+                    <div class="bg-white p-3 rounded border border-yellow-200 shadow-sm border-l-4 border-l-yellow-500 advanced-only hidden"><div class="font-bold text-yellow-700 mb-1">F. Home + Co. BTL</div><p class="text-xs text-gray-500">Buy a main residence AND a Company BTL. Requires high capital.</p></div>
                 </div>
             </div>
 
@@ -234,7 +208,7 @@
                 <p class="opacity-90">Adjust inputs to see your financial future.</p>
             </div>
 
-            <!-- Smart Insights -->
+            <!-- Insights -->
             <div id="insights" class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 no-print"></div>
 
             <!-- Chart Controls -->
@@ -248,21 +222,13 @@
 
             <!-- Charts Container -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-                <!-- Net Worth Chart -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4" id="nwTitle">Net Worth Projection (10 Years)</h3>
-                    <div class="relative h-72 w-full">
-                        <canvas id="netWorthChart"></canvas>
-                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4" id="nwTitle">Net Worth Projection</h3>
+                    <div class="relative h-72 w-full"><canvas id="netWorthChart"></canvas></div>
                 </div>
-
-                <!-- Dead Money Chart -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4" id="dmTitle">Cumulative "Dead Money"</h3>
-                    <div class="relative h-72 w-full">
-                        <canvas id="deadMoneyChart"></canvas>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-2 text-center">Dead Money = Rent OR (Interest + Fees + Maintenance - Net Income). Principal repayment is equity.</p>
+                    <div class="relative h-72 w-full"><canvas id="deadMoneyChart"></canvas></div>
                 </div>
             </div>
 
@@ -273,18 +239,12 @@
                     <span class="text-2xl font-bold text-indigo-600" id="inspectorLabel">Year 5</span>
                 </div>
                 <input type="range" min="1" max="40" value="5" id="yearSlider" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 mb-6">
-                
-                <!-- Inspector Cards -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="inspectorGrid">
-                    <!-- Populated by JS -->
-                </div>
+                <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4" id="inspectorGrid"></div>
             </div>
 
             <!-- Detailed Table -->
             <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Snapshot Analysis</h3>
-                </div>
+                <div class="px-6 py-4 border-b border-gray-200"><h3 class="text-lg font-semibold text-gray-800">Snapshot Analysis</h3></div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-600">
                         <thead class="bg-gray-50 text-gray-900 font-medium">
@@ -298,47 +258,30 @@
                                 <th class="px-6 py-3 text-right">Year 40</th>
                             </tr>
                         </thead>
-                        <tbody id="analysisTable" class="divide-y divide-gray-200">
-                            <!-- Populated by JS -->
-                        </tbody>
+                        <tbody id="analysisTable" class="divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
             </div>
             
-             <!-- Error Message Area -->
-             <div id="errorArea" class="mt-6 hidden bg-red-50 border-l-4 border-red-500 p-4">
-                <p class="text-red-700 font-medium" id="errorText"></p>
-            </div>
+            <div id="errorArea" class="mt-6 hidden bg-red-50 border-l-4 border-red-500 p-4"><p class="text-red-700 font-medium" id="errorText"></p></div>
 
             <footer class="mt-16 text-xs text-center text-gray-400 border-t border-gray-200 pt-6 no-print">
-                <p>Based on projected <strong>UK Tax Rules for 2025/26</strong>. Includes SDLT (Standard/FTB), Section 24 restriction, Rent-a-Room Relief (£7,500), CGT (20%), and Dividend Tax (33.75%+). Corp Tax assumed flat 25%. <br>Values are estimates for simulation purposes only. <strong>Not financial advice.</strong></p>
+                <p>Based on projected <strong>UK Tax Rules for 2025/26</strong>. Includes SDLT, Section 24, Rent-a-Room Relief, CGT (20%), Dividend Tax (33.75%+). <br><strong>Not financial advice.</strong></p>
             </footer>
         </main>
     </div>
 
     <script>
-        // --- Constants & Global Vars ---
-        let netWorthChartInstance = null;
-        let deadMoneyChartInstance = null;
-        let simYears = 10;
-        let isStockCrash = false;
-        let isPropCrash = false;
-        let isAdvanced = false;
-        let lastSimData = null;
+        let netWorthChartInstance = null, deadMoneyChartInstance = null;
+        let simYears = 10, isStockCrash = false, isPropCrash = false, isAdvanced = false, lastSimData = null;
 
-        // --- Selectors ---
         const inputs = {
-            // Financial
             liquidAssets: document.getElementById('liquidAssets'),
             isaBalance: document.getElementById('isaBalance'),
             monthlySavings: document.getElementById('monthlySavings'),
             stockGrowth: document.getElementById('stockGrowth'),
-            
-            // Rent
             currentRent: document.getElementById('currentRent'),
             rentInflation: document.getElementById('rentInflation'),
-            
-            // Purchase
             propertyPrice: document.getElementById('propertyPrice'),
             renoCost: document.getElementById('renoCost'),
             postWorkValue: document.getElementById('postWorkValue'),
@@ -346,8 +289,6 @@
             mortgageTerm: document.getElementById('mortgageTerm'),
             ratePersonal: document.getElementById('ratePersonal'),
             rateCompany: document.getElementById('rateCompany'),
-            
-            // Lifestyle
             isFTB: document.getElementById('isFTB'),
             lodgerIncome: document.getElementById('lodgerIncome'),
             lodgerYears: document.getElementById('lodgerYears'),
@@ -359,858 +300,152 @@
             table: document.getElementById('analysisTable'),
             errorArea: document.getElementById('errorArea'),
             errorText: document.getElementById('errorText'),
+            giaDisplay: document.getElementById('giaDisplay')
         };
 
-        // --- Event Listeners ---
-        Object.values(inputs).forEach(input => {
-            input.addEventListener('change', calculateAll);
-            input.addEventListener('input', calculateAll); // Real-time
-        });
-
-        // --- Logic Engine ---
+        Object.values(inputs).forEach(input => { input.addEventListener('change', calculateAll); input.addEventListener('input', calculateAll); });
 
         function getTaxRates(band) {
-            // 2024/25 Estimates
             switch(band) {
-                case 'basic': return { income: 0.20, cgt: 0.10, div: 0.0875 }; // Basic CGT residential is 18%, stocks 10%
-                case 'higher': return { income: 0.40, cgt: 0.20, div: 0.3375 }; // Higher CGT stocks 20%
+                case 'basic': return { income: 0.20, cgt: 0.10, div: 0.0875 };
+                case 'higher': return { income: 0.40, cgt: 0.20, div: 0.3375 };
                 case 'additional': return { income: 0.45, cgt: 0.20, div: 0.3935 };
                 default: return { income: 0.45, cgt: 0.20, div: 0.3935 };
             }
         }
 
         function calculateStampDuty(price, type, isFTB) {
-            // 2025 Rules
-            // Personal FTB: 0% up to 425k, 5% to 625k. (If > 625k, standard rules apply).
-            if (type === 'personal' && isFTB && price <= 625000) {
-                if (price <= 425000) return 0;
-                return (price - 425000) * 0.05;
+            if (type === 'personal' && isFTB && price <= 625000) return (price <= 425000) ? 0 : (price - 425000) * 0.05;
+            const bands = [{limit: 250000, rate: 0.00}, {limit: 925000, rate: 0.05}, {limit: 1500000, rate: 0.10}, {limit: Infinity, rate: 0.12}];
+            let tax = 0, rem = price, prev = 0;
+            for (const b of bands) {
+                let r = b.rate; if (type === 'company' || type === 'additional') r += 0.05;
+                let taxable = Math.min(rem, b.limit - prev);
+                if (taxable > 0) { tax += taxable * r; rem -= taxable; }
+                prev = b.limit; if (rem <= 0) break;
             }
-
-            // Standard Bands (Mover)
-            // 0 - 250k: 0%
-            // 250k - 925k: 5%
-            // 925k - 1.5m: 10%
-            // 1.5m+: 12%
-            
-            const bands = [
-                { limit: 250000, rate: 0.00 },
-                { limit: 925000, rate: 0.05 },
-                { limit: 1500000, rate: 0.10 },
-                { limit: Infinity, rate: 0.12 }
-            ];
-
-            let tax = 0;
-            let remaining = price;
-            let prevLimit = 0;
-
-            for (const band of bands) {
-                // Determine rate for this band
-                let rate = band.rate;
-                if (type === 'company') rate += 0.05; // 5% Surcharge on ALL bands
-
-                // Determine taxable amount in this band
-                const width = band.limit - prevLimit;
-                const taxable = Math.min(remaining, width);
-                
-                if (taxable > 0) {
-                    tax += taxable * rate;
-                    remaining -= taxable;
-                }
-                
-                prevLimit = band.limit;
-                if (remaining <= 0) break;
-            }
-            
             return tax;
         }
 
         function calculateMortgage(principal, rate, years) {
-            const r = rate / 100 / 12;
-            const n = years * 12;
+            const r = rate / 1200; const n = years * 12;
             if (r === 0) return principal / n;
             return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
         }
 
         function getSimData() {
-            // Read Inputs
-            const V = {
-                liquid: parseFloat(inputs.liquidAssets.value),
-                isa: parseFloat(inputs.isaBalance.value),
-                monthlySavings: parseFloat(inputs.monthlySavings.value),
-                stockGrowth: parseFloat(inputs.stockGrowth.value) / 100,
-                
-                rent: parseFloat(inputs.currentRent.value),
-                rentInf: parseFloat(inputs.rentInflation.value) / 100,
-                
-                price: parseFloat(inputs.propertyPrice.value),
-                reno: parseFloat(inputs.renoCost.value),
-                postValue: parseFloat(inputs.postWorkValue.value),
-                depositPct: parseFloat(inputs.depositPercent.value) / 100,
-                term: parseFloat(inputs.mortgageTerm.value),
-                rateP: parseFloat(inputs.ratePersonal.value),
-                rateC: parseFloat(inputs.rateCompany.value),
-                
-                isFTB: inputs.isFTB.checked,
-                lodgerInc: parseFloat(inputs.lodgerIncome.value),
-                lodgerYears: parseFloat(inputs.lodgerYears.value),
-                taxBand: inputs.taxBand.value
+            return {
+                liquid: parseFloat(inputs.liquidAssets.value), isa: parseFloat(inputs.isaBalance.value), monthlySavings: parseFloat(inputs.monthlySavings.value),
+                stockGrowth: parseFloat(inputs.stockGrowth.value) / 100, rent: parseFloat(inputs.currentRent.value), rentInf: parseFloat(inputs.rentInflation.value) / 100,
+                price: parseFloat(inputs.propertyPrice.value), reno: parseFloat(inputs.renoCost.value), postValue: parseFloat(inputs.postWorkValue.value),
+                depositPct: parseFloat(inputs.depositPercent.value) / 100, term: parseFloat(inputs.mortgageTerm.value),
+                rateP: parseFloat(inputs.ratePersonal.value), rateC: parseFloat(inputs.rateCompany.value), isFTB: inputs.isFTB.checked,
+                lodgerInc: parseFloat(inputs.lodgerIncome.value), lodgerYears: parseFloat(inputs.lodgerYears.value), taxBand: inputs.taxBand.value
             };
-            return V;
         }
 
         function simulateStrategies() {
-            const V = getSimData();
-            const rates = getTaxRates(V.taxBand);
-            
-            // Common Calcs
-            const years = 40; // Always simulate 40 years for data depth
-            const depositAmount = V.price * V.depositPct;
-            
-            // --- Strategy A: Rent & Invest ---
-            // "Surplus" is V.monthlySavings.
-            // But if rent increases, surplus decreases relative to baseline?
-            // PRD: "Surplus after current rent". So total budget = Savings + Rent.
-            const totalMonthlyBudget = V.monthlySavings + V.rent; 
-            
-            let stratA = { name: "Rent & Invest", netWorth: [], deadMoney: [], liquidHistory: [] };
-            let isaA = V.isa;
-            let giaA = V.liquid - V.isa; 
-            let basisA = giaA;
-            let deadA = 0;
-            
-            // --- Strategy B: Buy Solo ---
-            let stratB = { name: "Buy Solo", netWorth: [], deadMoney: [], liquidHistory: [] };
-            // Initial Costs
-            const sd_B = calculateStampDuty(V.price, 'personal', V.isFTB);
-            const legal = 2000; // Est
-            const upfrontB = depositAmount + sd_B + legal + V.reno;
-            
-            // Liquidity Check
-            let possibleB = true;
-            if (upfrontB > V.liquid) possibleB = false;
+            const V = getSimData(), rates = getTaxRates(V.taxBand), years = 40, depositAmount = V.price * V.depositPct, legal = 2000, totalMonthlyBudget = V.monthlySavings + V.rent;
+            const getNW = (isa, gia, basis, houseV, debt, cashCo=0) => {
+                const gain = Math.max(0, gia - basis);
+                return isa + (gia - gain * rates.cgt) + (houseV - debt) + cashCo * (1 - rates.div);
+            };
+            const getLiq = (isa, gia, basis, cashCo=0) => {
+                const gain = Math.max(0, gia - basis);
+                return isa + (gia - gain * rates.cgt) + cashCo * (1 - rates.div);
+            };
 
-            // Liquidation Tax for Deposit
-            // Assume pro-rata withdrawal from GIA triggers CGT.
-            // Simplified: User pays from Cash (no tax), then GIA (CGT).
-            // We assume V.liquid includes V.isa.
-            // Order: Free Cash -> GIA -> ISA
-            let remainingForB = V.liquid;
-            let taxOnLiquidationB = 0;
+            const initStrat = (name) => ({ name, netWorth: [], deadMoney: [], liquidHistory: [] });
+            let sA = initStrat("Rent & Invest"), isaA = V.isa, giaA = V.liquid - V.isa, basisA = giaA, deadA = 0;
             
-            // Simplified Logic for Simulation:
-            // Just subtract cost from Liquid. If Liquid < Cost, fail.
-            // Net Liquid after purchase = V.liquid - upfrontB
-            // The "lost" growth on that capital is the opportunity cost.
-            
-            let isaB = V.isa;
-            let giaB = V.liquid - V.isa;
-            
-            // Deduct Upfront from GIA first (standard advice to keep ISA), then ISA?
-            // Usually keep ISA.
+            let sB = initStrat("Buy & Live In"), possibleB = (depositAmount + calculateStampDuty(V.price, 'personal', V.isFTB) + legal + V.reno) <= V.liquid;
+            let isaB = V.isa, giaB = V.liquid - V.isa, basisB, debtB, houseB, deadB_c = 0;
             if (possibleB) {
-                let cost = upfrontB;
-                // Pay from GIA
-                if (giaB >= cost) {
-                    giaB -= cost;
-                    cost = 0;
-                } else {
-                    cost -= giaB;
-                    giaB = 0;
-                    // Pay remaining from ISA
-                    isaB -= cost;
-                }
+                let cost = depositAmount + calculateStampDuty(V.price, 'personal', V.isFTB) + legal + V.reno;
+                if (giaB >= cost) giaB -= cost; else { cost -= giaB; giaB = 0; isaB -= cost; }
+                basisB = giaB; debtB = V.price - depositAmount; houseB = V.reno > 0 ? V.postValue : V.price;
             }
-            let basisB = giaB;
-
-            const mortgageB = V.price - depositAmount;
-            let debtB = mortgageB;
-            // Immediate Equity Pop?
-            // Equity starts at Deposit. 
-            // If Reno > 0, Value becomes PostWorkValue.
-            // If Turnkey, Value is Price.
-            // Actually, Equity = Value - Debt.
-            let houseValueB = (V.reno > 0) ? V.postValue : V.price;
-            let deadB = 0; // Cumulative
-
-            // --- Strategy C: Buy + Lodger ---
-            let stratC = { name: "Buy + Lodger", netWorth: [], deadMoney: [], liquidHistory: [] };
-            let isaC = isaB; // Same start
-            let giaC = giaB;
-            let basisC = basisB;
-            let debtC = debtB;
-            let houseValueC = houseValueB;
-            let deadC = 0;
-            let possibleC = possibleB;
-
-            // --- Strategy D: Company BTL + Rent ---
-            let stratD = { name: "Co. BTL + Rent", netWorth: [], deadMoney: [], liquidHistory: [] };
-            // Costs: Deposit, Higher Stamp Duty, Reno.
-            const sd_D = calculateStampDuty(V.price, 'company', false);
-            const upfrontD = depositAmount + sd_D + legal + V.reno;
-            let possibleD = true;
-            if (upfrontD > V.liquid) possibleD = false;
-
-            let isaD = V.isa;
-            let giaD = V.liquid - V.isa;
+            let sC = initStrat("Buy + Lodger"), possibleC = possibleB, isaC = isaB, giaC = giaB, basisC = basisB, debtC = debtB, houseC = houseB, deadC_c = 0;
             
-            // Pay upfront
+            let sD = initStrat("Co. BTL + Rent"), possibleD = (depositAmount + calculateStampDuty(V.price, 'company', false) + legal + V.reno) <= V.liquid;
+            let isaD = V.isa, giaD = V.liquid - V.isa, basisD, debtD, houseD, coCashD = 0, deadD_c = 0;
             if (possibleD) {
-                let cost = upfrontD;
-                if (giaD >= cost) {
-                    giaD -= cost;
-                    cost = 0;
-                } else {
-                    cost -= giaD;
-                    giaD = 0;
-                    isaD -= cost;
-                }
+                let cost = depositAmount + calculateStampDuty(V.price, 'company', false) + legal + V.reno;
+                if (giaD >= cost) giaD -= cost; else { cost -= giaD; giaD = 0; isaD -= cost; }
+                basisD = giaD; debtD = V.price - depositAmount; houseD = V.reno > 0 ? V.postValue : V.price;
             }
-            let basisD = giaD;
-
-            let mortgageD = V.price - depositAmount; // Company Mortgage
-            let debtD = mortgageD;
-            let houseValueD = (V.reno > 0) ? V.postValue : V.price;
-            
-            // Company Accumulator
-            let companyCash = 0;
-            let deadD = 0; // Personal Rent + Company Interest?
-            // PRD: "Dead Money" for Buy = Interest + Fees + Maint.
-            // For Strat D: Personal Rent + Company Interest.
-
-            // --- Strategy E: Personal BTL + Rent ---
-            let stratE = { name: "Personal BTL", netWorth: [], deadMoney: [], liquidHistory: [] };
-            // Costs: Deposit, Higher Stamp Duty (Surcharge), Reno.
-            const sd_E = calculateStampDuty(V.price, 'additional', false);
-            const upfrontE = depositAmount + sd_E + legal + V.reno;
-            let possibleE = true;
-            if (upfrontE > V.liquid) possibleE = false;
-
-            let isaE = V.isa;
-            let giaE = V.liquid - V.isa;
-            
+            let sE = initStrat("Personal BTL"), possibleE = (depositAmount + calculateStampDuty(V.price, 'additional', false) + legal + V.reno) <= V.liquid;
+            let isaE = V.isa, giaE = V.liquid - V.isa, basisE, debtE, houseE, deadE_c = 0;
             if (possibleE) {
-                let cost = upfrontE;
-                if (giaE >= cost) { giaE -= cost; cost = 0; }
-                else { cost -= giaE; giaE = 0; isaE -= cost; }
+                let cost = depositAmount + calculateStampDuty(V.price, 'additional', false) + legal + V.reno;
+                if (giaE >= cost) giaE -= cost; else { cost -= giaE; giaE = 0; isaE -= cost; }
+                basisE = giaE; debtE = V.price - depositAmount; houseE = V.reno > 0 ? V.postValue : V.price;
             }
-            let basisE = giaE;
-            
-            let mortgageE = V.price - depositAmount; // BTL Mortgage
-            let debtE = mortgageE;
-            let houseValueE = (V.reno > 0) ? V.postValue : V.price;
-            let deadE = 0;
-
-            // --- F: Home + Co. BTL ---
-            let stratF = { name: "Home + Co. BTL", netWorth: [], deadMoney: [], liquidHistory: [] };
-            let possibleF = true;
-            let hasBTL_F = false;
-            
-            // 1. Buy Home
-            const sd_F1 = calculateStampDuty(V.price, 'personal', V.isFTB);
-            const upfrontF1 = depositAmount + sd_F1 + legal + V.reno;
-            
-            if (upfrontF1 > V.liquid) possibleF = false;
-            
-            let isaF = V.isa;
-            let giaF = V.liquid - V.isa;
-            let basisF = giaF;
-            
+            let sF = initStrat("Home + Co. BTL"), possibleF = possibleB && (V.liquid - (depositAmount + calculateStampDuty(V.price, 'personal', V.isFTB) + legal + V.reno)) >= (depositAmount + calculateStampDuty(V.price, 'company', false) + legal);
+            let isaF = V.isa, giaF = V.liquid - V.isa, basisF, dF1, hF1, dF2, hF2, coCashF = 0, deadF_c = 0;
             if (possibleF) {
-                let cost = upfrontF1;
-                if (giaF >= cost) { giaF -= cost; cost = 0; }
-                else { cost -= giaF; giaF = 0; isaF -= cost; } // Basis update?
-                // Simplified basis update:
-                basisF = giaF; 
+                let c1 = depositAmount + calculateStampDuty(V.price, 'personal', V.isFTB) + legal + V.reno;
+                let c2 = depositAmount + calculateStampDuty(V.price, 'company', false) + legal;
+                let cost = c1 + c2;
+                if (giaF >= cost) giaF -= cost; else { cost -= giaF; giaF = 0; isaF -= cost; }
+                basisF = giaF; dF1 = V.price - depositAmount; hF1 = V.reno > 0 ? V.postValue : V.price; dF2 = V.price - depositAmount; hF2 = V.price;
             }
-            
-            let mortgageF1 = V.price - depositAmount; 
-            let debtF1 = mortgageF1;
-            let valF1 = (V.reno > 0) ? V.postValue : V.price;
-            
-            // 2. Buy BTL (Company)
-            // Assumption: BTL Price = Home Price (user input). 
-            // In reality often smaller, but we use what we have.
-            const sd_F2 = calculateStampDuty(V.price, 'company', false); 
-            const upfrontF2 = depositAmount + sd_F2 + legal; // No reno on BTL
-            
-            let debtF2 = 0;
-            let valF2 = 0;
-            let coCashF = 0;
-            
-            if (possibleF) {
-                let totalLiq = isaF + giaF; // Available
-                if (totalLiq >= upfrontF2) {
-                    hasBTL_F = true;
-                    let cost = upfrontF2;
-                    if (giaF >= cost) { giaF -= cost; cost = 0; }
-                    else { cost -= giaF; giaF = 0; isaF -= cost; }
-                    basisF = giaF;
-                    
-                    debtF2 = V.price - depositAmount;
-                    valF2 = V.price;
-                }
-            }
-            
-            let deadF = 0;
 
-            // --- Simulation Loop ---
-            const monthlyPaymentB = calculateMortgage(mortgageB, V.rateP, V.term);
-            const monthlyPaymentC = calculateMortgage(mortgageB, V.rateP, V.term); // Same mortgage
-            const monthlyPaymentD = calculateMortgage(mortgageD, V.rateC, V.term); // Company rate
+            const pB = calculateMortgage(debtB||0, V.rateP, V.term), pD = calculateMortgage(debtD||0, V.rateC, V.term), pE = calculateMortgage(debtE||0, V.rateC, V.term), pF1 = calculateMortgage(dF1||0, V.rateP, V.term), pF2 = calculateMortgage(dF2||0, V.rateC, V.term);
 
             for (let y = 1; y <= years; y++) {
-                // Growth Factors
-                let stockM = (1 + V.stockGrowth / 12);
-                let propGrowth = 1.03; 
-                
-                if (y === 1) {
-                    if (isStockCrash) stockM = Math.pow(0.70, 1/12); // -30%
-                    if (isPropCrash) propGrowth = 0.85; // -15%
+                let stockM = (1 + V.stockGrowth / 12), propG = 1.03;
+                if (y === 1) { if (isStockCrash) stockM = Math.pow(0.7, 1/12); if (isPropCrash) propG = 0.85; }
+                let rentY = V.rent * Math.pow(1 + V.rentInf, y - 1);
+                for (let m = 1; m <= 12; m++) {
+                    const invest = (sur, isa, gia, basis) => {
+                        if (sur > 0) { let toISA = Math.min(sur, 20000/12); let toGIA = Math.max(0, sur - toISA); return [ (isa + toISA)*stockM, (gia + toGIA)*stockM, basis + toGIA ]; }
+                        else { let n = -sur; if (gia >= n) return [ isa*stockM, (gia-n)*stockM, basis-n ]; else return [ Math.max(0, isa-(n-gia))*stockM, 0, 0 ]; }
+                    };
+                    [isaA, giaA, basisA] = invest(totalMonthlyBudget - rentY, isaA, giaA, basisA);
+                    if (possibleB) { let i = debtB*(V.rateP/1200); debtB -= (pB-i); deadB_c += (i + houseB*0.01/12); [isaB, giaB, basisB] = invest(totalMonthlyBudget - (pB + houseB*0.01/12), isaB, giaB, basisB); }
+                    if (possibleC) { let i = debtC*(V.rateP/1200); debtC -= (pB-i); let l = (y<=V.lodgerYears)?V.lodgerInc:0; let netL = l - Math.max(0, (l*12>7500?(l-7500/12)*rates.income:0)); deadC_c += (i + houseC*0.01/12 - netL); [isaC, giaC, basisC] = invest(totalMonthlyBudget - (pB + houseC*0.01/12 - netL), isaC, giaC, basisC); }
+                    if (possibleD) { let i = debtD*(V.rateC/1200); debtD -= (pD-i); let btlR = houseD*0.05/12, prof = btlR-(i+houseD*0.01/12), tax = Math.max(0, prof*0.25); coCashD += (prof-tax); deadD_c += (rentY + i + houseD*0.01/12 + tax - btlR); [isaD, giaD, basisD] = invest(totalMonthlyBudget - rentY, isaD, giaD, basisD); }
+                    if (possibleE) { let i = debtE*(V.rateC/1200); debtE -= (pE-i); let btlR = houseE*0.05/12, prof = btlR-houseE*0.01/12, tax = Math.max(0, prof*rates.income-i*0.2); coCashD += 0; deadE_c += (rentY + i + houseE*0.01/12 + tax - btlR); [isaE, giaE, basisE] = invest(totalMonthlyBudget - rentY + (btlR-i-houseE*0.01/12-tax), isaE, giaE, basisE); }
+                    if (possibleF) { let i1 = dF1*(V.rateP/1200); dF1 -= (pF1-i1); let i2 = dF2*(V.rateC/1200); dF2 -= (pF2-i2); let btlR = hF2*0.05/12, btlP = btlR-(i2+hF2*0.01/12), btlT = Math.max(0, btlP*0.25); coCashF += (btlP-btlT); deadF_c += (i1 + hF1*0.01/12 + i2 + hF2*0.01/12 + btlT - btlR); [isaF, giaF, basisF] = invest(totalMonthlyBudget - (pF1+hF1*0.01/12), isaF, giaF, basisF); }
                 }
-                
-                // --- A: Rent ---
-                let annualRentA = 0;
-                for (let m=0; m<12; m++) {
-                    // Inflate rent annually, not monthly for simplicity in loop, but here fine.
-                    let currentRentY = V.rent * Math.pow(1 + V.rentInf, y-1);
-                    annualRentA += currentRentY;
-                    
-                    // Surplus
-                    let surplus = totalMonthlyBudget - currentRentY;
-                    
-                    // Invest Surplus (Split ISA/GIA logic? Simplified: Fill ISA first)
-                    // ISA limit 20k/yr.
-                    // Actually, let's just grow the pots.
-                    // Add surplus to GIA (simplification, assume ISA filled manually or effectively same growth rate, just tax diff at end).
-                    // Wait, tax diff is huge.
-                    // Logic: Add to ISA up to 20k/yr limit? Too complex for single file?
-                    // PRD: "ISA Balance grows tax free... Remainder (GIA) grows... apply CGT on GIA gains only."
-                    // Okay, we will track Cost Basis for GIA to calc Tax later.
-                    
-                    // We need to know how much *new* capital goes into ISA vs GIA.
-                    // Let's assume ISA Max £1666/mo.
-                    let toISA = Math.min(surplus, 20000/12);
-                    let toGIA = Math.max(0, surplus - toISA);
-                    
-                    isaA = (isaA + toISA) * stockM;
-                    giaA = (giaA + toGIA) * stockM;
-                    basisA += toGIA;
-                }
-                deadA += annualRentA;
-                
-                // Net Worth A
-                // Tax on GIA? Only on exit. The chart shows "Net Worth". 
-                // Should we show Post-Tax Net Worth? "Final Net Worth calculation... apply CGT".
-                // Yes, apply hypothetical tax to GIA gains for the chart line to be fair.
-                // Gain = CurrentGIA - PrincipalGIA. Hard to track Principal precisely without array.
-                // Approximation: GIA is fully taxable? No.
-                // Let's assume 50% of GIA is gain after 5 years?
-                // Better: Track Basis.
-                // Initial Basis A = (Initial Liquid - Initial ISA).
-                // Additions to Basis = Sum(toGIA).
-                // We will skip basis tracking for the *chart* to avoid lag, 
-                // OR just apply a flat 10% haircut to GIA for the chart line?
-                // Let's do it right:
-                // We need `giaBasisA`.
-                
-                // --- B: Buy Solo ---
-                if (possibleB) {
-                    let annualInterest = 0;
-                    let annualMaint = houseValueB * 0.01; // 1% Maint
-                    let annualCosts = 0;
-                    
-                    for (let m=0; m<12; m++) {
-                        // Mortgage
-                        let interest = debtB * (V.rateP/100/12);
-                        let principal = monthlyPaymentB - interest;
-                        if (debtB > 0) {
-                            debtB -= principal;
-                        }
-                        annualInterest += interest;
-                        
-                        // Budget
-                        // Cost = Mortgage + Maint(1%/12)
-                        let cost = monthlyPaymentB + (houseValueB * 0.01 / 12);
-                        let surplus = totalMonthlyBudget - cost;
-                        
-                        // Invest
-                        let toISA = Math.min(surplus, 20000/12); 
-                        // If surplus negative? (House poor)
-                        if (surplus < 0) {
-                            // Withdraw from GIA/ISA to cover shortfall
-                            let need = -surplus;
-                            if (giaB >= need) {
-                                giaB -= need;
-                                basisB -= need;
-                            } else {
-                                need -= giaB;
-                                giaB = 0;
-                                basisB = 0;
-                                isaB -= need;
-                            }
-                            // No growth on withdrawn amount (happens mid month)
-                        } else {
-                            let toGIA = Math.max(0, surplus - toISA);
-                            isaB = (isaB + toISA) * stockM;
-                            giaB = (giaB + toGIA) * stockM;
-                            basisB += toGIA;
-                        }
-                    }
-                    houseValueB *= propGrowth; // Apprec
-                    deadB += annualInterest + annualMaint;
-                    if (y===1) deadB += (sd_B + legal); // Buying costs in Y1
-                }
-                
-                // --- C: Buy + Lodger ---
-                if (possibleC) {
-                    let annualInterest = 0;
-                    let annualMaint = houseValueC * 0.01;
-                    
-                    for (let m=0; m<12; m++) {
-                        let interest = debtC * (V.rateP/100/12);
-                        let principal = monthlyPaymentC - interest;
-                        if (debtC > 0) debtC -= principal;
-                        annualInterest += interest;
-                        
-                        // Income
-                        let lodger = (y <= V.lodgerYears) ? V.lodgerInc : 0;
-                        // Tax on Lodger?
-                        // Rent a room relief £7500/yr.
-                        let monthlyTaxFree = 7500/12;
-                        let taxL = 0;
-                        if (lodger > monthlyTaxFree) {
-                            taxL = (lodger - monthlyTaxFree) * rates.income;
-                        }
-                        let netLodger = lodger - taxL;
-
-                        let cost = monthlyPaymentC + (houseValueC * 0.01 / 12);
-                        // Offset cost with lodger
-                        let realCost = cost - netLodger;
-                        
-                        let surplus = totalMonthlyBudget - realCost;
-                        
-                        // Invest
-                         if (surplus < 0) {
-                            let need = -surplus;
-                            if (giaC >= need) {
-                                giaC -= need;
-                                basisC -= need;
-                            } else {
-                                need -= giaC; giaC = 0; basisC = 0; isaC -= need;
-                            }
-                        } else {
-                            let toISA = Math.min(surplus, 20000/12); 
-                            let toGIA = Math.max(0, surplus - toISA);
-                            isaC = (isaC + toISA) * stockM;
-                            giaC = (giaC + toGIA) * stockM;
-                            basisC += toGIA;
-                        }
-                    }
-                    houseValueC *= propGrowth;
-                    // Dead Money: Interest + Maint - NetLodger
-                    // (Note: Buying costs added in Y1)
-                    let lodgerAnnualNet = (y <= V.lodgerYears) ? ((V.lodgerInc * 12) - ((V.lodgerInc*12 > 7500) ? (V.lodgerInc*12 - 7500)*rates.income : 0)) : 0;
-                    
-                    let yDead = annualInterest + annualMaint - lodgerAnnualNet;
-                    // deadC is cumulative.
-                    deadC += yDead;
-                    if (y===1) deadC += (sd_B + legal);
-                }
-
-                // --- D: Company ---
-                if (possibleD) {
-                    // Personal Side: Pays Rent, Invests surplus?
-                    // Wait, Company BTL strategy usually means:
-                    // 1. User pays Rent (Personal).
-                    // 2. User puts spare cash into Company? Or User invests personally?
-                    // PRD: "Company BTL + Rent Personal".
-                    // Implies: Personal surplus -> Invested Personal (Stocks).
-                    // Company: Self-contained. Rent covers mortgage. Profit retained.
-                    // This separates the "Empire" from "Personal Life".
-                    // BUT, the initial capital for Company came from Personal Liquid.
-                    
-                    // Personal Loop
-                    let annualRentA = 0; // Same as Strat A logic for personal life
-                    let currentRentY = V.rent * Math.pow(1 + V.rentInf, y-1);
-                    
-                    // Company Loop
-                    // Revenue: Assume BTL Rent = Current Rent * 1.1? (Yield?)
-                    // Let's assume BTL Yield is 5% of Property Value.
-                    let btlYield = 0.05;
-                    let coRentAnnual = (y === 1 ? (V.reno>0?V.postValue:V.price) : houseValueD) * btlYield;
-                    
-                    let coInterestAnnual = 0;
-                    // Interest Only usually for BTL? PRD said "Amortization 30".
-                    // Let's stick to Repayment to calculate "Net Worth" (Equity build).
-                    // Though BTL is usually IO. 
-                    // We'll use the calculated `monthlyPaymentD` (Repayment).
-                    
-                    for (let m=0; m<12; m++) {
-                        // Personal
-                        let surplus = totalMonthlyBudget - currentRentY; // User pays rent
-                        let toISA = Math.min(surplus, 20000/12);
-                        let toGIA = Math.max(0, surplus - toISA);
-                        isaD = (isaD + toISA) * stockM;
-                        giaD = (giaD + toGIA) * stockM;
-                        basisD += toGIA;
-                        
-                        // Company
-                        let interest = debtD * (V.rateC/100/12);
-                        let principal = monthlyPaymentD - interest;
-                        if (debtD > 0) debtD -= principal;
-                        coInterestAnnual += interest;
-                    }
-                    
-                    // Company Tax
-                    let coMaint = houseValueD * 0.01; 
-                    let coExpense = coInterestAnnual + coMaint;
-                    let coProfit = coRentAnnual - coExpense;
-                    let corpTax = (coProfit > 0) ? coProfit * 0.25 : 0;
-                    let retained = coProfit - corpTax;
-                    
-                    companyCash += retained; 
-                    // Assume Company Cash grows? Maybe 0% or Money Market 4%?
-                    // Let's assume 0% for simplicity, or it pays down debt?
-                    // Just add to Net Worth.
-                    
-                    houseValueD *= propGrowth;
-                    
-                    // Dead Money
-                    // Personal Rent + Company Interest + Company Tax + Co Maint - Co Rent (Income)
-                    // Wait, Dead Money for "Empire Builder" is complex.
-                    // It's "Unrecoverable Cost".
-                    // Personal Rent is unrecoverable.
-                    // Company expenses are unrecoverable.
-                    // Company Income offsets.
-                    let yDead = (currentRentY * 12) + coInterestAnnual + coMaint + corpTax - coRentAnnual;
-                    deadD += yDead;
-                    if (y===1) deadD += (sd_D + legal);
-                }
-                
-                // --- E: Personal BTL ---
-                if (possibleE) {
-                    let annualRentA = 0; // Personal Rent cost
-                    let currentRentY = V.rent * Math.pow(1 + V.rentInf, y-1);
-                    
-                    // BTL Income
-                    let btlYield = 0.05;
-                    let btlRentAnnual = (y === 1 ? (V.reno>0?V.postValue:V.price) : houseValueE) * btlYield;
-                    
-                    let btlInterestAnnual = 0;
-                    
-                    for (let m=0; m<12; m++) {
-                        let surplus = totalMonthlyBudget - currentRentY; // Base surplus
-                        
-                        // BTL Mortgage
-                        let interest = debtE * (V.rateC/100/12); // Use Co rate
-                        let principal = monthlyPaymentE - interest;
-                        if (debtE > 0) debtE -= principal;
-                        btlInterestAnnual += interest;
-                        
-                        let toISA = Math.min(surplus, 20000/12);
-                        let toGIA = Math.max(0, surplus - toISA);
-                        isaE = (isaE + toISA) * stockM;
-                        giaE = (giaE + toGIA) * stockM;
-                        basisE += toGIA;
-                    }
-                    
-                    // End of Year BTL Tax & Cashflow Adjustment
-                    let btlMaint = houseValueE * 0.01;
-                    let grossProfit = btlRentAnnual - btlMaint; 
-                    
-                    // Section 24 Tax
-                    let taxLiability = grossProfit * rates.income; 
-                    let taxCredit = btlInterestAnnual * 0.20;
-                    let finalTax = Math.max(0, taxLiability - taxCredit);
-                    
-                    // Net Cashflow from BTL
-                    let netBTL = btlRentAnnual - btlInterestAnnual - btlMaint - finalTax;
-                    
-                    // Inject Net BTL Cash into Portfolio
-                    if (netBTL > 0) {
-                        giaE += netBTL;
-                        basisE += netBTL;
-                    } else {
-                        let loss = -netBTL;
-                        if (giaE >= loss) { giaE -= loss; basisE -= loss; }
-                        else {
-                            let rem = loss - giaE; giaE = 0; basisE = 0; isaE -= rem;
-                        }
-                    }
-                    
-                    houseValueE *= propGrowth;
-                    
-                    // Dead Money: Personal Rent + BTL Interest + BTL Maint + Tax - BTL Rent
-                    let yDead = (currentRentY * 12) + btlInterestAnnual + btlMaint + finalTax - btlRentAnnual;
-                    deadE += yDead;
-                    if (y===1) deadE += (sd_E + legal);
-                }
-                
-                // --- F: Home + Co. BTL ---
-                let stratF = { name: "Home + Co. BTL", netWorth: [], deadMoney: [], liquidHistory: [] };
-                let possibleF = true;
-                let hasBTL_F = false;
-                
-                // 1. Buy Home
-                const sd_F1 = calculateStampDuty(V.price, 'personal', V.isFTB);
-                const upfrontF1 = depositAmount + sd_F1 + legal + V.reno;
-                
-                if (upfrontF1 > V.liquid) possibleF = false;
-                
-                let isaF = V.isa;
-                let giaF = V.liquid - V.isa;
-                let basisF = giaF;
-                
-                if (possibleF) {
-                    let cost = upfrontF1;
-                    if (giaF >= cost) { giaF -= cost; cost = 0; }
-                    else { cost -= giaF; giaF = 0; isaF -= cost; } // Basis update?
-                    // Simplified basis update:
-                    basisF = giaF; 
-                }
-                
-                let mortgageF1 = V.price - depositAmount; 
-                let debtF1 = mortgageF1;
-                let valF1 = (V.reno > 0) ? V.postValue : V.price;
-                
-                // 2. Buy BTL (Company)
-                // Assumption: BTL Price = Home Price (user input). 
-                // In reality often smaller, but we use what we have.
-                const sd_F2 = calculateStampDuty(V.price, 'company', false); 
-                const upfrontF2 = depositAmount + sd_F2 + legal; // No reno on BTL
-                
-                let debtF2 = 0;
-                let valF2 = 0;
-                let coCashF = 0;
-                
-                if (possibleF) {
-                    let totalLiq = isaF + giaF; // Available
-                    if (totalLiq >= upfrontF2) {
-                        hasBTL_F = true;
-                        let cost = upfrontF2;
-                        if (giaF >= cost) { giaF -= cost; cost = 0; }
-                        else { cost -= giaF; giaF = 0; isaF -= cost; }
-                        basisF = giaF;
-                        
-                        debtF2 = V.price - depositAmount;
-                        valF2 = V.price;
-                    }
-                }
-                
-                let deadF = 0;
-                const payF1 = calculateMortgage(mortgageF1, V.rateP, V.term);
-                const payF2 = calculateMortgage(mortgageF1, V.rateC, V.term);
-
-                if (possibleF) {
-                    let annualMaintF1 = valF1 * 0.01;
-                    let annualMaintF2 = 0;
-                    if (hasBTL_F) annualMaintF2 = valF2 * 0.01;
-                    
-                    let btlYield = 0.05;
-                    
-                    // Loop
-                    for (let y = 1; y <= years; y++) {
-                        let stockM = (1 + V.stockGrowth / 12);
-                        let propGrowth = 1.03;
-                        if (y === 1) {
-                            if (isStockCrash) stockM = Math.pow(0.70, 1/12);
-                            if (isPropCrash) propGrowth = 0.85;
-                        }
-                        
-                        // BTL Income (Annual)
-                        let btlRent = hasBTL_F ? (y===1 ? V.price : valF2) * btlYield : 0; // No rent inflation on calc base, but base grows? 
-                        // Wait, Strat D logic: coRentAnnual calculated annually.
-                        
-                        let interestF1_Ann = 0;
-                        let interestF2_Ann = 0;
-                        
-                        for (let m=0; m<12; m++) {
-                            // Home Mortgage
-                            let int1 = debtF1 * (V.rateP/100/12);
-                            let prin1 = payF1 - int1;
-                            if (debtF1 > 0) debtF1 -= prin1;
-                            interestF1_Ann += int1;
-                            
-                            // BTL Mortgage
-                            let int2 = 0;
-                            if (hasBTL_F) {
-                                int2 = debtF2 * (V.rateC/100/12);
-                                let prin2 = payF2 - int2; // Repayment? Or IO? Strat D was Repayment.
-                                if (debtF2 > 0) debtF2 -= prin2;
-                                interestF2_Ann += int2;
-                            }
-                            
-                            // Personal Cashflow
-                            // Cost = Home Mortgage + Home Maint/12
-                            let cost = payF1 + (annualMaintF1/12);
-                            let surplus = totalMonthlyBudget - cost; // No Rent paid!
-                            
-                            let toISA = Math.min(surplus, 20000/12);
-                            let toGIA = Math.max(0, surplus - toISA);
-                            
-                            if (surplus < 0) {
-                                let need = -surplus;
-                                if (giaF >= need) { giaF -= need; basisF -= need; }
-                                else { let rem = need - giaF; giaF=0; basisF=0; isaF -= rem; }
-                            } else {
-                                isaF = (isaF + toISA) * stockM;
-                                giaF = (giaF + toGIA) * stockM;
-                                basisF += toGIA;
-                            }
-                        }
-                        
-                        // Co BTL Year End
-                        if (hasBTL_F) {
-                            let expense = interestF2_Ann + annualMaintF2;
-                            let profit = btlRent - expense;
-                            let tax = Math.max(0, profit * 0.25);
-                            coCashF += (profit - tax);
-                            
-                            valF2 *= propGrowth;
-                            annualMaintF2 = valF2 * 0.01;
-                        }
-                        valF1 *= propGrowth;
-                        annualMaintF1 = valF1 * 0.01;
-                        
-                        // Dead Money: Home Interest + Home Maint + (BTL Interest + Maint + Tax - Rent)?
-                        // BTL Dead Money is negative if profitable.
-                        let btlDead = hasBTL_F ? (interestF2_Ann + annualMaintF2 + Math.max(0, (btlRent - interestF2_Ann - annualMaintF2)*0.25) - btlRent) : 0;
-                        
-                        let yDead = interestF1_Ann + annualMaintF1 + btlDead;
-                        deadF += yDead;
-                        if (y===1) deadF += (sd_F1 + legal);
-                        if (y===1 && hasBTL_F) deadF += (sd_F2 + legal);
-                        
-                        // Push
-                        stratF.netWorth.push(getNW(isaF, giaF, basisF, valF1+valF2, debtF1+debtF2, coCashF));
-                        stratF.liquidHistory.push(getLiq(isaF, giaF, basisF, coCashF));
-                        stratF.deadMoney.push(deadF);
-                    }
-                } else {
-                    // Fill zeros
-                    for(let i=0; i<years; i++) { 
-                        stratF.netWorth.push(0); stratF.liquidHistory.push(0); stratF.deadMoney.push(0);
-                    }
-                }
-
-                // --- Snapshots ---
-                // Calculate Net Worths (Post-Tax Estimations for Chart?)
-                // Just use gross for simplicity, or 90% of GIA gain?
-                // Let's use Gross Equity + Gross Liquid for the Chart line, 
-                // but display specific notes or cleaner calc in Table.
-                
-                // Helper to get NW (Post Tax)
-                const getNW = (isa, gia, basis, houseV, debt, cashCo=0) => {
-                    // GIA Tax
-                    const gain = Math.max(0, gia - basis);
-                    const cgt = gain * rates.cgt;
-                    const netGia = gia - cgt;
-                    
-                    // Company Cash Tax (Dividend)
-                    const divTax = Math.max(0, cashCo * rates.div);
-                    const netCoCash = cashCo - divTax;
-                    
-                    return isa + netGia + (houseV - debt) + netCoCash;
-                };
-                
-                const getLiq = (isa, gia, basis, cashCo=0) => {
-                    const gain = Math.max(0, gia - basis);
-                    const cgt = gain * rates.cgt;
-                    const divTax = Math.max(0, cashCo * rates.div);
-                    return isa + (gia - cgt) + (cashCo - divTax);
-                };
-
-                stratA.netWorth.push(getNW(isaA, giaA, basisA, 0, 0));
-                stratA.liquidHistory.push(getLiq(isaA, giaA, basisA));
-                
-                if (possibleB) {
-                    stratB.netWorth.push(getNW(isaB, giaB, basisB, houseValueB, debtB));
-                    stratB.liquidHistory.push(getLiq(isaB, giaB, basisB));
-                } else {
-                    stratB.netWorth.push(0); stratB.liquidHistory.push(0);
-                }
-
-                if (possibleC) {
-                    stratC.netWorth.push(getNW(isaC, giaC, basisC, houseValueC, debtC));
-                    stratC.liquidHistory.push(getLiq(isaC, giaC, basisC));
-                } else {
-                    stratC.netWorth.push(0); stratC.liquidHistory.push(0);
-                }
-                
-                if (possibleD) {
-                    stratD.netWorth.push(getNW(isaD, giaD, basisD, houseValueD, debtD, companyCash));
-                    stratD.liquidHistory.push(getLiq(isaD, giaD, basisD, companyCash));
-                    stratD.deadMoney.push(deadD);
-                } else {
-                    stratD.netWorth.push(0); stratD.liquidHistory.push(0); stratD.deadMoney.push(0);
-                }
-                
-                if (possibleE) {
-                    stratE.netWorth.push(getNW(isaE, giaE, basisE, houseValueE, debtE, 0));
-                    stratE.liquidHistory.push(getLiq(isaE, giaE, basisE));
-                    stratE.deadMoney.push(deadE);
-                } else {
-                    stratE.netWorth.push(0); stratE.liquidHistory.push(0); stratE.deadMoney.push(0);
-                }
-                
-                // Dead Money (A/B/C)
-                stratA.deadMoney.push(deadA);
-                if (possibleB) stratB.deadMoney.push(deadB); else stratB.deadMoney.push(0);
-                if (possibleC) stratC.deadMoney.push(deadC); else stratC.deadMoney.push(0);
+                deadA += (rentY * 12); if (possibleB) houseB *= propG; if (possibleC) houseC *= propG; if (possibleD) houseD *= propG; if (possibleE) houseE *= propG; if (possibleF) { hF1 *= propG; hF2 *= propG; }
+                sA.netWorth.push(getNW(isaA, giaA, basisA, 0, 0)); sA.liquidHistory.push(getLiq(isaA, giaA, basisA)); sA.deadMoney.push(deadA);
+                if (possibleB) { sB.netWorth.push(getNW(isaB, giaB, basisB, houseB, debtB)); sB.liquidHistory.push(getLiq(isaB, giaB, basisB)); sB.deadMoney.push(deadB_c + (y===1?(depositAmount+calculateStampDuty(V.price,'personal',V.isFTB)+legal):0)); } else { sB.netWorth.push(0); sB.liquidHistory.push(0); sB.deadMoney.push(0); }
+                if (possibleC) { sC.netWorth.push(getNW(isaC, giaC, basisC, houseC, debtC)); sC.liquidHistory.push(getLiq(isaC, giaC, basisC)); sC.deadMoney.push(deadC_c + (y===1?(depositAmount+calculateStampDuty(V.price,'personal',V.isFTB)+legal):0)); } else { sC.netWorth.push(0); sC.liquidHistory.push(0); sC.deadMoney.push(0); }
+                if (possibleD) { sD.netWorth.push(getNW(isaD, giaD, basisD, houseD, debtD, coCashD)); sD.liquidHistory.push(getLiq(isaD, giaD, basisD, coCashD)); sD.deadMoney.push(deadD_c + (y===1?(depositAmount+calculateStampDuty(V.price,'company',false)+legal):0)); } else { sD.netWorth.push(0); sD.liquidHistory.push(0); sD.deadMoney.push(0); }
+                if (possibleE) { sE.netWorth.push(getNW(isaE, giaE, basisE, houseE, debtE)); sE.liquidHistory.push(getLiq(isaE, giaE, basisE)); sE.deadMoney.push(deadE_c + (y===1?(depositAmount+calculateStampDuty(V.price,'additional',false)+legal):0)); } else { sE.netWorth.push(0); sE.liquidHistory.push(0); sE.deadMoney.push(0); }
+                if (possibleF) { sF.netWorth.push(getNW(isaF, giaF, basisF, hF1+hF2, dF1+dF2, coCashF)); sF.liquidHistory.push(getLiq(isaF, giaF, basisF, coCashF)); sF.deadMoney.push(deadF_c + (y===1?(2*depositAmount+calculateStampDuty(V.price,'personal',V.isFTB)+calculateStampDuty(V.price,'company',false)+2*legal):0)); } else { sF.netWorth.push(0); sF.liquidHistory.push(0); sF.deadMoney.push(0); }
             }
-            
-            // Calculate Breakeven (First year where strategy > Rent)
-            const be = {B: null, C: null, D: null, E: null, F: null};
-            for (let i=0; i<simYears; i++) {
-                const rentNW = stratA.netWorth[i];
-                if (possibleB && be.B === null && stratB.netWorth[i] > rentNW) be.B = i + 1;
-                if (possibleC && be.C === null && stratC.netWorth[i] > rentNW) be.C = i + 1;
-                if (possibleD && be.D === null && stratD.netWorth[i] > rentNW) be.D = i + 1;
-                if (possibleE && be.E === null && stratE.netWorth[i] > rentNW) be.E = i + 1;
-                if (possibleF && be.F === null && stratF.netWorth[i] > rentNW) be.F = i + 1;
+            const be = {B:null, C:null, D:null, E:null, F:null};
+            for (let i=0; i<years; i++) {
+                let r = sA.netWorth[i];
+                if (possibleB && !be.B && sB.netWorth[i] > r) be.B = i+1; if (possibleC && !be.C && sC.netWorth[i] > r) be.C = i+1;
+                if (possibleD && !be.D && sD.netWorth[i] > r) be.D = i+1; if (possibleE && !be.E && sE.netWorth[i] > r) be.E = i+1;
+                if (possibleF && !be.F && sF.netWorth[i] > r) be.F = i+1;
             }
-
-            return { stratA, stratB, stratC, stratD, stratE, stratF, possibleB, possibleD, possibleE, possibleF, be };
+            return { stratA:sA, stratB:sB, stratC:sC, stratD:sD, stratE:sE, stratF:sF, possibleB, possibleD, possibleE, possibleF, be };
         }
 
         function updateCharts(data) {
             const labels = Array.from({length: simYears}, (_, i) => `Year ${i+1}`);
-            
             document.getElementById('nwTitle').innerText = `Net Worth Projection (${simYears} Years)`;
             document.getElementById('dmTitle').innerText = `Cumulative "Dead Money" (${simYears} Years)`;
-
-            // Net Worth Chart
             if (netWorthChartInstance) netWorthChartInstance.destroy();
-            const ctxNW = document.getElementById('netWorthChart').getContext('2d');
-            netWorthChartInstance = new Chart(ctxNW, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Rent & Invest', data: data.stratA.netWorth, borderColor: '#94a3b8', borderWidth: 2, tension: 0.3 },
-                        { label: 'Buy & Live In', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
-                        { label: 'Buy + Lodger', data: data.stratC.netWorth, borderColor: '#10b981', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleB) },
-                        { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleD) },
-                        { label: 'Personal BTL', data: data.stratE.netWorth, borderColor: '#f97316', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleE) },
-                        { label: 'Home + Co. BTL', data: data.stratF.netWorth, borderColor: '#eab308', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleF) }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: { y: { beginAtZero: false, ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } }
-                }
+            netWorthChartInstance = new Chart(document.getElementById('netWorthChart').getContext('2d'), {
+                type: 'line', data: { labels, datasets: [
+                    { label: 'Rent & Invest', data: data.stratA.netWorth, borderColor: '#94a3b8', borderWidth: 2, tension: 0.3 },
+                    { label: 'Buy & Live In', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
+                    { label: 'Buy + Lodger', data: data.stratC.netWorth, borderColor: '#10b981', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleB) },
+                    { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleD) },
+                    { label: 'Personal BTL', data: data.stratE.netWorth, borderColor: '#f97316', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleE) },
+                    { label: 'Home + Co. BTL', data: data.stratF.netWorth, borderColor: '#eab308', borderWidth: 2, tension: 0.3, hidden: (!isAdvanced || !data.possibleF) }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
             });
-
-            // Dead Money Chart
             if (deadMoneyChartInstance) deadMoneyChartInstance.destroy();
-            const ctxDM = document.getElementById('deadMoneyChart').getContext('2d');
-            
             const idx = simYears - 1;
-            
-            const dmData = [
+            const dmD = [
                 {l:'Rent', v:data.stratA.deadMoney[idx], c:'#94a3b8', s:true},
                 {l:'Buy & Live In', v:data.stratB.deadMoney[idx], c:'#3b82f6', s:data.possibleB},
                 {l:'Buy + Lodger', v:data.stratC.deadMoney[idx], c:'#10b981', s:isAdvanced && data.possibleB},
@@ -1218,553 +453,208 @@
                 {l:'Pers. BTL', v:data.stratE.deadMoney[idx], c:'#f97316', s:isAdvanced && data.possibleE},
                 {l:'Home + Co.', v:data.stratF.deadMoney[idx], c:'#eab308', s:isAdvanced && data.possibleF}
             ].filter(i => i.s);
-
-            deadMoneyChartInstance = new Chart(ctxDM, {
-                type: 'bar',
-                data: {
-                    labels: dmData.map(i => i.l),
-                    datasets: [{
-                        label: `Cumulative Cost (Year ${idx+1})`,
-                        data: dmData.map(i => i.v),
-                        backgroundColor: dmData.map(i => i.c)
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } }
-                }
+            deadMoneyChartInstance = new Chart(document.getElementById('deadMoneyChart').getContext('2d'), {
+                type: 'bar', data: { labels: dmD.map(i=>i.l), datasets: [{ label: `Cumulative Cost (Year ${idx+1})`, data: dmD.map(i=>i.v), backgroundColor: dmD.map(i=>i.c) }]},
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
             });
         }
-        
+
         function updateTable(data) {
-            const table = document.getElementById('analysisTable');
-            table.innerHTML = '';
-            
+            const table = dom.table; table.innerHTML = '';
             const strategies = [data.stratA, data.stratB, data.stratC, data.stratD, data.stratE, data.stratF];
             const years = [2, 5, 10, 15, 25, 40];
-            
-            // 1. Calculate stats per column (year)
             const yearStats = {};
             years.forEach(y => {
                 let vals = [];
                 strategies.forEach((s, idx) => {
-                    // Visibility Logic
                     if ((idx === 1 || idx === 2) && !data.possibleB) return;
                     if (idx === 3 && !data.possibleD) return;
                     if (idx === 4 && !data.possibleE) return;
                     if (idx === 5 && !data.possibleF) return;
-                    if (idx >= 2 && !isAdvanced) return; // Hide C, D, E, F if not advanced
-                    
+                    if (idx >= 2 && !isAdvanced) return;
                     vals.push(s.netWorth[y-1] || 0);
                 });
-                yearStats[y] = {
-                    max: Math.max(...vals),
-                    min: Math.min(...vals)
-                };
+                yearStats[y] = { max: Math.max(...vals), min: Math.min(...vals) };
             });
-            
             strategies.forEach((s, idx) => {
                 if ((idx === 1 || idx === 2) && !data.possibleB) return;
                 if (idx === 3 && !data.possibleD) return;
                 if (idx === 4 && !data.possibleE) return;
                 if (idx === 5 && !data.possibleF) return;
                 if (idx >= 2 && !isAdvanced) return;
-
                 const tr = document.createElement('tr');
-                const fmt = (v) => '£' + Math.round(v/1000).toLocaleString() + 'k';
-                
                 let cells = `<td class="px-6 py-4 font-medium text-gray-900">${s.name}</td>`;
-                
                 years.forEach(y => {
-                    const val = s.netWorth[y-1] || 0;
-                    const stats = yearStats[y];
-                    
+                    const val = s.netWorth[y-1] || 0; const stats = yearStats[y];
                     let style = "text-gray-600";
                     if (val === stats.max) style = "font-bold text-green-700 bg-green-50 rounded-lg";
-                    else if (val === stats.min) style = "text-red-600 bg-red-50 rounded-lg";
-                    
-                    cells += `<td class="px-6 py-4 text-right"><span class="px-2 py-1 ${style}">${fmt(val)}</span></td>`;
+                    else if (val === stats.min && vals.length > 1) style = "text-red-600 bg-red-50 rounded-lg";
+                    cells += `<td class="px-6 py-4 text-right"><span class="px-2 py-1 ${style}">£${Math.round(val/1000).toLocaleString()}k</span></td>`;
                 });
-
-                tr.innerHTML = cells;
-                table.appendChild(tr);
+                tr.innerHTML = cells; table.appendChild(tr);
             });
         }
-        
+
         function updateHeadline(data) {
-            const h = document.getElementById('headline');
-            const idx = simYears - 1; // Use selected horizon
-            
-            // Collect End-State Values
+            const h = dom.headline; const idx = simYears - 1;
             const strategies = [
                 {name: 'Renting', val: data.stratA.netWorth[idx], code: 'A', type: 'Rent', visible: true},
                 {name: 'Buy & Live In', val: data.possibleB ? data.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy', visible: true},
-                {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy', visible: isAdvanced},
+                {name: 'Buy + Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy', visible: isAdvanced},
                 {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy', visible: isAdvanced},
                 {name: 'Personal BTL', val: data.possibleE ? data.stratE.netWorth[idx] : -Infinity, code: 'E', type: 'Buy', visible: isAdvanced},
                 {name: 'Home + Co. BTL', val: data.possibleF ? data.stratF.netWorth[idx] : -Infinity, code: 'F', type: 'Buy', visible: isAdvanced}
             ].filter(s => s.visible);
-            
-            // Sort Descending
             strategies.sort((a,b) => b.val - a.val);
-            
-            const winner = strategies[0];
-            const rentStrat = strategies.find(s => s.code === 'A');
-            const bestBuy = strategies.find(s => s.type === 'Buy' && s.val > -Infinity); // Top buying option
-            
-            // Check affordability (of VISIBLE buy options)
-            const canBuyAny = strategies.some(s => s.type === 'Buy' && s.val > -Infinity);
-            if (!canBuyAny) {
-                h.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="text-4xl">⚠️</div>
-                        <div>
-                            <h2 class="text-2xl font-bold">Renting is the only option</h2>
-                            <p class="text-white opacity-90">Insufficient liquid assets to afford the upfront costs of any visible Buying strategy.</p>
-                        </div>
-                    </div>`;
+            const winner = strategies[0], rentStrat = strategies.find(s => s.code === 'A');
+            if (!strategies.some(s => s.type === 'Buy' && s.val > -Infinity)) {
+                h.innerHTML = `<h2 class="text-2xl font-bold text-white">Renting is the only option</h2><p class="opacity-90">Insufficient liquid assets for any visible Buying strategy.</p>`;
                 return;
             }
-
-            let title, desc, subtext;
-            let diff = 0;
-
+            let title, desc, subtext, diff;
             if (winner.type === 'Rent') {
-                // Rent Wins
-                const runnerUp = strategies[1]; // Likely a Buy option
-                diff = winner.val - (runnerUp.val > -Infinity ? runnerUp.val : 0);
+                const runnerUp = strategies[1]; diff = winner.val - runnerUp.val;
                 title = "Renting is the Wealthier Choice 🏖️";
                 desc = `Projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${runnerUp.name} after ${simYears} years.`;
                 subtext = "Investing the surplus in the stock market outperforms property equity in this scenario.";
             } else {
-                // Buy Wins
                 diff = winner.val - rentStrat.val;
                 title = `${winner.name} Wins 🏡`;
                 desc = `Projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting after ${simYears} years.`;
-                
-                // Context
                 const beY = data.be[winner.code];
-                if (beY) {
-                    subtext = `✅ Breakeven vs Renting occurs in <strong>Year ${beY}</strong>.`;
-                } else if (winner.val > rentStrat.val) {
-                    subtext = `✅ ${winner.name} is cheaper/better starting from <strong>Year 1</strong>.`;
-                } else {
-                    subtext = `⚠️ Warning: Even by Year ${simYears}, this barely beats renting.`;
-                }
+                subtext = beY ? `✅ Breakeven vs Renting occurs in <strong>Year ${beY}</strong>.` : `✅ ${winner.name} is better starting from <strong>Year 1</strong>.`;
             }
-
-            h.innerHTML = `
-                <div class="flex flex-col md:flex-row md:items-center gap-4">
-                    <div class="flex-1">
-                        <h2 class="text-2xl font-bold leading-tight">${title}</h2>
-                        <p class="text-lg mt-1">${desc}</p>
-                        <p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p>
-                    </div>
-                    <div class="hidden md:block text-right">
-                        <div class="text-sm uppercase tracking-wider opacity-70">Projected Gain</div>
-                        <div class="text-3xl font-bold">+£${Math.round(diff/1000).toLocaleString()}k</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function setHorizon(y) {
-            simYears = y;
-            const b10 = document.getElementById('btn10y');
-            const b25 = document.getElementById('btn25y');
-            
-            const active = "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition";
-            const inactive = "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
-            
-            if (y === 10) { b10.className = active; b25.className = inactive; }
-            else { b10.className = inactive; b25.className = active; }
-            
-            calculateAll();
-        }
-
-        function toggleStockCrash() {
-            isStockCrash = !isStockCrash;
-            updateCrashUI();
-            calculateAll();
-        }
-
-        function togglePropCrash() {
-            isPropCrash = !isPropCrash;
-            updateCrashUI();
-            calculateAll();
-        }
-
-        function toggleAdvanced() {
-            isAdvanced = document.getElementById('advancedToggle').checked;
-            
-            // Toggle Inputs
-            document.querySelectorAll('.advanced-input').forEach(el => {
-                if (isAdvanced) el.classList.remove('hidden');
-                else el.classList.add('hidden');
-            });
-            
-            // Toggle Cards in Guide
-            document.querySelectorAll('.advanced-only').forEach(el => {
-                if (isAdvanced) el.classList.remove('hidden');
-                else el.classList.add('hidden');
-            });
-            
-            calculateAll();
-        }
-
-        function updateCrashUI() {
-            const banner = document.getElementById('crashBanner');
-            const msg = document.getElementById('crashMsg');
-            const btnS = document.getElementById('btnStockCrash');
-            const btnP = document.getElementById('btnPropCrash');
-            
-            // Stock Button Style
-            if (isStockCrash) {
-                btnS.className = "px-3 py-2 bg-red-600 border border-red-700 text-white rounded-full text-xs font-medium hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300 has-tooltip";
-                btnS.innerHTML = `📉 Stock Active <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -30% Drop</span>`;
-            } else {
-                btnS.className = "px-3 py-2 bg-white border border-red-200 text-red-700 rounded-full text-xs font-medium hover:bg-red-50 transition shadow-sm flex items-center gap-1 has-tooltip";
-                btnS.innerHTML = `📉 Stock Crash <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -30% Drop</span>`;
-            }
-            btnS.style.borderBottom = "0";
-
-            // Prop Button Style
-            if (isPropCrash) {
-                btnP.className = "px-3 py-2 bg-orange-600 border border-orange-700 text-white rounded-full text-xs font-medium hover:bg-orange-700 transition shadow-sm flex items-center gap-1 ring-2 ring-orange-300 has-tooltip";
-                btnP.innerHTML = `🏠 Prop Active <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -15% Drop</span>`;
-            } else {
-                btnP.className = "px-3 py-2 bg-white border border-orange-200 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-50 transition shadow-sm flex items-center gap-1 has-tooltip";
-                btnP.innerHTML = `🏠 Prop Crash <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -15% Drop</span>`;
-            }
-            btnP.style.borderBottom = "0";
-
-            // Banner Logic
-            if (!isStockCrash && !isPropCrash) {
-                banner.classList.add('hidden');
-            } else {
-                banner.classList.remove('hidden');
-                let txt = '<h4 class="font-bold text-red-800 text-sm">Simulation Active: Year 1 Shock</h4><p class="text-xs text-red-700 mt-1">';
-                if (isStockCrash) txt += '📉 <strong>Stock Market Crash (-30%)</strong> applied.<br>';
-                if (isPropCrash) txt += '🏠 <strong>Property Market Crash (-15%)</strong> applied.<br>';
-                txt += 'Use this to test resilience against negative equity and sequence of returns risk.</p>';
-                msg.innerHTML = txt;
-            }
-        }
-
-                function calculateAll() {
-
-                    // Check liquidity constraint
-
-                    const V = getSimData();
-
-                    
-
-                    // Update UI Helper
-
-                    const giaVal = Math.max(0, V.liquid - V.isa);
-
-                    document.getElementById('giaDisplay').innerText = `Remaining £${Math.round(giaVal).toLocaleString()} is in GIA (Taxable)`;
-
-        
-
-                    // Upfront B/C
-            const sdB = calculateStampDuty(V.price, 'personal', V.isFTB);
-            const upfrontB = (V.price*V.depositPct) + sdB + 2000 + V.reno;
-            
-            const sdD = calculateStampDuty(V.price, 'company', false);
-            const upfrontD = (V.price*V.depositPct) + sdD + 2000 + V.reno;
-            
-            let err = [];
-            if (upfrontB > V.liquid) err.push(`Insufficient funds for Personal Buy (Need £${Math.round(upfrontB/1000)}k)`);
-            if (upfrontD > V.liquid) err.push(`Insufficient funds for Company Buy (Need £${Math.round(upfrontD/1000)}k)`);
-            
-            if (err.length > 0) {
-                dom.errorArea.classList.remove('hidden');
-                dom.errorText.innerHTML = err.join('<br>');
-            } else {
-                dom.errorArea.classList.add('hidden');
-            }
-
-            // Run Sim
-            const data = simulateStrategies();
-            lastSimData = data;
-            
-            updateCharts(data);
-            updateTable(data);
-            updateHeadline(data);
-            updateInsights(getSimData());
-            updateInspector();
-            updateURL();
-            saveToStorage();
+            h.innerHTML = `<div class="flex flex-col md:flex-row md:items-center gap-4"><div class="flex-1"><h2 class="text-2xl font-bold leading-tight text-white">${title}</h2><p class="text-lg mt-1 text-white">${desc}</p><p class="text-sm mt-2 text-white opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p></div><div class="hidden md:block text-right"><div class="text-sm uppercase tracking-wider text-white opacity-70">Projected Gain</div><div class="text-3xl font-bold text-white">+£${Math.round(diff/1000).toLocaleString()}k</div></div></div>`;
         }
 
         function updateInspector() {
             if (!lastSimData) return;
             const year = parseInt(document.getElementById('yearSlider').value);
             document.getElementById('inspectorLabel').innerText = `Year ${year}`;
-            
-            const div = document.getElementById('inspectorGrid');
-            div.innerHTML = '';
-            
+            const div = document.getElementById('inspectorGrid'); div.innerHTML = '';
             const strategies = [lastSimData.stratA, lastSimData.stratB, lastSimData.stratC, lastSimData.stratD, lastSimData.stratE, lastSimData.stratF];
             const colors = ['border-gray-300', 'border-blue-400', 'border-green-400', 'border-purple-400', 'border-orange-400', 'border-yellow-500'];
             const bgs = ['bg-white', 'bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-orange-50', 'bg-yellow-50'];
-            
-            // 1. Determine Ranks for current year
             let validVals = [];
+            strategies.forEach((s, i) => { if (((i===1||i===2)&&!lastSimData.possibleB) || (i===3&&!lastSimData.possibleD) || (i===4&&!lastSimData.possibleE) || (i===5&&!lastSimData.possibleF) || (i>=2&&!isAdvanced)) return; validVals.push(s.netWorth[year-1] || 0); });
+            const maxVal = Math.max(...validVals), minVal = Math.min(...validVals);
             strategies.forEach((s, i) => {
-                if ((i===1 || i===2) && !lastSimData.possibleB) return;
-                if (i===3 && !lastSimData.possibleD) return;
-                if (i===4 && !lastSimData.possibleE) return;
-                if (i===5 && !lastSimData.possibleF) return;
-                if (i >= 2 && !isAdvanced) return;
-                validVals.push(s.netWorth[year-1] || 0);
-            });
-            
-            const maxVal = Math.max(...validVals);
-            const minVal = Math.min(...validVals);
-            
-            strategies.forEach((s, i) => {
-                // Visibility Check
-                if ((i===1 || i===2) && !lastSimData.possibleB) return;
-                if (i===3 && !lastSimData.possibleD) return;
-                if (i===4 && !lastSimData.possibleE) return;
-                if (i===5 && !lastSimData.possibleF) return;
-                if (i >= 2 && !isAdvanced) return;
-                
-                const nw = s.netWorth[year-1] || 0;
-
-                const liq = s.liquidHistory[year-1] || 0;
-                const equity = nw - liq;
-                
-                // Determine Color & Badge
-                let colorClass = "border-gray-200 bg-white";
-                let badge = "";
-                
-                if (nw === maxVal) {
-                    colorClass = "border-green-500 bg-green-50 ring-1 ring-green-500";
-                    badge = '<span class="ml-auto text-[10px] font-bold text-green-700 bg-green-200 px-2 py-0.5 rounded-full tracking-wider">BEST</span>';
-                } else if (nw === minVal && validVals.length > 1) {
-                    colorClass = "border-red-300 bg-red-50 opacity-90";
-                    badge = '<span class="ml-auto text-[10px] font-bold text-red-700 bg-red-200 px-2 py-0.5 rounded-full tracking-wider">WORST</span>';
-                } else {
-                    colorClass = "border-gray-300 bg-gray-50";
-                }
-                
-                div.innerHTML += `
-                    <div class="p-3 rounded border-l-4 shadow-sm ${colorClass} transition-all duration-200">
-                        <div class="flex items-center mb-2">
-                            <div class="text-xs font-bold text-gray-500 uppercase truncate pr-2">${s.name}</div>
-                            ${badge}
-                        </div>
-                        <div class="text-xl font-bold text-gray-800">£${Math.round(nw/1000).toLocaleString()}k</div>
-                        <div class="text-xs text-gray-500 mt-2 flex justify-between border-t border-black/5 pt-2">
-                            <span title="Liquid Cash">💵 £${Math.round(liq/1000)}k</span>
-                            <span title="Property Equity">🏠 £${Math.round(equity/1000)}k</span>
-                        </div>
-                    </div>
-                `;
+                if (((i===1||i===2)&&!lastSimData.possibleB) || (i===3&&!lastSimData.possibleD) || (i===4&&!lastSimData.possibleE) || (i===5&&!lastSimData.possibleF) || (i>=2&&!isAdvanced)) return;
+                const nw = s.netWorth[year-1] || 0, liq = s.liquidHistory[year-1] || 0, eq = nw - liq;
+                let cClass = (nw === maxVal) ? "border-green-500 bg-green-50 ring-1 ring-green-500" : (nw === minVal && validVals.length > 1) ? "border-red-300 bg-red-50 opacity-90" : "border-gray-300 bg-gray-50";
+                let badge = (nw === maxVal) ? '<span class="ml-auto text-[10px] font-bold text-green-700 bg-green-200 px-2 py-0.5 rounded-full">BEST</span>' : (nw === minVal && validVals.length > 1) ? '<span class="ml-auto text-[10px] font-bold text-red-700 bg-red-200 px-2 py-0.5 rounded-full">WORST</span>' : '';
+                div.innerHTML += `<div class="p-3 rounded border-l-4 shadow-sm ${cClass} transition-all duration-200"><div class="flex items-center mb-2"><div class="text-xs font-bold text-gray-500 uppercase truncate pr-2">${s.name}</div>${badge}</div><div class="text-xl font-bold text-gray-800">£${Math.round(nw/1000).toLocaleString()}k</div><div class="text-xs text-gray-500 mt-2 flex justify-between border-t border-black/5 pt-2"><span>💵 £${Math.round(liq/1000)}k</span><span>🏠 £${Math.round(eq/1000)}k</span></div></div>`;
             });
         }
 
         function updateInsights(V) {
-            const div = document.getElementById('insights');
-            div.innerHTML = '';
-            
+            const div = document.getElementById('insights'); div.innerHTML = '';
+            const yield = (V.rent * 12 / V.price) * 100;
             const tips = [];
-            
-            // 1. Rent vs Price Yield
-            const annualRent = V.rent * 12;
-            const yield = (annualRent / V.price) * 100;
-            if (yield < 3.5) {
-                tips.push({icon: '📉', title: 'Low Rental Yield', text: `Rent is only ${yield.toFixed(1)}% of property price. Renting is likely mathematically superior unless property appreciates fast.`});
-            } else if (yield > 6) {
-                tips.push({icon: '📈', title: 'High Rental Yield', text: `Rent is ${yield.toFixed(1)}% of price. Buying effectively saves you a high yield cost.`});
-            }
-            
-            // 2. Stock Optimism
-            if (V.stockGrowth > 10) {
-                tips.push({icon: '🚀', title: 'Aggressive Stocks', text: `${(V.stockGrowth*100).toFixed(1)}% growth is historically high. Standard S&P500 inflation-adjusted is ~7%.`});
-            }
-            
-            // 3. Leverage
-            if (V.depositPct < 0.15) {
-                tips.push({icon: '⚖️', title: 'High Leverage', text: `Low deposit (${(V.depositPct*100).toFixed(0)}%) amplifies gains but also losses (negative equity risk).`});
-            }
-            
-            // 4. Rate Risk
-            if (V.rateP > 6) {
-                tips.push({icon: '💸', title: 'Expensive Debt', text: `${V.rateP}% interest is high. Overpaying the mortgage might beat stock returns.`});
-            }
-
-            // Render
-            tips.forEach(t => {
-                div.innerHTML += `
-                    <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3">
-                        <span class="text-2xl">${t.icon}</span>
-                        <div>
-                            <h4 class="font-bold text-blue-900 text-sm">${t.title}</h4>
-                            <p class="text-xs text-blue-800 leading-relaxed">${t.text}</p>
-                        </div>
-                    </div>
-                `;
-            });
+            if (yield < 3.5) tips.push({icon: '📉', title: 'Low Yield', text: `Rent is only ${yield.toFixed(1)}% of price. Renting is likely superior.`});
+            else if (yield > 6) tips.push({icon: '📈', title: 'High Yield', text: `Rent is ${yield.toFixed(1)}% of price. Buying saves significant cost.`});
+            if (V.stockGrowth > 0.10) tips.push({icon: '🚀', title: 'Aggressive Stocks', text: '10%+ growth is historically optimistic.'});
+            if (V.depositPct < 0.15) tips.push({icon: '⚖️', title: 'High Leverage', text: 'Low deposit amplifies both gains and negative equity risks.'});
+            tips.forEach(t => { div.innerHTML += `<div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3"><span class="text-2xl">${t.icon}</span><div><h4 class="font-bold text-blue-900 text-sm">${t.title}</h4><p class="text-xs text-blue-800 leading-relaxed">${t.text}</p></div></div>`; });
         }
 
         function applyPreset(name) {
-            const data = {
-                nomad: {
-                    // Strat A Wins: Cheap Rent, High Stock Growth
-                    liquidAssets: 100000, isaBalance: 20000, monthlySavings: 2000, stockGrowth: 12,
-                    currentRent: 800, propertyPrice: 350000, renoCost: 0, isFTB: true,
-                    lodgerIncome: 0, taxBand: 'basic', depositPercent: 25
-                },
-                london: {
-                    // Strat B Wins: High Rent costs make buying attractive despite high price
-                    liquidAssets: 130000, isaBalance: 30000, monthlySavings: 1500, stockGrowth: 7,
-                    currentRent: 2400, propertyPrice: 500000, renoCost: 10000, isFTB: true,
-                    lodgerIncome: 0, taxBand: 'higher', depositPercent: 20
-                },
-                starter: {
-                    // Strat C Wins: Lodger income is crucial for affordability
-                    liquidAssets: 40000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8,
-                    currentRent: 1200, propertyPrice: 280000, renoCost: 5000, isFTB: true,
-                    lodgerIncome: 625, lodgerYears: 5, taxBand: 'basic', depositPercent: 10
-                },
-                landlord: {
-                    // Strat D Wins: Personal rent high (lifestyle), but investing in cheaper BTL via Co
-                    liquidAssets: 90000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8,
-                    currentRent: 2500, propertyPrice: 200000, renoCost: 15000, isFTB: false,
-                    lodgerIncome: 0, taxBand: 'additional', depositPercent: 25
-                }
+            const presets = {
+                nomad: { liquidAssets: 100000, isaBalance: 20000, monthlySavings: 2000, stockGrowth: 12, currentRent: 800, propertyPrice: 350000, renoCost: 0, isFTB: true, lodgerIncome: 0, taxBand: 'basic', depositPercent: 25 },
+                london: { liquidAssets: 130000, isaBalance: 30000, monthlySavings: 1500, stockGrowth: 7, currentRent: 2400, propertyPrice: 500000, renoCost: 10000, isFTB: true, lodgerIncome: 0, taxBand: 'higher', depositPercent: 20 },
+                starter: { liquidAssets: 40000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8, currentRent: 1200, propertyPrice: 280000, renoCost: 5000, isFTB: true, lodgerIncome: 625, lodgerYears: 5, taxBand: 'basic', depositPercent: 10 },
+                landlord: { liquidAssets: 90000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8, currentRent: 2500, propertyPrice: 200000, renoCost: 15000, isFTB: false, lodgerIncome: 0, taxBand: 'additional', depositPercent: 25 }
             };
-
-            const set = data[name];
-            if (!set) return;
-
-            // Apply values
-            if (set.liquidAssets !== undefined) inputs.liquidAssets.value = set.liquidAssets;
-            if (set.isaBalance !== undefined) inputs.isaBalance.value = set.isaBalance;
-            if (set.monthlySavings !== undefined) inputs.monthlySavings.value = set.monthlySavings;
-            if (set.stockGrowth !== undefined) inputs.stockGrowth.value = set.stockGrowth;
-            if (set.currentRent !== undefined) inputs.currentRent.value = set.currentRent;
-            if (set.propertyPrice !== undefined) inputs.propertyPrice.value = set.propertyPrice;
-            if (set.renoCost !== undefined) inputs.renoCost.value = set.renoCost;
-            if (set.depositPercent !== undefined) inputs.depositPercent.value = set.depositPercent;
-            if (set.isFTB !== undefined) inputs.isFTB.checked = set.isFTB;
-            if (set.lodgerIncome !== undefined) inputs.lodgerIncome.value = set.lodgerIncome;
-            if (set.lodgerYears !== undefined) inputs.lodgerYears.value = set.lodgerYears || 2;
-            if (set.taxBand !== undefined) inputs.taxBand.value = set.taxBand;
-
+            const s = presets[name]; if (!s) return;
+            Object.keys(s).forEach(k => { if (inputs[k]) { if (inputs[k].type === 'checkbox') inputs[k].checked = s[k]; else inputs[k].value = s[k]; } });
+            ['liquidAssets', 'monthlySavings', 'stockGrowth', 'currentRent', 'propertyPrice'].forEach(id => { const el = document.getElementById(id); if (el && el.nextElementSibling && el.nextElementSibling.type === 'range') el.nextElementSibling.value = el.value; });
             calculateAll();
         }
-        
-        // --- URL State Management ---
+
         function updateURL() {
-            const params = new URLSearchParams();
-            for (const [key, el] of Object.entries(inputs)) {
-                if (el.type === 'checkbox') {
-                    params.set(key, el.checked);
-                } else {
-                    params.set(key, el.value);
-                }
-            }
-            // Update URL without reloading
-            const newUrl = `${window.location.pathname}?${params.toString()}`;
-            window.history.replaceState({}, '', newUrl);
+            const p = new URLSearchParams();
+            Object.entries(inputs).forEach(([k, el]) => p.set(k, el.type === 'checkbox' ? el.checked : el.value));
+            window.history.replaceState({}, '', `${window.location.pathname}?${p.toString()}`);
         }
-        
+
         function saveToStorage() {
-            const data = {};
-            for (const [key, el] of Object.entries(inputs)) {
-                data[key] = (el.type === 'checkbox') ? el.checked : el.value;
-            }
-            localStorage.setItem('rentVsBuyData', JSON.stringify(data));
+            const d = {}; Object.entries(inputs).forEach(([k, el]) => d[k] = (el.type === 'checkbox' ? el.checked : el.value));
+            localStorage.setItem('rentVsBuyData', JSON.stringify(d));
         }
 
         function loadState() {
-            const params = new URLSearchParams(window.location.search);
-            const hasParams = !params.keys().next().done;
-
-            if (hasParams) {
-                // Priority 1: URL
-                for (const [key, el] of Object.entries(inputs)) {
-                    if (params.has(key)) {
-                        if (el.type === 'checkbox') el.checked = params.get(key) === 'true';
-                        else el.value = params.get(key);
-                    }
-                }
-            } else {
-                // Priority 2: Local Storage
+            const p = new URLSearchParams(window.location.search);
+            if (!p.keys().next().done) { Object.entries(inputs).forEach(([k, el]) => { if (p.has(k)) { if (el.type === 'checkbox') el.checked = p.get(k) === 'true'; else el.value = p.get(k); } }); }
+            else {
                 const saved = localStorage.getItem('rentVsBuyData');
-                if (saved) {
-                    try {
-                        const data = JSON.parse(saved);
-                        for (const [key, val] of Object.entries(data)) {
-                            if (inputs[key]) {
-                                if (inputs[key].type === 'checkbox') inputs[key].checked = val;
-                                else inputs[key].value = val;
-                            }
-                        }
-                    } catch (e) { console.error("LS Load error", e); }
-                }
+                if (saved) { try { const d = JSON.parse(saved); Object.entries(d).forEach(([k, v]) => { if (inputs[k]) { if (inputs[k].type === 'checkbox') inputs[k].checked = v; else inputs[k].value = v; } }); } catch (e) {} }
             }
         }
 
         function copyShareLink() {
             navigator.clipboard.writeText(window.location.href).then(() => {
-                const btn = document.querySelector('header button');
-                const orig = btn.innerText;
-                btn.innerText = "Copied! ✅";
-                setTimeout(() => btn.innerText = orig, 2000);
+                const btn = document.querySelectorAll('header button')[1]; const o = btn.innerText; btn.innerText = "Copied! ✅"; setTimeout(() => btn.innerText = o, 2000);
             });
         }
-        
-        // --- UX Features ---
+
         function setupSliders() {
-            const config = {
-                liquidAssets: { min: 0, max: 500000, step: 1000 },
-                monthlySavings: { min: 0, max: 5000, step: 50 },
-                stockGrowth: { min: 0, max: 15, step: 0.1 },
-                currentRent: { min: 0, max: 4000, step: 50 },
-                propertyPrice: { min: 100000, max: 1000000, step: 5000 }
-            };
-            
+            const config = { liquidAssets: { min: 0, max: 500000, step: 1000 }, monthlySavings: { min: 0, max: 5000, step: 50 }, stockGrowth: { min: 0, max: 15, step: 0.1 }, currentRent: { min: 0, max: 4000, step: 50 }, propertyPrice: { min: 100000, max: 1000000, step: 5000 } };
             for (const [id, cfg] of Object.entries(config)) {
-                const numInput = document.getElementById(id);
-                if (!numInput) continue;
-                
-                const range = document.createElement('input');
-                range.type = 'range';
-                range.min = cfg.min;
-                range.max = cfg.max;
-                range.step = cfg.step;
-                range.value = numInput.value;
-                range.className = "w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600";
-                
-                // Sync Range -> Number
-                range.addEventListener('input', (e) => {
-                    numInput.value = e.target.value;
-                    calculateAll();
-                });
-                
-                // Sync Number -> Range
-                numInput.addEventListener('input', (e) => {
-                    range.value = e.target.value;
-                });
-                
-                // Insert
-                numInput.parentNode.appendChild(range);
+                const num = document.getElementById(id); if (!num) continue;
+                const r = document.createElement('input'); r.type = 'range'; r.min = cfg.min; r.max = cfg.max; r.step = cfg.step; r.value = num.value;
+                r.className = "w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600";
+                r.addEventListener('input', (e) => { num.value = e.target.value; calculateAll(); });
+                num.addEventListener('input', (e) => { r.value = e.target.value; });
+                num.parentNode.appendChild(r);
             }
         }
 
-        // Init
-        document.getElementById('yearSlider').addEventListener('input', updateInspector);
-        setupSliders();
-        loadState();
-        calculateAll();
+        function setHorizon(y) {
+            simYears = y;
+            document.getElementById('btn10y').className = y === 10 ? "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition" : "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
+            document.getElementById('btn25y').className = y === 25 ? "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition" : "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
+            calculateAll();
+        }
 
+        function toggleStockCrash() { isStockCrash = !isStockCrash; updateCrashUI(); calculateAll(); }
+        function togglePropCrash() { isPropCrash = !isPropCrash; updateCrashUI(); calculateAll(); }
+        function toggleAdvanced() {
+            isAdvanced = document.getElementById('advancedToggle').checked;
+            document.querySelectorAll('.advanced-input').forEach(el => isAdvanced ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            document.querySelectorAll('.advanced-only').forEach(el => isAdvanced ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            calculateAll();
+        }
+
+        function updateCrashUI() {
+            const banner = document.getElementById('crashBanner'), msg = document.getElementById('crashMsg'), btnS = document.getElementById('btnStockCrash'), btnP = document.getElementById('btnPropCrash');
+            btnS.className = isStockCrash ? "px-3 py-2 bg-red-600 border border-red-700 text-white rounded-full text-xs font-medium hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300 has-tooltip" : "px-3 py-2 bg-white border border-red-200 text-red-700 rounded-full text-xs font-medium hover:bg-red-50 transition shadow-sm flex items-center gap-1 has-tooltip";
+            btnP.className = isPropCrash ? "px-3 py-2 bg-orange-600 border border-orange-700 text-white rounded-full text-xs font-medium hover:bg-orange-700 transition shadow-sm flex items-center gap-1 ring-2 ring-orange-300 has-tooltip" : "px-3 py-2 bg-white border border-orange-200 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-50 transition shadow-sm flex items-center gap-1 has-tooltip";
+            if (!isStockCrash && !isPropCrash) banner.classList.add('hidden');
+            else { banner.classList.remove('hidden'); msg.innerHTML = `<h4 class="font-bold text-red-800 text-sm">Simulation Active: Year 1 Shock</h4><p class="text-xs text-red-700 mt-1">${isStockCrash?'📉 <strong>Stock Crash (-30%)</strong> applied.<br>':''}${isPropCrash?'🏠 <strong>Property Crash (-15%)</strong> applied.<br>':''}Resilience test active.</p>`; }
+        }
+
+        function toggleStrategies() {
+            const div = document.getElementById('stratGuide'); const arrow = document.getElementById('stratToggleArrow');
+            if (div.classList.contains('hidden')) { div.classList.remove('hidden'); arrow.classList.add('rotate-90'); }
+            else { div.classList.add('hidden'); arrow.classList.remove('rotate-90'); }
+        }
+
+        function calculateAll() {
+            const V = getSimData();
+            dom.giaDisplay.innerText = `Remaining £${Math.round(Math.max(0, V.liquid - V.isa)).toLocaleString()} is in GIA (Taxable)`;
+            const sdB = calculateStampDuty(V.price, 'personal', V.isFTB);
+            const upfrontB = (V.price*V.depositPct) + sdB + 2000 + V.reno;
+            const sdD = calculateStampDuty(V.price, 'company', false);
+            const upfrontD = (V.price*V.depositPct) + sdD + 2000 + V.reno;
+            let err = [];
+            if (upfrontB > V.liquid) err.push(`Insufficient funds for Buy (Need £${Math.round(upfrontB/1000)}k)`);
+            if (err.length > 0) { dom.errorArea.classList.remove('hidden'); dom.errorText.innerHTML = err.join('<br>'); } else dom.errorArea.classList.add('hidden');
+            const data = simulateStrategies(); lastSimData = data;
+            updateCharts(data); updateTable(data); updateHeadline(data); updateInsights(V); updateInspector(); updateURL(); saveToStorage();
+        }
+
+        document.getElementById('yearSlider').addEventListener('input', updateInspector);
+        setupSliders(); loadState(); calculateAll();
     </script>
 </body>
 </html>

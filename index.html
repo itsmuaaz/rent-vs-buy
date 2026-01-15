@@ -841,9 +841,15 @@
                 if (possibleD) {
                     stratD.netWorth.push(getNW(isaD, giaD, basisD, houseValueD, debtD, companyCash));
                     stratD.liquidHistory.push(getLiq(isaD, giaD, basisD, companyCash));
+                    stratD.deadMoney.push(deadD);
                 } else {
-                    stratD.netWorth.push(0); stratD.liquidHistory.push(0);
+                    stratD.netWorth.push(0); stratD.liquidHistory.push(0); stratD.deadMoney.push(0);
                 }
+                
+                // Dead Money (A/B/C)
+                stratA.deadMoney.push(deadA);
+                if (possibleB) stratB.deadMoney.push(deadB); else stratB.deadMoney.push(0);
+                if (possibleC) stratC.deadMoney.push(deadC); else stratC.deadMoney.push(0);
             }
             
             // Calculate Breakeven (First year where strategy > Rent)

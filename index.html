@@ -387,7 +387,8 @@
             
             let stratA = { name: "Rent & Invest", netWorth: [], deadMoney: [], liquid: 0 };
             let isaA = V.isa;
-            let giaA = V.liquid - V.isa; // Initial pool split
+            let giaA = V.liquid - V.isa; 
+            let basisA = giaA;
             let deadA = 0;
             
             // --- Strategy B: Buy Solo ---
@@ -432,6 +433,7 @@
                     isaB -= cost;
                 }
             }
+            let basisB = giaB;
 
             const mortgageB = V.price - depositAmount;
             let debtB = mortgageB;
@@ -447,6 +449,7 @@
             let stratC = { name: "Buy + Lodger", netWorth: [], deadMoney: [], liquid: 0 };
             let isaC = isaB; // Same start
             let giaC = giaB;
+            let basisC = basisB;
             let debtC = debtB;
             let houseValueC = houseValueB;
             let deadC = 0;
@@ -475,6 +478,7 @@
                     isaD -= cost;
                 }
             }
+            let basisD = giaD;
 
             let mortgageD = V.price - depositAmount; // Company Mortgage
             let debtD = mortgageD;
@@ -527,6 +531,7 @@
                     
                     isaA = (isaA + toISA) * stockM;
                     giaA = (giaA + toGIA) * stockM;
+                    basisA += toGIA;
                 }
                 deadA += annualRentA;
                 
@@ -571,10 +576,13 @@
                         if (surplus < 0) {
                             // Withdraw from GIA/ISA to cover shortfall
                             let need = -surplus;
-                            if (giaB >= need) giaB -= need;
-                            else {
+                            if (giaB >= need) {
+                                giaB -= need;
+                                basisB -= need;
+                            } else {
                                 need -= giaB;
                                 giaB = 0;
+                                basisB = 0;
                                 isaB -= need;
                             }
                             // No growth on withdrawn amount (happens mid month)
@@ -582,6 +590,7 @@
                             let toGIA = Math.max(0, surplus - toISA);
                             isaB = (isaB + toISA) * stockM;
                             giaB = (giaB + toGIA) * stockM;
+                            basisB += toGIA;
                         }
                     }
                     houseValueB *= propGrowth; // Apprec
@@ -620,15 +629,18 @@
                         // Invest
                          if (surplus < 0) {
                             let need = -surplus;
-                            if (giaC >= need) giaC -= need;
-                            else {
-                                need -= giaC; giaC = 0; isaC -= need;
+                            if (giaC >= need) {
+                                giaC -= need;
+                                basisC -= need;
+                            } else {
+                                need -= giaC; giaC = 0; basisC = 0; isaC -= need;
                             }
                         } else {
                             let toISA = Math.min(surplus, 20000/12); 
                             let toGIA = Math.max(0, surplus - toISA);
                             isaC = (isaC + toISA) * stockM;
                             giaC = (giaC + toGIA) * stockM;
+                            basisC += toGIA;
                         }
                     }
                     houseValueC *= propGrowth;
@@ -677,6 +689,7 @@
                         let toGIA = Math.max(0, surplus - toISA);
                         isaD = (isaD + toISA) * stockM;
                         giaD = (giaD + toGIA) * stockM;
+                        basisD += toGIA;
                         
                         // Company
                         let interest = debtD * (V.rateC/100/12);
@@ -717,20 +730,29 @@
                 // Let's use Gross Equity + Gross Liquid for the Chart line, 
                 // but display specific notes or cleaner calc in Table.
                 
-                // Helper to get NW
-                const getNW = (isa, gia, houseV, debt, cashCo=0) => {
-                    return isa + gia + (houseV - debt) + cashCo;
+                // Helper to get NW (Post Tax)
+                const getNW = (isa, gia, basis, houseV, debt, cashCo=0) => {
+                    // GIA Tax
+                    const gain = Math.max(0, gia - basis);
+                    const cgt = gain * rates.cgt;
+                    const netGia = gia - cgt;
+                    
+                    // Company Cash Tax (Dividend)
+                    const divTax = Math.max(0, cashCo * rates.div);
+                    const netCoCash = cashCo - divTax;
+                    
+                    return isa + netGia + (houseV - debt) + netCoCash;
                 };
 
-                stratA.netWorth.push(getNW(isaA, giaA, 0, 0));
+                stratA.netWorth.push(getNW(isaA, giaA, basisA, 0, 0));
                 
-                if (possibleB) stratB.netWorth.push(getNW(isaB, giaB, houseValueB, debtB));
+                if (possibleB) stratB.netWorth.push(getNW(isaB, giaB, basisB, houseValueB, debtB));
                 else stratB.netWorth.push(0);
 
-                if (possibleC) stratC.netWorth.push(getNW(isaC, giaC, houseValueC, debtC));
+                if (possibleC) stratC.netWorth.push(getNW(isaC, giaC, basisC, houseValueC, debtC));
                 else stratC.netWorth.push(0);
                 
-                if (possibleD) stratD.netWorth.push(getNW(isaD, giaD, houseValueD, debtD, companyCash));
+                if (possibleD) stratD.netWorth.push(getNW(isaD, giaD, basisD, houseValueD, debtD, companyCash));
                 else stratD.netWorth.push(0);
                 
                 // Dead Money Arrays

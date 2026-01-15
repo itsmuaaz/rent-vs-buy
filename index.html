@@ -195,7 +195,7 @@
                     </div>
                     <!-- B -->
                     <div class="bg-white p-3 rounded border border-blue-200 shadow-sm border-l-4 border-l-blue-500">
-                        <div class="font-bold text-blue-700 mb-1">B. Buy Solo</div>
+                        <div class="font-bold text-blue-700 mb-1">B. Buy & Live In</div>
                         <p class="text-xs text-gray-500">You buy a home in your name and live alone. You build equity but pay mortgage interest and maintenance costs.</p>
                     </div>
                     <!-- C -->
@@ -952,7 +952,7 @@
                     labels: labels,
                     datasets: [
                         { label: 'Rent & Invest', data: data.stratA.netWorth, borderColor: '#94a3b8', borderWidth: 2, tension: 0.3 },
-                        { label: 'Buy Solo', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
+                        { label: 'Buy & Live In', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
                         { label: 'Buy + Lodger', data: data.stratC.netWorth, borderColor: '#10b981', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
                         { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: !data.possibleD },
                         { label: 'Personal BTL', data: data.stratE.netWorth, borderColor: '#f97316', borderWidth: 2, tension: 0.3, hidden: !data.possibleE }
@@ -987,7 +987,7 @@
             deadMoneyChartInstance = new Chart(ctxDM, {
                 type: 'bar',
                 data: {
-                    labels: ['Rent', 'Buy Solo', 'Buy + Lodger', 'Co. BTL', 'Pers. BTL'],
+                    labels: ['Rent', 'Buy & Live In', 'Buy + Lodger', 'Co. BTL', 'Pers. BTL'],
                     datasets: [{
                         label: `Cumulative Cost (Year ${idx+1})`,
                         data: d5,
@@ -1058,7 +1058,7 @@
             // Collect End-State Values
             const strategies = [
                 {name: 'Renting', val: data.stratA.netWorth[idx], code: 'A', type: 'Rent'},
-                {name: 'Buying Solo', val: data.possibleB ? data.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy'},
+                {name: 'Buy & Live In', val: data.possibleB ? data.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy'},
                 {name: 'Buying with Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy'},
                 {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy'},
                 {name: 'Personal BTL', val: data.possibleE ? data.stratE.netWorth[idx] : -Infinity, code: 'E', type: 'Buy'}

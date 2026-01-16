@@ -6,9 +6,10 @@
     <title>Strategic Wealth: Rent vs. Buy Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="engine.js"></script>
     <style>
-        /* Custom scrollbar for sidebar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
@@ -19,13 +20,10 @@
         @media (min-width: 768px) { .input-field { font-size: 0.875rem; } }
         .input-field:focus { outline: none; border-color: #2563eb; ring: 2px solid #2563eb; }
         canvas { max-height: 400px; }
-        
-        /* Tooltips */
         .has-tooltip { position: relative; cursor: help; border-bottom: 1px dashed #9ca3af; }
         .tooltip { visibility: hidden; width: 200px; background-color: #1f2937; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 100; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; pointer-events: none; }
         .has-tooltip:hover .tooltip { visibility: visible; opacity: 1; }
         .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1f2937 transparent transparent transparent; }
-
         @media print {
             .no-print { display: none !important; }
             body, main { height: auto !important; overflow: visible !important; display: block !important; }
@@ -33,9 +31,13 @@
             #headline { break-inside: avoid; border: 1px solid #ddd; background: #fff !important; color: #000 !important; }
             canvas { max-height: 300px !important; }
         }
+        /* Range Slider Styling */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #4f46e5; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #e5e7eb; border-radius: 2px; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans md:h-screen flex flex-col md:overflow-hidden">
+<body class="bg-gray-50 text-gray-800 font-sans md:h-screen flex flex-col md:overflow-hidden" x-data="calculator()">
 
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 p-4 shadow-sm z-10 flex-shrink-0">
@@ -45,8 +47,8 @@
             </h1>
             <div class="flex items-center gap-3 no-print">
                 <button onclick="window.print()" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200 transition">Print / PDF 🖨️</button>
-                <button onclick="copyShareLink()" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition">Share 🔗</button>
-                <div class="text-sm text-gray-500">v1.3 (Engine)</div>
+                <button @click="copyLink" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition" x-text="copied ? 'Copied! ✅' : 'Share 🔗'"></button>
+                <div class="text-sm text-gray-500">v2.0 (Alpine)</div>
             </div>
         </div>
     </header>
@@ -57,7 +59,7 @@
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Configuration</h2>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="advancedToggle" onchange="toggleAdvanced()" class="w-4 h-4 text-indigo-600 rounded">
+                    <input type="checkbox" x-model="isAdvanced" class="w-4 h-4 text-indigo-600 rounded">
                     <span class="text-xs font-medium text-gray-500">⚙️ Advanced</span>
                 </label>
             </div>
@@ -65,35 +67,43 @@
             <!-- Section 1: Financial Profile -->
             <div class="mb-6">
                 <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">1. Financial Profile</h3>
+                
                 <div class="input-group">
                     <label class="input-label"><span class="has-tooltip">Total Investable Capital (£)<span class="tooltip">Total cash/stocks available for Deposit or Investment.</span></span></label>
-                    <input type="number" id="liquidAssets" class="input-field" value="50000">
+                    <input type="number" x-model.number="i.liquidAssets" class="input-field">
+                    <input type="range" x-model.number="i.liquidAssets" min="0" max="500000" step="1000">
                 </div>
+                
                 <div class="input-group">
                     <label class="input-label">Of which is ISA (£) <span class="text-xs text-gray-400">(Tax Free)</span></label>
-                    <input type="number" id="isaBalance" class="input-field" value="20000">
-                    <div id="giaDisplay" class="text-xs text-gray-500 mt-1 italic"></div>
+                    <input type="number" x-model.number="i.isaBalance" class="input-field">
+                    <div class="text-xs text-gray-500 mt-1 italic" x-text="`Remaining £${Math.max(0, i.liquidAssets - i.isaBalance).toLocaleString()} is in GIA (Taxable)`"></div>
                 </div>
+
                 <div class="input-group">
                     <label class="input-label"><span class="has-tooltip">Monthly Investment (£)<span class="tooltip">Allocated to stocks. Fills £20k/yr ISA first, then GIA (Taxable).</span></span></label>
-                    <input type="number" id="monthlySavings" class="input-field" value="1000">
+                    <input type="number" x-model.number="i.monthlySavings" class="input-field">
+                    <input type="range" x-model.number="i.monthlySavings" min="0" max="5000" step="50">
                 </div>
+
                 <div class="input-group">
                     <label class="input-label">Stock Growth Rate (%)</label>
-                    <input type="number" id="stockGrowth" class="input-field" value="8" step="0.1">
+                    <input type="number" x-model.number="i.stockGrowth" class="input-field" step="0.1">
+                    <input type="range" x-model.number="i.stockGrowth" min="0" max="15" step="0.1">
                 </div>
             </div>
 
-            <!-- Section 2: Rental (Baseline) -->
+            <!-- Section 2: Rental -->
             <div class="mb-6">
                 <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">2. Rental Scenario</h3>
                 <div class="input-group">
                     <label class="input-label">Current Rent (£/mo)</label>
-                    <input type="number" id="currentRent" class="input-field" value="1500">
+                    <input type="number" x-model.number="i.currentRent" class="input-field">
+                    <input type="range" x-model.number="i.currentRent" min="0" max="4000" step="50">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Rent Inflation (%)</label>
-                    <input type="number" id="rentInflation" class="input-field" value="3" step="0.1">
+                    <input type="number" x-model.number="i.rentInflation" class="input-field" step="0.1">
                 </div>
             </div>
 
@@ -102,34 +112,35 @@
                 <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">3. Purchase Scenario</h3>
                 <div class="input-group">
                     <label class="input-label">Property Price (£)</label>
-                    <input type="number" id="propertyPrice" class="input-field" value="400000">
+                    <input type="number" x-model.number="i.propertyPrice" class="input-field">
+                    <input type="range" x-model.number="i.propertyPrice" min="100000" max="1000000" step="5000">
                 </div>
                 <div class="input-group">
                     <label class="input-label"><span class="has-tooltip">Renovation Cost (£)<span class="tooltip">Increases value to 'Post-Work Value' instantly (Forced Equity).</span></span></label>
-                    <input type="number" id="renoCost" class="input-field" value="60000">
+                    <input type="number" x-model.number="i.renoCost" class="input-field">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Post-Work Value (£)</label>
-                    <input type="number" id="postWorkValue" class="input-field" value="525000">
+                    <input type="number" x-model.number="i.postWorkValue" class="input-field">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div class="input-group">
                         <label class="input-label">Deposit (%)</label>
-                        <input type="number" id="depositPercent" class="input-field" value="25">
+                        <input type="number" x-model.number="i.depositPercent" class="input-field">
                     </div>
                     <div class="input-group">
                         <label class="input-label">Term (Years)</label>
-                        <input type="number" id="mortgageTerm" class="input-field" value="30">
+                        <input type="number" x-model.number="i.mortgageTerm" class="input-field">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div class="input-group">
                         <label class="input-label">Rate Pers. (%)</label>
-                        <input type="number" id="ratePersonal" class="input-field" value="4.5" step="0.1">
+                        <input type="number" x-model.number="i.ratePersonal" class="input-field" step="0.1">
                     </div>
-                    <div class="input-group advanced-input hidden">
+                    <div class="input-group" x-show="isAdvanced">
                         <label class="input-label"><span class="has-tooltip">Rate Co. (%)<span class="tooltip">Higher rates, but bypasses Section 24 (interest is deductible).</span></span></label>
-                        <input type="number" id="rateCompany" class="input-field" value="5.5" step="0.1">
+                        <input type="number" x-model.number="i.rateCompany" class="input-field" step="0.1">
                     </div>
                 </div>
             </div>
@@ -139,22 +150,22 @@
                 <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">4. Lifestyle & Tax</h3>
                 <div class="flex items-center justify-between mb-3">
                     <label class="input-label mb-0">First Time Buyer?</label>
-                    <input type="checkbox" id="isFTB" checked class="w-5 h-5 text-blue-600 rounded">
+                    <input type="checkbox" x-model="i.isFTB" class="w-5 h-5 text-blue-600 rounded">
                 </div>
-                <div class="input-group advanced-input hidden">
+                <div class="input-group" x-show="isAdvanced">
                     <label class="input-label">Lodger Income (£/mo)</label>
-                    <input type="number" id="lodgerIncome" class="input-field" value="900">
+                    <input type="number" x-model.number="i.lodgerIncome" class="input-field">
                 </div>
-                <div class="input-group advanced-input hidden">
+                <div class="input-group" x-show="isAdvanced">
                     <label class="input-label">Years with Lodger</label>
-                    <input type="number" id="lodgerYears" class="input-field" value="2">
+                    <input type="number" x-model.number="i.lodgerYears" class="input-field">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Tax Band</label>
-                    <select id="taxBand" class="input-field">
+                    <select x-model="i.taxBand" class="input-field">
                         <option value="basic">Basic (20%)</option>
                         <option value="higher">Higher (40%)</option>
-                        <option value="additional" selected>Additional (45%)</option>
+                        <option value="additional">Additional (45%)</option>
                     </select>
                 </div>
             </div>
@@ -165,16 +176,16 @@
             <!-- Presets -->
             <div class="flex flex-wrap gap-3 mb-6 items-center no-print">
                 <span class="text-sm font-medium text-gray-500 py-2">Presets:</span>
-                <button onclick="applyPreset('nomad')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 transition shadow-sm" title="Strategy A: Low Rent, High Stocks">🌍 Digital Nomad</button>
-                <button onclick="applyPreset('london')" class="px-4 py-2 bg-white border border-blue-200 rounded-full text-sm hover:bg-blue-50 transition shadow-sm" title="Strategy B: High Rent Efficiency">🇬🇧 London Pro</button>
-                <button onclick="applyPreset('starter')" class="px-4 py-2 bg-white border border-green-200 rounded-full text-sm hover:bg-green-50 transition shadow-sm" title="Strategy C: Affordability via Lodger">🏠 Smart Starter</button>
-                <button onclick="applyPreset('landlord')" class="px-4 py-2 bg-white border border-purple-200 rounded-full text-sm hover:bg-purple-50 transition shadow-sm" title="Strategy D: Tax Optimization">🏗️ Portfolio Landlord</button>
+                <button @click="applyPreset('nomad')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100 transition shadow-sm" title="Strategy A: Low Rent, High Stocks">🌍 Digital Nomad</button>
+                <button @click="applyPreset('london')" class="px-4 py-2 bg-white border border-blue-200 rounded-full text-sm hover:bg-blue-50 transition shadow-sm" title="Strategy B: High Rent Efficiency">🇬🇧 London Pro</button>
+                <button @click="applyPreset('starter')" class="px-4 py-2 bg-white border border-green-200 rounded-full text-sm hover:bg-green-50 transition shadow-sm" title="Strategy C: Affordability via Lodger">🏠 Smart Starter</button>
+                <button @click="applyPreset('landlord')" class="px-4 py-2 bg-white border border-purple-200 rounded-full text-sm hover:bg-purple-50 transition shadow-sm" title="Strategy D: Tax Optimization">🏗️ Portfolio Landlord</button>
                 <div class="ml-auto flex gap-2">
-                    <button onclick="toggleStockCrash()" id="btnStockCrash" class="px-3 py-2 bg-white border border-red-200 text-red-700 rounded-full text-xs font-medium hover:bg-red-50 transition shadow-sm flex items-center gap-1 has-tooltip" style="border-bottom: 0;">
+                    <button @click="isStockCrash = !isStockCrash" :class="isStockCrash ? 'bg-red-600 text-white ring-2 ring-red-300' : 'bg-white text-red-700'" class="px-3 py-2 border border-red-200 rounded-full text-xs font-medium hover:opacity-90 transition shadow-sm flex items-center gap-1 has-tooltip">
                         📉 Stock Crash
                         <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -30% Drop</span>
                     </button>
-                    <button onclick="togglePropCrash()" id="btnPropCrash" class="px-3 py-2 bg-white border border-orange-200 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-50 transition shadow-sm flex items-center gap-1 has-tooltip" style="border-bottom: 0;">
+                    <button @click="isPropCrash = !isPropCrash" :class="isPropCrash ? 'bg-orange-600 text-white ring-2 ring-orange-300' : 'bg-white text-orange-700'" class="px-3 py-2 border border-orange-200 rounded-full text-xs font-medium hover:opacity-90 transition shadow-sm flex items-center gap-1 has-tooltip">
                         🏠 Prop Crash
                         <span class="tooltip w-40 bg-gray-800 text-white text-xs rounded p-2 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">Year 1: -15% Drop</span>
                     </button>
@@ -182,56 +193,75 @@
             </div>
 
             <!-- Crash Banner -->
-            <div id="crashBanner" class="hidden mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-3 transition-all no-print">
+            <div x-show="isStockCrash || isPropCrash" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-3 transition-all no-print">
                 <span class="text-2xl">⚠️</span>
-                <div id="crashMsg"></div>
+                <div>
+                    <h4 class="font-bold text-red-800 text-sm">Simulation Active: Year 1 Shock</h4>
+                    <p class="text-xs text-red-700 mt-1">
+                        <span x-show="isStockCrash">📉 <strong>Stock Crash (-30%)</strong> applied.<br></span>
+                        <span x-show="isPropCrash">🏠 <strong>Property Crash (-15%)</strong> applied.<br></span>
+                        Resilience test active.
+                    </p>
+                </div>
             </div>
 
             <!-- Strategy Guide -->
-            <div class="mb-8 no-print">
-                <button onclick="toggleStrategies()" class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none">
-                    <span id="stratToggleArrow" class="transform transition-transform">▶</span> 
+            <div class="mb-8 no-print" x-data="{ open: false }">
+                <button @click="open = !open" class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none">
+                    <span :class="open ? 'rotate-90' : ''" class="transform transition-transform">▶</span> 
                     <span>What do these strategies mean?</span>
                 </button>
-                <div id="stratGuide" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div x-show="open" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div class="bg-white p-3 rounded border border-gray-200 shadow-sm"><div class="font-bold text-gray-700 mb-1">A. Rent & Invest</div><p class="text-xs text-gray-500">Continue renting. All surplus cash is invested in the Stock Market.</p></div>
                     <div class="bg-white p-3 rounded border border-blue-200 shadow-sm border-l-4 border-l-blue-500"><div class="font-bold text-blue-700 mb-1">B. Buy & Live In</div><p class="text-xs text-gray-500">Buy a home in your name and live there. Building equity vs paying interest.</p></div>
-                    <div class="bg-white p-3 rounded border border-green-200 shadow-sm border-l-4 border-l-green-500 advanced-only hidden"><div class="font-bold text-green-700 mb-1">C. Buy + Lodger</div><p class="text-xs text-gray-500">Rent out a room. Income is Tax-Free (up to £7.5k/yr) and offsets mortgage.</p></div>
-                    <div class="bg-white p-3 rounded border border-purple-200 shadow-sm border-l-4 border-l-purple-500 advanced-only hidden"><div class="font-bold text-purple-700 mb-1">D. Company BTL</div><p class="text-xs text-gray-500">Rent personally, use a Ltd Company to buy a rental property (Tax efficient).</p></div>
-                    <div class="bg-white p-3 rounded border border-orange-200 shadow-sm border-l-4 border-l-orange-500 advanced-only hidden"><div class="font-bold text-orange-700 mb-1">E. Personal BTL</div><p class="text-xs text-gray-500">Rent personally, buy BTL in your own name. Subject to Section 24 Tax.</p></div>
-                    <div class="bg-white p-3 rounded border border-yellow-200 shadow-sm border-l-4 border-l-yellow-500 advanced-only hidden"><div class="font-bold text-yellow-700 mb-1">F. Home + Co. BTL</div><p class="text-xs text-gray-500">Buy a main residence AND a Company BTL. Requires high capital.</p></div>
+                    <div x-show="isAdvanced" class="bg-white p-3 rounded border border-green-200 shadow-sm border-l-4 border-l-green-500"><div class="font-bold text-green-700 mb-1">C. Buy + Lodger</div><p class="text-xs text-gray-500">Rent out a room. Income is Tax-Free (up to £7.5k/yr) and offsets mortgage.</p></div>
+                    <div x-show="isAdvanced" class="bg-white p-3 rounded border border-purple-200 shadow-sm border-l-4 border-l-purple-500"><div class="font-bold text-purple-700 mb-1">D. Company BTL</div><p class="text-xs text-gray-500">Rent personally, use a Ltd Company to buy a rental property (Tax efficient).</p></div>
+                    <div x-show="isAdvanced" class="bg-white p-3 rounded border border-orange-200 shadow-sm border-l-4 border-l-orange-500"><div class="font-bold text-orange-700 mb-1">E. Personal BTL</div><p class="text-xs text-gray-500">Rent personally, buy BTL in your own name. Subject to Section 24 Tax.</p></div>
+                    <div x-show="isAdvanced" class="bg-white p-3 rounded border border-yellow-200 shadow-sm border-l-4 border-l-yellow-500"><div class="font-bold text-yellow-700 mb-1">F. Home + Co. BTL</div><p class="text-xs text-gray-500">Buy a main residence AND a Company BTL. Requires high capital.</p></div>
                 </div>
             </div>
 
             <!-- Headline -->
-            <div id="headline" class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-8">
-                <h2 class="text-2xl font-bold mb-2">Calculating...</h2>
-                <p class="opacity-90">Adjust inputs to see your financial future.</p>
-            </div>
+            <div class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-8" x-html="headlineHTML"></div>
 
             <!-- Insights -->
-            <div id="insights" class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 no-print"></div>
+            <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+                <template x-for="insight in insights" :key="insight.title">
+                    <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3">
+                        <span class="text-2xl" x-text="insight.icon"></span>
+                        <div>
+                            <h4 class="font-bold text-blue-900 text-sm" x-text="insight.title"></h4>
+                            <p class="text-xs text-blue-800 leading-relaxed" x-text="insight.text"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Error Area -->
+            <div x-show="errors.length > 0" class="mt-6 mb-6 bg-red-50 border-l-4 border-red-500 p-4">
+                <template x-for="err in errors">
+                    <p class="text-red-700 font-medium" x-text="err"></p>
+                </template>
+            </div>
 
             <!-- Chart Controls -->
             <div class="flex justify-between items-center mb-2 no-print">
                 <h3 class="text-lg font-semibold text-gray-700">Projections</h3>
                 <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
-                    <button onclick="setHorizon(5)" id="btn5y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">5y</button>
-                    <button onclick="setHorizon(10)" id="btn10y" class="px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition">10y</button>
-                    <button onclick="setHorizon(15)" id="btn15y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">15y</button>
-                    <button onclick="setHorizon(25)" id="btn25y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">25y</button>
-                    <button onclick="setHorizon(40)" id="btn40y" class="px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition">40y</button>
+                    <template x-for="y in [5, 10, 15, 25, 40]">
+                        <button @click="simYears = y" :class="simYears === y ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:bg-gray-50'" class="px-3 py-1 rounded transition" x-text="y + 'y'"></button>
+                    </template>
                 </div>
             </div>
 
             <!-- Charts Container -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4" id="nwTitle">Net Worth Projection</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="`Net Worth Projection (${simYears} Years)`"></h3>
                     <div class="relative h-72 w-full"><canvas id="netWorthChart"></canvas></div>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4" id="dmTitle">Cumulative "Dead Money"</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="`Cumulative Dead Money (${simYears} Years)`"></h3>
                     <div class="relative h-72 w-full"><canvas id="deadMoneyChart"></canvas></div>
                 </div>
             </div>
@@ -240,10 +270,24 @@
             <div class="bg-white p-4 rounded-lg shadow border border-gray-100 mb-8 no-print">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-800">⏱️ Time Travel Inspector</h3>
-                    <span class="text-2xl font-bold text-indigo-600" id="inspectorLabel">Year 5</span>
+                    <span class="text-2xl font-bold text-indigo-600" x-text="`Year ${inspectorYear}`"></span>
                 </div>
-                <input type="range" min="1" max="40" value="5" id="yearSlider" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 mb-6">
-                <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4" id="inspectorGrid"></div>
+                <input type="range" min="1" max="40" x-model.number="inspectorYear" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 mb-6">
+                <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <template x-for="s in inspectorData" :key="s.code">
+                        <div class="p-3 rounded border-l-4 shadow-sm transition-all duration-200" :class="s.highlightClass">
+                            <div class="flex items-center mb-2">
+                                <div class="text-xs font-bold text-gray-500 uppercase truncate pr-2" x-text="s.name"></div>
+                                <span x-show="s.badge" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full" :class="s.badgeClass" x-text="s.badge"></span>
+                            </div>
+                            <div class="text-xl font-bold text-gray-800" x-text="`£${Math.round(s.nw/1000).toLocaleString()}k`"></div>
+                            <div class="text-xs text-gray-500 mt-2 flex justify-between border-t border-black/5 pt-2">
+                                <span x-text="`💵 £${Math.round(s.liq/1000)}k`"></span>
+                                <span x-text="`🏠 £${Math.round(s.eq/1000)}k`"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
             </div>
 
             <!-- Detailed Table -->
@@ -254,21 +298,27 @@
                         <thead class="bg-gray-50 text-gray-900 font-medium">
                             <tr>
                                 <th class="px-6 py-3">Strategy</th>
-                                <th class="px-6 py-3 text-right">Year 2</th>
-                                <th class="px-6 py-3 text-right">Year 5</th>
-                                <th class="px-6 py-3 text-right">Year 10</th>
-                                <th class="px-6 py-3 text-right">Year 15</th>
-                                <th class="px-6 py-3 text-right">Year 25</th>
-                                <th class="px-6 py-3 text-right">Year 40</th>
+                                <template x-for="y in [2, 5, 10, 15, 25, 40]">
+                                    <th class="px-6 py-3 text-right" x-text="`Year ${y}`"></th>
+                                </template>
                             </tr>
                         </thead>
-                        <tbody id="analysisTable" class="divide-y divide-gray-200"></tbody>
+                        <tbody class="divide-y divide-gray-200">
+                            <template x-for="row in tableData" :key="row.name">
+                                <tr>
+                                    <td class="px-6 py-4 font-medium text-gray-900" x-text="row.name"></td>
+                                    <template x-for="cell in row.cells">
+                                        <td class="px-6 py-4 text-right">
+                                            <span class="px-2 py-1" :class="cell.style" x-text="cell.val"></span>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
                     </table>
                 </div>
             </div>
             
-            <div id="errorArea" class="mt-6 hidden bg-red-50 border-l-4 border-red-500 p-4"><p class="text-red-700 font-medium" id="errorText"></p></div>
-
             <footer class="mt-16 text-xs text-center text-gray-400 border-t border-gray-200 pt-6 no-print">
                 <p>Based on projected <strong>UK Tax Rules for 2025/26</strong>. Includes SDLT, Section 24, Rent-a-Room Relief, CGT (20%), Dividend Tax (33.75%+). <br><strong>Not financial advice.</strong></p>
             </footer>
@@ -276,288 +326,240 @@
     </div>
 
     <script>
-        let netWorthChartInstance = null, deadMoneyChartInstance = null;
-        let simYears = 10, isStockCrash = false, isPropCrash = false, isAdvanced = false, lastSimData = null;
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('calculator', () => ({
+                isAdvanced: false,
+                isStockCrash: false,
+                isPropCrash: false,
+                simYears: 10,
+                inspectorYear: 5,
+                copied: false,
+                i: { // inputs
+                    liquidAssets: 50000, isaBalance: 20000, monthlySavings: 1000, stockGrowth: 8,
+                    currentRent: 1500, rentInflation: 3,
+                    propertyPrice: 400000, renoCost: 60000, postWorkValue: 525000,
+                    depositPercent: 25, mortgageTerm: 30, ratePersonal: 4.5, rateCompany: 5.5,
+                    isFTB: true, lodgerIncome: 900, lodgerYears: 2, taxBand: 'additional'
+                },
+                results: null,
+                nwChart: null,
+                dmChart: null,
+                
+                init() {
+                    // Load state
+                    const p = new URLSearchParams(window.location.search);
+                    if ([...p.keys()].length > 0) {
+                        for (const [k, v] of p) { if (this.i.hasOwnProperty(k)) this.i[k] = (v === 'true' || v === 'false') ? v === 'true' : parseFloat(v); }
+                    } else {
+                        const saved = localStorage.getItem('rentVsBuyData');
+                        if (saved) try { Object.assign(this.i, JSON.parse(saved)); } catch(e){}
+                    }
+                    
+                    this.$watch('i', () => { this.calculate(); this.save(); }, { deep: true });
+                    this.$watch('simYears', () => this.updateCharts());
+                    this.$watch('isStockCrash', () => this.calculate());
+                    this.$watch('isPropCrash', () => this.calculate());
+                    
+                    // Initial calculation and charts setup
+                    this.$nextTick(() => { this.calculate(); });
+                },
+                
+                get payload() {
+                    return {
+                        liquid: this.i.liquidAssets, isa: this.i.isaBalance, monthlySavings: this.i.monthlySavings,
+                        stockGrowth: this.i.stockGrowth/100, rent: this.i.currentRent, rentInf: this.i.rentInflation/100,
+                        price: this.i.propertyPrice, reno: this.i.renoCost, postValue: this.i.postWorkValue,
+                        depositPct: this.i.depositPercent/100, term: this.i.mortgageTerm,
+                        rateP: this.i.ratePersonal, rateC: this.i.rateCompany, isFTB: this.i.isFTB,
+                        lodgerInc: this.i.lodgerIncome, lodgerYears: this.i.lodgerYears, taxBand: this.i.taxBand,
+                        isStockCrash: this.isStockCrash, isPropCrash: this.isPropCrash
+                    };
+                },
+                
+                get errors() {
+                    const errs = [];
+                    // We need a helper to check affordability without full simulation if possible, or just use simulation result
+                    // For now, simple check:
+                    const stamp = Engine.calculateStampDuty(this.i.propertyPrice, 'personal', this.i.isFTB);
+                    const upfront = (this.i.propertyPrice * this.i.depositPercent/100) + stamp + 2000 + this.i.renoCost;
+                    if (upfront > this.i.liquidAssets) errs.push(`Insufficient funds for Buy (Need £${Math.round(upfront/1000)}k)`);
+                    return errs;
+                },
 
-        const inputs = {
-            liquidAssets: document.getElementById('liquidAssets'),
-            isaBalance: document.getElementById('isaBalance'),
-            monthlySavings: document.getElementById('monthlySavings'),
-            stockGrowth: document.getElementById('stockGrowth'),
-            currentRent: document.getElementById('currentRent'),
-            rentInflation: document.getElementById('rentInflation'),
-            propertyPrice: document.getElementById('propertyPrice'),
-            renoCost: document.getElementById('renoCost'),
-            postWorkValue: document.getElementById('postWorkValue'),
-            depositPercent: document.getElementById('depositPercent'),
-            mortgageTerm: document.getElementById('mortgageTerm'),
-            ratePersonal: document.getElementById('ratePersonal'),
-            rateCompany: document.getElementById('rateCompany'),
-            isFTB: document.getElementById('isFTB'),
-            lodgerIncome: document.getElementById('lodgerIncome'),
-            lodgerYears: document.getElementById('lodgerYears'),
-            taxBand: document.getElementById('taxBand'),
-        };
+                get headlineHTML() {
+                    if (!this.results) return '<h2>Calculating...</h2>';
+                    const idx = this.simYears - 1;
+                    const r = this.results;
+                    const strats = [
+                        {name: 'Renting', val: r.stratA.netWorth[idx], code: 'A', type: 'Rent'},
+                        {name: 'Buy & Live In', val: r.possibleB ? r.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy'},
+                        {name: 'Buy + Lodger', val: r.possibleB ? r.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Company BTL', val: r.possibleD ? r.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Personal BTL', val: r.possibleE ? r.stratE.netWorth[idx] : -Infinity, code: 'E', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Home + Co. BTL', val: r.possibleF ? r.stratF.netWorth[idx] : -Infinity, code: 'F', type: 'Buy', show: this.isAdvanced}
+                    ].filter(s => s.show !== false); // Default true if undefined
+                    
+                    strats.sort((a,b) => b.val - a.val);
+                    const winner = strats[0];
+                    
+                    if (!strats.some(s => s.type === 'Buy' && s.val > -Infinity)) return `<h2 class="text-2xl font-bold">Renting is the only option</h2><p class="opacity-90">Insufficient liquid assets.</p>`;
+                    
+                    const rentVal = r.stratA.netWorth[idx];
+                    let title, desc, subtext;
+                    if (winner.type === 'Rent') {
+                        const diff = winner.val - strats[1].val;
+                        title = "Renting is the Wealthier Choice 🏖️";
+                        desc = `Projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${strats[1].name}.`;
+                        subtext = "Investing the surplus outperforms property equity.";
+                    } else {
+                        const diff = winner.val - rentVal;
+                        title = `${winner.name} Wins 🏡`;
+                        desc = `Projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting.`;
+                        const beY = r.be[winner.code];
+                        subtext = beY ? `✅ Breakeven vs Renting in <strong>Year ${beY}</strong>.` : `✅ ${winner.name} is better starting from Year 1.`;
+                    }
+                    return `<div class="flex flex-col md:flex-row md:items-center gap-4"><div class="flex-1"><h2 class="text-2xl font-bold leading-tight">${title}</h2><p class="text-lg mt-1">${desc}</p><p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p></div></div>`;
+                },
 
-        const dom = {
-            headline: document.getElementById('headline'),
-            table: document.getElementById('analysisTable'),
-            errorArea: document.getElementById('errorArea'),
-            errorText: document.getElementById('errorText'),
-            giaDisplay: document.getElementById('giaDisplay')
-        };
+                get inspectorData() {
+                    if (!this.results) return [];
+                    const y = this.inspectorYear - 1;
+                    const r = this.results;
+                    const list = [
+                        {name: 'Rent', nw: r.stratA.netWorth[y], liq: r.stratA.liquidHistory[y], code: 'A', visible: true},
+                        {name: 'Buy', nw: r.stratB.netWorth[y], liq: r.stratB.liquidHistory[y], code: 'B', visible: r.possibleB},
+                        {name: 'Lodger', nw: r.stratC.netWorth[y], liq: r.stratC.liquidHistory[y], code: 'C', visible: r.possibleB && this.isAdvanced},
+                        {name: 'Co. BTL', nw: r.stratD.netWorth[y], liq: r.stratD.liquidHistory[y], code: 'D', visible: r.possibleD && this.isAdvanced},
+                        {name: 'Pers. BTL', nw: r.stratE.netWorth[y], liq: r.stratE.liquidHistory[y], code: 'E', visible: r.possibleE && this.isAdvanced},
+                        {name: 'Home+Co', nw: r.stratF.netWorth[y], liq: r.stratF.liquidHistory[y], code: 'F', visible: r.possibleF && this.isAdvanced}
+                    ].filter(s => s.visible).map(s => ({...s, eq: s.nw - s.liq}));
 
-        Object.values(inputs).forEach(input => { input.addEventListener('change', calculateAll); input.addEventListener('input', calculateAll); });
+                    const max = Math.max(...list.map(s=>s.nw)), min = Math.min(...list.map(s=>s.nw));
+                    return list.map(s => {
+                        let highlightClass = (s.nw === max) ? "border-green-500 bg-green-50 ring-1 ring-green-500" : (s.nw === min && list.length>1) ? "border-red-300 bg-red-50 opacity-90" : "border-gray-300 bg-gray-50";
+                        let badge = (s.nw === max) ? 'BEST' : (s.nw === min && list.length>1) ? 'WORST' : '';
+                        let badgeClass = (s.nw === max) ? 'text-green-700 bg-green-200' : 'text-red-700 bg-red-200';
+                        return { ...s, highlightClass, badge, badgeClass };
+                    });
+                },
 
-        function getSimData() {
-            return {
-                liquid: parseFloat(inputs.liquidAssets.value), isa: parseFloat(inputs.isaBalance.value), monthlySavings: parseFloat(inputs.monthlySavings.value),
-                stockGrowth: parseFloat(inputs.stockGrowth.value) / 100, rent: parseFloat(inputs.currentRent.value), rentInf: parseFloat(inputs.rentInflation.value) / 100,
-                price: parseFloat(inputs.propertyPrice.value), reno: parseFloat(inputs.renoCost.value), postValue: parseFloat(inputs.postWorkValue.value),
-                depositPct: parseFloat(inputs.depositPercent.value) / 100, term: parseFloat(inputs.mortgageTerm.value),
-                rateP: parseFloat(inputs.ratePersonal.value), rateC: parseFloat(inputs.rateCompany.value), isFTB: inputs.isFTB.checked,
-                lodgerInc: parseFloat(inputs.lodgerIncome.value), lodgerYears: parseFloat(inputs.lodgerYears.value), taxBand: inputs.taxBand.value,
-                isStockCrash, isPropCrash
-            };
-        }
+                get tableData() {
+                    if (!this.results) return [];
+                    const r = this.results;
+                    const strategies = [
+                        {name: 'Rent & Invest', s: r.stratA, show: true},
+                        {name: 'Buy & Live In', s: r.stratB, show: r.possibleB},
+                        {name: 'Buy + Lodger', s: r.stratC, show: r.possibleB && this.isAdvanced},
+                        {name: 'Company BTL', s: r.stratD, show: r.possibleD && this.isAdvanced},
+                        {name: 'Personal BTL', s: r.stratE, show: r.possibleE && this.isAdvanced},
+                        {name: 'Home + Co. BTL', s: r.stratF, show: r.possibleF && this.isAdvanced}
+                    ].filter(i => i.show);
 
-        function updateCharts(data) {
-            const labels = Array.from({length: simYears}, (_, i) => `Year ${i+1}`);
-            document.getElementById('nwTitle').innerText = `Net Worth Projection (${simYears} Years)`;
-            document.getElementById('dmTitle').innerText = `Cumulative "Dead Money" (${simYears} Years)`;
-            
-            let datasets = [
-                { label: 'Rent & Invest', data: data.stratA.netWorth, borderColor: '#94a3b8', borderWidth: 2, tension: 0.3 },
-                { label: 'Buy & Live In', data: data.stratB.netWorth, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, hidden: !data.possibleB }
-            ];
-            if (isAdvanced) {
-                datasets.push(
-                    { label: 'Buy + Lodger', data: data.stratC.netWorth, borderColor: '#10b981', borderWidth: 2, tension: 0.3, hidden: !data.possibleB },
-                    { label: 'Company BTL', data: data.stratD.netWorth, borderColor: '#8b5cf6', borderWidth: 2, tension: 0.3, hidden: !data.possibleD },
-                    { label: 'Personal BTL', data: data.stratE.netWorth, borderColor: '#f97316', borderWidth: 2, tension: 0.3, hidden: !data.possibleE },
-                    { label: 'Home + Co. BTL', data: data.stratF.netWorth, borderColor: '#eab308', borderWidth: 2, tension: 0.3, hidden: !data.possibleF }
-                );
-            }
+                    const years = [2, 5, 10, 15, 25, 40];
+                    const yearStats = {};
+                    years.forEach(y => {
+                        const vals = strategies.map(str => str.s.netWorth[y-1]);
+                        yearStats[y] = { max: Math.max(...vals), min: Math.min(...vals), count: vals.length };
+                    });
 
-            if (netWorthChartInstance) netWorthChartInstance.destroy();
-            netWorthChartInstance = new Chart(document.getElementById('netWorthChart').getContext('2d'), {
-                type: 'line', data: { labels, datasets },
-                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
-            });
-            if (deadMoneyChartInstance) deadMoneyChartInstance.destroy();
-            const idx = simYears - 1;
-            const dmD = [
-                {l:'Rent', v:data.stratA.deadMoney[idx], c:'#94a3b8', s:true},
-                {l:'Buy & Live In', v:data.stratB.deadMoney[idx], c:'#3b82f6', s:data.possibleB},
-                {l:'Buy + Lodger', v:data.stratC.deadMoney[idx], c:'#10b981', s:isAdvanced && data.possibleB},
-                {l:'Co. BTL', v:data.stratD.deadMoney[idx], c:'#8b5cf6', s:isAdvanced && data.possibleD},
-                {l:'Pers. BTL', v:data.stratE.deadMoney[idx], c:'#f97316', s:isAdvanced && data.possibleE},
-                {l:'Home + Co.', v:data.stratF.deadMoney[idx], c:'#eab308', s:isAdvanced && data.possibleF}
-            ].filter(i => i.s);
-            deadMoneyChartInstance = new Chart(document.getElementById('deadMoneyChart').getContext('2d'), {
-                type: 'bar', data: { labels: dmD.map(i=>i.l), datasets: [{ label: `Cumulative Cost (Year ${idx+1})`, data: dmD.map(i=>i.v), backgroundColor: dmD.map(i=>i.c) }]},
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
-            });
-        }
+                    return strategies.map(str => {
+                        const cells = years.map(y => {
+                            const val = str.s.netWorth[y-1];
+                            const stats = yearStats[y];
+                            let style = "text-gray-600";
+                            if (val === stats.max) style = "font-bold text-green-700 bg-green-50 rounded-lg";
+                            else if (val === stats.min && stats.count > 1) style = "text-red-600 bg-red-50 rounded-lg";
+                            return { val: `£${Math.round(val/1000).toLocaleString()}k`, style };
+                        });
+                        return { name: str.name, cells };
+                    });
+                },
+                
+                get insights() {
+                    const tips = [];
+                    const yield = (this.i.currentRent * 12 / this.i.propertyPrice) * 100;
+                    if (yield < 3.5) tips.push({icon: '📉', title: 'Low Yield', text: `Rent is only ${yield.toFixed(1)}% of price. Renting is likely superior.`});
+                    else if (yield > 6) tips.push({icon: '📈', title: 'High Yield', text: `Rent is ${yield.toFixed(1)}% of price. Buying saves significant cost.`});
+                    if (this.i.stockGrowth > 10) tips.push({icon: '🚀', title: 'Aggressive Stocks', text: '10%+ growth is historically optimistic.'});
+                    if (this.i.depositPercent < 15) tips.push({icon: '⚖️', title: 'High Leverage', text: 'Low deposit amplifies both gains and negative equity risks.'});
+                    return tips;
+                },
 
-        function updateTable(data) {
-            const table = dom.table; table.innerHTML = '';
-            const strategies = [data.stratA, data.stratB, data.stratC, data.stratD, data.stratE, data.stratF];
-            const years = [2, 5, 10, 15, 25, 40];
-            const yearStats = {};
-            years.forEach(y => {
-                let vals = [];
-                strategies.forEach((s, idx) => {
-                    if ((idx === 1 || idx === 2) && !data.possibleB) return;
-                    if (idx === 3 && !data.possibleD) return;
-                    if (idx === 4 && !data.possibleE) return;
-                    if (idx === 5 && !data.possibleF) return;
-                    if (idx >= 2 && !isAdvanced) return;
-                    vals.push(s.netWorth[y-1] || 0);
-                });
-                yearStats[y] = { max: Math.max(...vals), min: Math.min(...vals), count: vals.length };
-            });
-            strategies.forEach((s, idx) => {
-                if ((idx === 1 || idx === 2) && !data.possibleB) return;
-                if (idx === 3 && !data.possibleD) return;
-                if (idx === 4 && !data.possibleE) return;
-                if (idx === 5 && !data.possibleF) return;
-                if (idx >= 2 && !isAdvanced) return;
-                const tr = document.createElement('tr');
-                let cells = `<td class="px-6 py-4 font-medium text-gray-900">${s.name}</td>`;
-                years.forEach(y => {
-                    const val = s.netWorth[y-1] || 0; const stats = yearStats[y];
-                    let style = "text-gray-600";
-                    if (val === stats.max) style = "font-bold text-green-700 bg-green-50 rounded-lg";
-                    else if (val === stats.min && stats.count > 1) style = "text-red-600 bg-red-50 rounded-lg";
-                    cells += `<td class="px-6 py-4 text-right"><span class="px-2 py-1 ${style}">£${Math.round(val/1000).toLocaleString()}k</span></td>`;
-                });
-                tr.innerHTML = cells; table.appendChild(tr);
-            });
-        }
+                calculate() {
+                    this.results = Engine.simulateStrategies(this.payload);
+                    this.updateCharts();
+                },
+                
+                updateCharts() {
+                    if (!this.results) return;
+                    const r = this.results;
+                    const len = this.simYears;
+                    const labels = Array.from({length: len}, (_, i) => `Year ${i+1}`);
+                    
+                    const mkDs = (lbl, data, color, hidden) => ({ label: lbl, data: data.slice(0, len), borderColor: color, borderWidth: 2, tension: 0.3, hidden });
+                    
+                    const nwDatasets = [
+                        mkDs('Rent & Invest', r.stratA.netWorth, '#94a3b8', false),
+                        mkDs('Buy & Live In', r.stratB.netWorth, '#3b82f6', !r.possibleB)
+                    ];
+                    if (this.isAdvanced) {
+                        nwDatasets.push(
+                            mkDs('Buy + Lodger', r.stratC.netWorth, '#10b981', !r.possibleB),
+                            mkDs('Company BTL', r.stratD.netWorth, '#8b5cf6', !r.possibleD),
+                            mkDs('Personal BTL', r.stratE.netWorth, '#f97316', !r.possibleE),
+                            mkDs('Home + Co. BTL', r.stratF.netWorth, '#eab308', !r.possibleF)
+                        );
+                    }
+                    // Filter out hidden entirely if !isAdvanced is handled by pushing logic
+                    
+                    if (this.nwChart) this.nwChart.destroy();
+                    this.nwChart = new Chart(document.getElementById('netWorthChart').getContext('2d'), {
+                        type: 'line', data: { labels, datasets: nwDatasets },
+                        options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
+                    });
 
-        function updateHeadline(data) {
-            const h = dom.headline; const idx = simYears - 1;
-            const strategies = [
-                {name: 'Renting', val: data.stratA.netWorth[idx], code: 'A', type: 'Rent', visible: true},
-                {name: 'Buy & Live In', val: data.possibleB ? data.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy', visible: true},
-                {name: 'Buy + Lodger', val: data.possibleB ? data.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy', visible: isAdvanced},
-                {name: 'Company BTL', val: data.possibleD ? data.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy', visible: isAdvanced},
-                {name: 'Personal BTL', val: data.possibleE ? data.stratE.netWorth[idx] : -Infinity, code: 'E', type: 'Buy', visible: isAdvanced},
-                {name: 'Home + Co. BTL', val: data.possibleF ? data.stratF.netWorth[idx] : -Infinity, code: 'F', type: 'Buy', visible: isAdvanced}
-            ].filter(s => s.visible);
-            strategies.sort((a,b) => b.val - a.val);
-            const winner = strategies[0], rentStrat = strategies.find(s => s.code === 'A');
-            if (!strategies.some(s => s.type === 'Buy' && s.val > -Infinity)) {
-                h.innerHTML = `<h2 class="text-2xl font-bold text-white">Renting is the only option</h2><p class="opacity-90">Insufficient liquid assets for any visible Buying strategy.</p>`;
-                return;
-            }
-            let title, desc, subtext, diff;
-            if (winner.type === 'Rent') {
-                const runnerUp = strategies[1]; diff = winner.val - runnerUp.val;
-                title = "Renting is the Wealthier Choice 🏖️";
-                desc = `Projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${runnerUp.name} after ${simYears} years.`;
-                subtext = "Investing the surplus in the stock market outperforms property equity in this scenario.";
-            } else {
-                diff = winner.val - rentStrat.val;
-                title = `${winner.name} Wins 🏡`;
-                desc = `Projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting after ${simYears} years.`;
-                const beY = data.be[winner.code];
-                subtext = beY ? `✅ Breakeven vs Renting occurs in <strong>Year ${beY}</strong>.` : `✅ ${winner.name} is better starting from <strong>Year 1</strong>.`;
-            }
-            h.innerHTML = `<div class="flex flex-col md:flex-row md:items-center gap-4"><div class="flex-1"><h2 class="text-2xl font-bold leading-tight text-white">${title}</h2><p class="text-lg mt-1 text-white">${desc}</p><p class="text-sm mt-2 text-white opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p></div><div class="hidden md:block text-right"><div class="text-sm uppercase tracking-wider text-white opacity-70">Projected Gain</div><div class="text-3xl font-bold text-white">+£${Math.round(diff/1000).toLocaleString()}k</div></div></div>`;
-        }
+                    // Dead Money
+                    const idx = len - 1;
+                    const dmData = [
+                        {l:'Rent', v:r.stratA.deadMoney[idx], c:'#94a3b8', s:true},
+                        {l:'Buy & Live In', v:r.stratB.deadMoney[idx], c:'#3b82f6', s:r.possibleB},
+                        {l:'Buy + Lodger', v:r.stratC.deadMoney[idx], c:'#10b981', s:r.possibleB && this.isAdvanced},
+                        {l:'Co. BTL', v:r.stratD.deadMoney[idx], c:'#8b5cf6', s:r.possibleD && this.isAdvanced},
+                        {l:'Pers. BTL', v:r.stratE.deadMoney[idx], c:'#f97316', s:r.possibleE && this.isAdvanced},
+                        {l:'Home + Co.', v:r.stratF.deadMoney[idx], c:'#eab308', s:r.possibleF && this.isAdvanced}
+                    ].filter(i => i.s);
 
-        function updateInspector() {
-            if (!lastSimData) return;
-            const year = parseInt(document.getElementById('yearSlider').value);
-            document.getElementById('inspectorLabel').innerText = `Year ${year}`;
-            const div = document.getElementById('inspectorGrid'); div.innerHTML = '';
-            const strategies = [lastSimData.stratA, lastSimData.stratB, lastSimData.stratC, lastSimData.stratD, lastSimData.stratE, lastSimData.stratF];
-            const colors = ['border-gray-300', 'border-blue-400', 'border-green-400', 'border-purple-400', 'border-orange-400', 'border-yellow-500'];
-            const bgs = ['bg-white', 'bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-orange-50', 'bg-yellow-50'];
-            let validVals = [];
-            strategies.forEach((s, i) => { if (((i===1||i===2)&&!lastSimData.possibleB) || (i===3&&!lastSimData.possibleD) || (i===4&&!lastSimData.possibleE) || (i===5&&!lastSimData.possibleF) || (i>=2&&!isAdvanced)) return; validVals.push(s.netWorth[year-1] || 0); });
-            const maxVal = Math.max(...validVals), minVal = Math.min(...validVals);
-            strategies.forEach((s, i) => {
-                if (((i===1||i===2)&&!lastSimData.possibleB) || (i===3&&!lastSimData.possibleD) || (i===4&&!lastSimData.possibleE) || (i===5&&!lastSimData.possibleF) || (i>=2&&!isAdvanced)) return;
-                const nw = s.netWorth[year-1] || 0, liq = s.liquidHistory[year-1] || 0, eq = nw - liq;
-                let cClass = (nw === maxVal) ? "border-green-500 bg-green-50 ring-1 ring-green-500" : (nw === minVal && validVals.length > 1) ? "border-red-300 bg-red-50 opacity-90" : "border-gray-300 bg-gray-50";
-                let badge = (nw === maxVal) ? '<span class="ml-auto text-[10px] font-bold text-green-700 bg-green-200 px-2 py-0.5 rounded-full">BEST</span>' : (nw === minVal && validVals.length > 1) ? '<span class="ml-auto text-[10px] font-bold text-red-700 bg-red-200 px-2 py-0.5 rounded-full">WORST</span>' : '';
-                div.innerHTML += `<div class="p-3 rounded border-l-4 shadow-sm ${cClass} transition-all duration-200"><div class="flex items-center mb-2"><div class="text-xs font-bold text-gray-500 uppercase truncate pr-2">${s.name}</div>${badge}</div><div class="text-xl font-bold text-gray-800">£${Math.round(nw/1000).toLocaleString()}k</div><div class="text-xs text-gray-500 mt-2 flex justify-between border-t border-black/5 pt-2"><span>💵 £${Math.round(liq/1000)}k</span><span>🏠 £${Math.round(eq/1000)}k</span></div></div>`;
-            });
-        }
+                    if (this.dmChart) this.dmChart.destroy();
+                    this.dmChart = new Chart(document.getElementById('deadMoneyChart').getContext('2d'), {
+                        type: 'bar', data: { labels: dmData.map(i=>i.l), datasets: [{ label: 'Cumulative Cost', data: dmData.map(i=>i.v), backgroundColor: dmData.map(i=>i.c) }]},
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
+                    });
+                },
 
-        function updateInsights(V) {
-            const div = document.getElementById('insights'); div.innerHTML = '';
-            const yield = (V.rent * 12 / V.price) * 100;
-            const tips = [];
-            if (yield < 3.5) tips.push({icon: '📉', title: 'Low Yield', text: `Rent is only ${yield.toFixed(1)}% of price. Renting is likely superior.`});
-            else if (yield > 6) tips.push({icon: '📈', title: 'High Yield', text: `Rent is ${yield.toFixed(1)}% of price. Buying saves significant cost.`});
-            if (V.stockGrowth > 0.10) tips.push({icon: '🚀', title: 'Aggressive Stocks', text: '10%+ growth is historically optimistic.'});
-            if (V.depositPct < 0.15) tips.push({icon: '⚖️', title: 'High Leverage', text: 'Low deposit amplifies both gains and negative equity risks.'});
-            tips.forEach(t => { div.innerHTML += `<div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3"><span class="text-2xl">${t.icon}</span><div><h4 class="font-bold text-blue-900 text-sm">${t.title}</h4><p class="text-xs text-blue-800 leading-relaxed">${t.text}</p></div></div>`; });
-        }
+                applyPreset(name) {
+                    const presets = {
+                        nomad: { liquidAssets: 100000, isaBalance: 20000, monthlySavings: 2000, stockGrowth: 12, currentRent: 800, propertyPrice: 350000, renoCost: 0, isFTB: true, lodgerIncome: 0, taxBand: 'basic', depositPercent: 25 },
+                        london: { liquidAssets: 130000, isaBalance: 30000, monthlySavings: 1500, stockGrowth: 7, currentRent: 2400, propertyPrice: 500000, renoCost: 10000, isFTB: true, lodgerIncome: 0, taxBand: 'higher', depositPercent: 20 },
+                        starter: { liquidAssets: 40000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8, currentRent: 1200, propertyPrice: 280000, renoCost: 5000, isFTB: true, lodgerIncome: 625, lodgerYears: 5, taxBand: 'basic', depositPercent: 10 },
+                        landlord: { liquidAssets: 90000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8, currentRent: 2500, propertyPrice: 200000, renoCost: 15000, isFTB: false, lodgerIncome: 0, taxBand: 'additional', depositPercent: 25 }
+                    };
+                    if (presets[name]) Object.assign(this.i, presets[name]);
+                },
 
-        function applyPreset(name) {
-            const presets = {
-                nomad: { liquidAssets: 100000, isaBalance: 20000, monthlySavings: 2000, stockGrowth: 12, currentRent: 800, propertyPrice: 350000, renoCost: 0, isFTB: true, lodgerIncome: 0, taxBand: 'basic', depositPercent: 25 },
-                london: { liquidAssets: 130000, isaBalance: 30000, monthlySavings: 1500, stockGrowth: 7, currentRent: 2400, propertyPrice: 500000, renoCost: 10000, isFTB: true, lodgerIncome: 0, taxBand: 'higher', depositPercent: 20 },
-                starter: { liquidAssets: 40000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8, currentRent: 1200, propertyPrice: 280000, renoCost: 5000, isFTB: true, lodgerIncome: 625, lodgerYears: 5, taxBand: 'basic', depositPercent: 10 },
-                landlord: { liquidAssets: 90000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8, currentRent: 2500, propertyPrice: 200000, renoCost: 15000, isFTB: false, lodgerIncome: 0, taxBand: 'additional', depositPercent: 25 }
-            };
-            const s = presets[name]; if (!s) return;
-            Object.keys(s).forEach(k => { if (inputs[k]) { if (inputs[k].type === 'checkbox') inputs[k].checked = s[k]; else inputs[k].value = s[k]; } });
-            ['liquidAssets', 'monthlySavings', 'stockGrowth', 'currentRent', 'propertyPrice'].forEach(id => { const el = document.getElementById(id); if (el && el.nextElementSibling && el.nextElementSibling.type === 'range') el.nextElementSibling.value = el.value; });
-            calculateAll();
-        }
+                save() {
+                    const p = new URLSearchParams();
+                    Object.entries(this.i).forEach(([k, v]) => p.set(k, v));
+                    window.history.replaceState({}, '', `${window.location.pathname}?${p.toString()}`);
+                    localStorage.setItem('rentVsBuyData', JSON.stringify(this.i));
+                },
 
-        function updateURL() {
-            const p = new URLSearchParams();
-            Object.entries(inputs).forEach(([k, el]) => p.set(k, el.type === 'checkbox' ? el.checked : el.value));
-            window.history.replaceState({}, '', `${window.location.pathname}?${p.toString()}`);
-        }
-
-        function saveToStorage() {
-            const d = {}; Object.entries(inputs).forEach(([k, el]) => d[k] = (el.type === 'checkbox' ? el.checked : el.value));
-            localStorage.setItem('rentVsBuyData', JSON.stringify(d));
-        }
-
-        function loadState() {
-            const p = new URLSearchParams(window.location.search);
-            if (!p.keys().next().done) { Object.entries(inputs).forEach(([k, el]) => { if (p.has(k)) { if (el.type === 'checkbox') el.checked = p.get(k) === 'true'; else el.value = p.get(k); } }); }
-            else {
-                const saved = localStorage.getItem('rentVsBuyData');
-                if (saved) { try { const d = JSON.parse(saved); Object.entries(d).forEach(([k, v]) => { if (inputs[k]) { if (inputs[k].type === 'checkbox') inputs[k].checked = v; else inputs[k].value = v; } }); } catch (e) {} }
-            }
-        }
-
-        function copyShareLink() {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                const btn = document.querySelectorAll('header button')[1]; const o = btn.innerText; btn.innerText = "Copied! ✅"; setTimeout(() => btn.innerText = o, 2000);
-            });
-        }
-
-        function setupSliders() {
-            const config = { liquidAssets: { min: 0, max: 500000, step: 1000 }, monthlySavings: { min: 0, max: 5000, step: 50 }, stockGrowth: { min: 0, max: 15, step: 0.1 }, currentRent: { min: 0, max: 4000, step: 50 }, propertyPrice: { min: 100000, max: 1000000, step: 5000 } };
-            for (const [id, cfg] of Object.entries(config)) {
-                const num = document.getElementById(id); if (!num) continue;
-                const r = document.createElement('input'); r.type = 'range'; r.min = cfg.min; r.max = cfg.max; r.step = cfg.step; r.value = num.value;
-                r.className = "w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600";
-                r.addEventListener('input', (e) => { num.value = e.target.value; calculateAll(); });
-                num.addEventListener('input', (e) => { r.value = e.target.value; });
-                num.parentNode.appendChild(r);
-            }
-        }
-
-        function setHorizon(y) {
-            simYears = y;
-            [5, 10, 15, 25, 40].forEach(b => {
-                const btn = document.getElementById(`btn${b}y`);
-                if (btn) btn.className = y === b ? "px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-medium transition" : "px-3 py-1 rounded text-gray-500 hover:bg-gray-50 transition";
-            });
-            calculateAll();
-        }
-
-        function toggleStockCrash() { isStockCrash = !isStockCrash; updateCrashUI(); calculateAll(); }
-        function togglePropCrash() { isPropCrash = !isPropCrash; updateCrashUI(); calculateAll(); }
-        function toggleAdvanced() {
-            isAdvanced = document.getElementById('advancedToggle').checked;
-            document.querySelectorAll('.advanced-input').forEach(el => isAdvanced ? el.classList.remove('hidden') : el.classList.add('hidden'));
-            document.querySelectorAll('.advanced-only').forEach(el => isAdvanced ? el.classList.remove('hidden') : el.classList.add('hidden'));
-            calculateAll();
-        }
-
-        function updateCrashUI() {
-            const banner = document.getElementById('crashBanner'), msg = document.getElementById('crashMsg'), btnS = document.getElementById('btnStockCrash'), btnP = document.getElementById('btnPropCrash');
-            btnS.className = isStockCrash ? "px-3 py-2 bg-red-600 border border-red-700 text-white rounded-full text-xs font-medium hover:bg-red-700 transition shadow-sm flex items-center gap-1 ring-2 ring-red-300 has-tooltip" : "px-3 py-2 bg-white border border-red-200 text-red-700 rounded-full text-xs font-medium hover:bg-red-50 transition shadow-sm flex items-center gap-1 has-tooltip";
-            btnP.className = isPropCrash ? "px-3 py-2 bg-orange-600 border border-orange-700 text-white rounded-full text-xs font-medium hover:bg-orange-700 transition shadow-sm flex items-center gap-1 ring-2 ring-orange-300 has-tooltip" : "px-3 py-2 bg-white border border-orange-200 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-50 transition shadow-sm flex items-center gap-1 has-tooltip";
-            if (!isStockCrash && !isPropCrash) banner.classList.add('hidden');
-            else { banner.classList.remove('hidden'); msg.innerHTML = `<h4 class="font-bold text-red-800 text-sm">Simulation Active: Year 1 Shock</h4><p class="text-xs text-red-700 mt-1">${isStockCrash?'📉 <strong>Stock Crash (-30%)</strong> applied.<br>':''}${isPropCrash?'🏠 <strong>Property Crash (-15%)</strong> applied.<br>':''}Resilience test active.</p>`; }
-        }
-
-        function toggleStrategies() {
-            const div = document.getElementById('stratGuide'); const arrow = document.getElementById('stratToggleArrow');
-            if (div.classList.contains('hidden')) { div.classList.remove('hidden'); arrow.classList.add('rotate-90'); }
-            else { div.classList.add('hidden'); arrow.classList.remove('rotate-90'); }
-        }
-
-        function calculateAll() {
-            const V = getSimData();
-            dom.giaDisplay.innerText = `Remaining £${Math.round(Math.max(0, V.liquid - V.isa)).toLocaleString()} is in GIA (Taxable)`;
-            const sdB = Engine.calculateStampDuty(V.price, 'personal', V.isFTB);
-            const upfrontB = (V.price*V.depositPct) + sdB + 2000 + V.reno;
-            const sdD = Engine.calculateStampDuty(V.price, 'company', false);
-            const upfrontD = (V.price*V.depositPct) + sdD + 2000 + V.reno;
-            let err = [];
-            if (upfrontB > V.liquid) err.push(`Insufficient funds for Buy (Need £${Math.round(upfrontB/1000)}k)`);
-            if (err.length > 0) { dom.errorArea.classList.remove('hidden'); dom.errorText.innerHTML = err.join('<br>'); } else dom.errorArea.classList.add('hidden');
-            const data = Engine.simulateStrategies(V); lastSimData = data;
-            updateCharts(data); updateTable(data); updateHeadline(data); updateInsights(V); updateInspector(); updateURL(); saveToStorage();
-        }
-
-        document.getElementById('yearSlider').addEventListener('input', updateInspector);
-        setupSliders(); loadState(); calculateAll();
+                copyLink() {
+                    navigator.clipboard.writeText(window.location.href).then(() => {
+                        this.copied = true; setTimeout(() => this.copied = false, 2000);
+                    });
+                }
+            }));
+        });
     </script>
 </body>
 </html>

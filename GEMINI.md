@@ -59,6 +59,7 @@ This is a financial tool. A math error is worse than a crash.
 ## 📂 Key Files
 
 *   `engine.js`: Core logic. (Pure JS, CommonJS/Browser hybrid export).
+*   `app.js`: UI logic and state management (Alpine.js).
 *   `engine.test.js`: Jest test suite. Defines "Golden Scenarios".
 *   `index.html`: Main UI. Imports `engine.js`.
 *   `.husky/pre-commit`: Ensures tests pass before commit.

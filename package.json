@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   },
   "homepage": "https://github.com/itsmuaaz/rent-vs-buy#readme",
   "devDependencies": {
+    "husky": "^9.1.7",
     "jest": "^30.2.0"
   }
 }

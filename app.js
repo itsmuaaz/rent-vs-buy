@@ -77,6 +77,32 @@ document.addEventListener('alpine:init', () => {
             return errs;
         },
 
+        get homeStats() {
+            if (!this.i.home.active) return null;
+            const H = this.i.home;
+            const P = this.i.personal;
+            const stamp = Engine.calculateStampDuty(H.price, 'personal', P.isFTB);
+            const deposit = H.price * (H.depositPct / 100);
+            const upfront = deposit + stamp + H.buyingCost + H.renoCost;
+            const debt = H.price - deposit;
+            const mortgage = Engine.calculateMortgage(debt, H.rate, H.term);
+            return { stamp, upfront, mortgage, debt };
+        },
+
+        get btlStats() {
+            if (!this.i.btl.active) return null;
+            const B = this.i.btl;
+            const stamp = Engine.calculateStampDuty(B.price, 'company', false);
+            const deposit = B.price * (B.depositPct / 100);
+            const upfront = deposit + stamp + (B.buyingCost||2000);
+            const debt = B.price - deposit;
+            // Use Company rate if selected, else Personal. If both, Company.
+            const rate = B.wrappers.company ? B.rateCompany : B.ratePersonal; 
+            const mortgage = Engine.calculateMortgage(debt, rate, B.term);
+            const rent = (B.price * (B.rentYield/100)) / 12;
+            return { stamp, upfront, mortgage, rent };
+        },
+
         getNW(s, idx) {
             if (!s) return -Infinity;
             const arr = (this.valuationMode === 'gross') ? s.netWorth : s.netWorthLiquid;

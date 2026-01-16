@@ -414,6 +414,7 @@
                     this.$watch('isStockCrash', () => this.calculate());
                     this.$watch('isPropCrash', () => this.calculate());
                     this.$watch('valuationMode', () => this.updateCharts());
+                    this.$watch('isAdvanced', () => this.updateCharts());
                     
                     // Initial calculation and charts setup
                     this.$nextTick(() => { this.calculate(); });

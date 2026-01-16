@@ -364,7 +364,7 @@ Engine.simulateStrategies = function(V) {
             const bSellFee = hF2 * (B.sellingCostPct || 0.015); // Default BTL sell cost? Not in schema yet, assume 1.5%
             const bGross = Math.max(0, hF2 - dF2) + coCashF;
             let bProceeds = Math.max(0, hF2 - bSellFee - dF2);
-            const bGain = (hF2 - bSellFee) - propBasisD; // Use D basis
+            const bGain = (hF2 - bSellFee) - pbF2; // Use F's basis
             if (bGain > 0) bProceeds -= (bGain * rates.corp);
             const bLiquid = Math.max(0, (bProceeds + coCashF) * (1 - rates.div));
             

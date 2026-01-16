@@ -314,7 +314,8 @@
                     <div class="relative h-72 w-full"><canvas id="netWorthChart"></canvas></div>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="`Cumulative Dead Money (${simYears} Years)`"></h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2" x-text="`Cumulative Dead Money (${simYears} Years)`"></h3>
+                    <p class="text-xs text-gray-500 mb-4">"Dead Money" is unrecoverable cost: Rent, Mortgage Interest, Maintenance, Taxes, and Buying Fees.</p>
                     <div class="relative h-72 w-full"><canvas id="deadMoneyChart"></canvas></div>
                 </div>
             </div>
@@ -583,21 +584,40 @@
                         options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
                     });
 
-                    // Dead Money
+                    // Dead Money Breakdown
                     const idx = len - 1;
-                    const dmData = [
-                        {l:'Rent', v:r.stratA.deadMoney[idx], c:'#94a3b8', s:true},
-                        {l:'Buy & Live In', v:r.stratB.deadMoney[idx], c:'#3b82f6', s:r.possibleB},
-                        {l:'Buy + Lodger', v:r.stratC.deadMoney[idx], c:'#10b981', s:r.possibleB && this.isAdvanced},
-                        {l:'Co. BTL', v:r.stratD.deadMoney[idx], c:'#8b5cf6', s:r.possibleD && this.isAdvanced},
-                        {l:'Pers. BTL', v:r.stratE.deadMoney[idx], c:'#f97316', s:r.possibleE && this.isAdvanced},
-                        {l:'Home + Co.', v:r.stratF.deadMoney[idx], c:'#eab308', s:r.possibleF && this.isAdvanced}
-                    ].filter(i => i.s);
+                    const strategies = [
+                        {l:'Rent', s:r.stratA, v:true},
+                        {l:'Buy & Live In', s:r.stratB, v:r.possibleB},
+                        {l:'Buy + Lodger', s:r.stratC, v:r.possibleB && this.isAdvanced},
+                        {l:'Co. BTL', s:r.stratD, v:r.possibleD && this.isAdvanced},
+                        {l:'Pers. BTL', s:r.stratE, v:r.possibleE && this.isAdvanced},
+                        {l:'Home + Co.', s:r.stratF, v:r.possibleF && this.isAdvanced}
+                    ].filter(x => x.v);
+
+                    const labelsDM = strategies.map(x => x.l);
+                    const dsRent = { label: 'Rent', data: strategies.map(x => x.s.breakdown.rent[idx]), backgroundColor: '#94a3b8', stack: 'Stack 0' };
+                    const dsInt = { label: 'Interest', data: strategies.map(x => x.s.breakdown.interest[idx]), backgroundColor: '#ef4444', stack: 'Stack 0' };
+                    const dsMaint = { label: 'Maintenance', data: strategies.map(x => x.s.breakdown.maintenance[idx]), backgroundColor: '#f59e0b', stack: 'Stack 0' };
+                    const dsTax = { label: 'Tax', data: strategies.map(x => x.s.breakdown.tax[idx]), backgroundColor: '#8b5cf6', stack: 'Stack 0' };
+                    const dsFees = { label: 'Fees (Stamp/Legal)', data: strategies.map(x => x.s.breakdown.fees[idx]), backgroundColor: '#64748b', stack: 'Stack 0' };
 
                     if (this.dmChart) this.dmChart.destroy();
                     this.dmChart = new Chart(document.getElementById('deadMoneyChart').getContext('2d'), {
-                        type: 'bar', data: { labels: dmData.map(i=>i.l), datasets: [{ label: 'Cumulative Cost', data: dmData.map(i=>i.v), backgroundColor: dmData.map(i=>i.c) }]},
-                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } } }
+                        type: 'bar', 
+                        data: { 
+                            labels: labelsDM, 
+                            datasets: [dsRent, dsInt, dsMaint, dsTax, dsFees] 
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            scales: { 
+                                x: { stacked: true }, 
+                                y: { stacked: true, ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } 
+                            },
+                            interaction: { mode: 'index', intersect: false }
+                        }
                     });
                 },
 

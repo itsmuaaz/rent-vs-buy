@@ -91,6 +91,16 @@
                     <input type="number" x-model.number="i.stockGrowth" class="input-field" step="0.1">
                     <input type="range" x-model.number="i.stockGrowth" min="0" max="15" step="0.1">
                 </div>
+                
+                <div class="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded text-xs text-indigo-800">
+                    <div class="font-bold flex justify-between">
+                        <span>Total Monthly Budget:</span>
+                        <span x-text="`£${(i.monthlySavings + i.currentRent).toLocaleString()}`"></span>
+                    </div>
+                    <div class="mt-1 opacity-90">
+                        We assume this total budget is fixed. If your mortgage is cheaper than rent, the difference is <strong>automatically invested</strong>.
+                    </div>
+                </div>
             </div>
 
             <!-- Section 2: Rental -->

@@ -263,22 +263,34 @@ document.addEventListener('alpine:init', () => {
         },
 
         applyPreset(name) {
-            // Simplified mapping for now
             const presets = {
-                london: {
-                    personal: { liquidAssets: 130000, isaBalance: 30000, monthlySavings: 1500, taxBand: 'higher', rent: {current:2400} },
-                    home: { active: true, price: 500000, depositPct: 20 },
-                },
                 nomad: {
-                    personal: { liquidAssets: 100000, rent: {current:800}, stockGrowth: 12 },
-                    home: { active: false }
+                    personal: { liquidAssets: 100000, rent: {current:800}, stockGrowth: 12, monthlySavings: 2000, isFTB: true },
+                    home: { active: false },
+                    btl: { active: false }
+                },
+                london: {
+                    personal: { liquidAssets: 130000, isaBalance: 30000, monthlySavings: 1500, taxBand: 'higher', rent: {current:2400}, isFTB: true },
+                    home: { active: true, price: 500000, depositPct: 20, rate: 4.5, serviceCharge: 2000, repairRate: 0.5 },
+                    btl: { active: false }
+                },
+                starter: {
+                    personal: { liquidAssets: 40000, isaBalance: 5000, monthlySavings: 800, stockGrowth: 8, rent: {current:1200}, isFTB: true, taxBand: 'basic' },
+                    home: { active: true, price: 280000, depositPct: 10, rate: 4.8, renoCost: 5000, lodger: {active: true, income: 625, years: 5} },
+                    btl: { active: false }
+                },
+                landlord: {
+                    personal: { liquidAssets: 90000, isaBalance: 10000, monthlySavings: 3000, stockGrowth: 8, rent: {current:2500}, isFTB: false, taxBand: 'additional' },
+                    home: { active: false }, // Renting
+                    btl: { active: true, price: 200000, depositPct: 25, rentYield: 6, wrappers: { company: true, personal: false } }
                 }
             };
             
             const p = presets[name];
             if (p) {
                 if(p.personal) Object.assign(this.i.personal, p.personal);
-                if(p.home) Object.assign(this.i.home, p.home);
+                if(p.home) { Object.assign(this.i.home, p.home); if(p.home.lodger) Object.assign(this.i.home.lodger, p.home.lodger); }
+                if(p.btl) { Object.assign(this.i.btl, p.btl); if(p.btl.wrappers) Object.assign(this.i.btl.wrappers, p.btl.wrappers); }
             }
         },
 

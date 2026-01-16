@@ -64,9 +64,23 @@
                 </label>
             </div>
             
-            <!-- Section 1: Financial Profile -->
+            <!-- Section 1: Rental -->
             <div class="mb-6">
-                <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">1. Financial Profile</h3>
+                <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">1. Rental Scenario</h3>
+                <div class="input-group">
+                    <label class="input-label">Current Rent (£/mo)</label>
+                    <input type="number" x-model.number="i.currentRent" class="input-field">
+                    <input type="range" x-model.number="i.currentRent" min="0" max="4000" step="50">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Rent Inflation (%)</label>
+                    <input type="number" x-model.number="i.rentInflation" class="input-field" step="0.1">
+                </div>
+            </div>
+
+            <!-- Section 2: Financial Profile -->
+            <div class="mb-6">
+                <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">2. Financial Profile</h3>
                 
                 <div class="input-group">
                     <label class="input-label"><span class="has-tooltip">Total Investable Capital (£)<span class="tooltip">Total cash/stocks available for Deposit or Investment.</span></span></label>
@@ -81,7 +95,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label class="input-label"><span class="has-tooltip">Monthly Investment (£)<span class="tooltip">Allocated to stocks. Fills £20k/yr ISA first, then GIA (Taxable).</span></span></label>
+                    <label class="input-label"><span class="has-tooltip">Monthly Savings (£)<span class="tooltip">Allocated to stocks. Fills £20k/yr ISA first, then GIA (Taxable).</span></span></label>
                     <input type="number" x-model.number="i.monthlySavings" class="input-field">
                     <input type="range" x-model.number="i.monthlySavings" min="0" max="5000" step="50">
                 </div>
@@ -100,20 +114,6 @@
                     <div class="mt-1 opacity-90">
                         We assume this total budget is fixed. If your mortgage is cheaper than rent, the difference is <strong>automatically invested</strong>.
                     </div>
-                </div>
-            </div>
-
-            <!-- Section 2: Rental -->
-            <div class="mb-6">
-                <h3 class="font-semibold text-slate-700 mb-2 border-b pb-1">2. Rental Scenario</h3>
-                <div class="input-group">
-                    <label class="input-label">Current Rent (£/mo)</label>
-                    <input type="number" x-model.number="i.currentRent" class="input-field">
-                    <input type="range" x-model.number="i.currentRent" min="0" max="4000" step="50">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Rent Inflation (%)</label>
-                    <input type="number" x-model.number="i.rentInflation" class="input-field" step="0.1">
                 </div>
             </div>
 

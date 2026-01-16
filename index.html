@@ -334,9 +334,10 @@
                                 <span x-show="s.badge" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full" :class="s.badgeClass" x-text="s.badge"></span>
                             </div>
                             <div class="text-xl font-bold text-gray-800" x-text="`£${Math.round(s.nw/1000).toLocaleString()}k`"></div>
-                            <div class="text-xs text-gray-500 mt-2 flex justify-between border-t border-black/5 pt-2">
-                                <span x-text="`💵 £${Math.round(s.liq/1000)}k`"></span>
-                                <span x-text="`🏠 £${Math.round(s.eq/1000)}k`"></span>
+                            <div class="text-xs text-gray-500 mt-2 space-y-1 border-t border-black/5 pt-2">
+                                <div class="flex justify-between"><span>💵 Cash:</span><span x-text="`£${Math.round(s.liq/1000)}k`"></span></div>
+                                <div class="flex justify-between"><span>🏠 Equity:</span><span x-text="`£${Math.round(s.eq/1000)}k`"></span></div>
+                                <div class="flex justify-between text-red-400" title="Cumulative Interest Paid"><span>📉 Interest:</span><span x-text="`£${Math.round(s.int/1000)}k`"></span></div>
                             </div>
                         </div>
                     </template>
@@ -455,13 +456,13 @@
                     const idx = this.simYears - 1;
                     const r = this.results;
                     const strats = [
-                        {name: 'Renting', val: this.getNW(r.stratA, idx), code: 'A', type: 'Rent'},
-                        {name: 'Buy & Live In', val: r.possibleB ? this.getNW(r.stratB, idx) : -Infinity, code: 'B', type: 'Buy'},
-                        {name: 'Buy + Lodger', val: r.possibleB ? this.getNW(r.stratC, idx) : -Infinity, code: 'C', type: 'Buy', show: this.isAdvanced},
-                        {name: 'Company BTL', val: r.possibleD ? this.getNW(r.stratD, idx) : -Infinity, code: 'D', type: 'Buy', show: this.isAdvanced},
-                        {name: 'Personal BTL', val: r.possibleE ? this.getNW(r.stratE, idx) : -Infinity, code: 'E', type: 'Buy', show: this.isAdvanced},
-                        {name: 'Home + Co. BTL', val: r.possibleF ? this.getNW(r.stratF, idx) : -Infinity, code: 'F', type: 'Buy', show: this.isAdvanced}
-                    ].filter(s => s.show !== false); // Default true if undefined
+                        {name: 'Renting', val: this.getNW(r.stratA, idx), interest: 0, code: 'A', type: 'Rent'},
+                        {name: 'Buy & Live In', val: r.possibleB ? this.getNW(r.stratB, idx) : -Infinity, interest: r.possibleB ? r.stratB.totalInterest[idx] : 0, code: 'B', type: 'Buy'},
+                        {name: 'Buy + Lodger', val: r.possibleB ? this.getNW(r.stratC, idx) : -Infinity, interest: r.possibleB ? r.stratC.totalInterest[idx] : 0, code: 'C', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Company BTL', val: r.possibleD ? this.getNW(r.stratD, idx) : -Infinity, interest: r.possibleD ? r.stratD.totalInterest[idx] : 0, code: 'D', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Personal BTL', val: r.possibleE ? this.getNW(r.stratE, idx) : -Infinity, interest: r.possibleE ? r.stratE.totalInterest[idx] : 0, code: 'E', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Home + Co. BTL', val: r.possibleF ? this.getNW(r.stratF, idx) : -Infinity, interest: r.possibleF ? r.stratF.totalInterest[idx] : 0, code: 'F', type: 'Buy', show: this.isAdvanced}
+                    ].filter(s => s.show !== false); 
                     
                     strats.sort((a,b) => b.val - a.val);
                     const winner = strats[0];
@@ -474,13 +475,12 @@
                         const diff = winner.val - strats[1].val;
                         title = "Renting is the Wealthier Choice 🏖️";
                         desc = `Projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${strats[1].name}.`;
-                        subtext = "Investing the surplus outperforms property equity.";
+                        subtext = `You avoided paying <strong>£${Math.round(strats[1].interest/1000)}k</strong> in mortgage interest. Investing the surplus returns more.`;
                     } else {
                         const diff = winner.val - rentVal;
                         title = `${winner.name} Wins 🏡`;
                         desc = `Projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting.`;
-                        const beY = r.be[winner.code];
-                        subtext = beY ? `✅ Breakeven vs Renting in <strong>Year ${beY}</strong>.` : `✅ ${winner.name} is better starting from Year 1.`;
+                        subtext = `Although you paid <strong>£${Math.round(winner.interest/1000)}k</strong> in interest, the property equity growth outweighed it.`;
                     }
                     return `<div class="flex flex-col md:flex-row md:items-center gap-4"><div class="flex-1"><h2 class="text-2xl font-bold leading-tight">${title}</h2><p class="text-lg mt-1">${desc}</p><p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p></div></div>`;
                 },
@@ -490,12 +490,12 @@
                     const y = this.inspectorYear - 1;
                     const r = this.results;
                     const list = [
-                        {name: 'Rent', nw: this.getNW(r.stratA, y), liq: r.stratA.liquidHistory[y], code: 'A', visible: true},
-                        {name: 'Buy', nw: this.getNW(r.stratB, y), liq: r.stratB.liquidHistory[y], code: 'B', visible: r.possibleB},
-                        {name: 'Lodger', nw: this.getNW(r.stratC, y), liq: r.stratC.liquidHistory[y], code: 'C', visible: r.possibleB && this.isAdvanced},
-                        {name: 'Co. BTL', nw: this.getNW(r.stratD, y), liq: r.stratD.liquidHistory[y], code: 'D', visible: r.possibleD && this.isAdvanced},
-                        {name: 'Pers. BTL', nw: this.getNW(r.stratE, y), liq: r.stratE.liquidHistory[y], code: 'E', visible: r.possibleE && this.isAdvanced},
-                        {name: 'Home+Co', nw: this.getNW(r.stratF, y), liq: r.stratF.liquidHistory[y], code: 'F', visible: r.possibleF && this.isAdvanced}
+                        {name: 'Rent', nw: this.getNW(r.stratA, y), liq: r.stratA.liquidHistory[y], int: r.stratA.totalInterest[y], code: 'A', visible: true},
+                        {name: 'Buy', nw: this.getNW(r.stratB, y), liq: r.stratB.liquidHistory[y], int: r.stratB.totalInterest[y], code: 'B', visible: r.possibleB},
+                        {name: 'Lodger', nw: this.getNW(r.stratC, y), liq: r.stratC.liquidHistory[y], int: r.stratC.totalInterest[y], code: 'C', visible: r.possibleB && this.isAdvanced},
+                        {name: 'Co. BTL', nw: this.getNW(r.stratD, y), liq: r.stratD.liquidHistory[y], int: r.stratD.totalInterest[y], code: 'D', visible: r.possibleD && this.isAdvanced},
+                        {name: 'Pers. BTL', nw: this.getNW(r.stratE, y), liq: r.stratE.liquidHistory[y], int: r.stratE.totalInterest[y], code: 'E', visible: r.possibleE && this.isAdvanced},
+                        {name: 'Home+Co', nw: this.getNW(r.stratF, y), liq: r.stratF.liquidHistory[y], int: r.stratF.totalInterest[y], code: 'F', visible: r.possibleF && this.isAdvanced}
                     ].filter(s => s.visible).map(s => ({...s, eq: s.nw - s.liq}));
 
                     const max = Math.max(...list.map(s=>s.nw)), min = Math.min(...list.map(s=>s.nw));

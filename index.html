@@ -116,6 +116,15 @@
                     <input type="range" x-model.number="i.propertyPrice" min="100000" max="1000000" step="5000">
                 </div>
                 <div class="input-group">
+                    <label class="input-label"><span class="has-tooltip">Buying Costs (£)<span class="tooltip">Solicitor, Surveyor, Mortgage Broker fees.</span></span></label>
+                    <input type="number" x-model.number="i.buyingCost" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="input-label"><span class="has-tooltip">Maintenance (%/yr)<span class="tooltip">Annual repairs. Usually 1% of property value.</span></span></label>
+                    <input type="number" x-model.number="i.maintenanceRate" class="input-field" step="0.1">
+                    <input type="range" x-model.number="i.maintenanceRate" min="0" max="3" step="0.1">
+                </div>
+                <div class="input-group">
                     <label class="input-label"><span class="has-tooltip">Renovation Cost (£)<span class="tooltip">Increases value to 'Post-Work Value' instantly (Forced Equity).</span></span></label>
                     <input type="number" x-model.number="i.renoCost" class="input-field">
                 </div>
@@ -337,7 +346,7 @@
                 i: { // inputs
                     liquidAssets: 50000, isaBalance: 20000, monthlySavings: 1000, stockGrowth: 8,
                     currentRent: 1500, rentInflation: 3,
-                    propertyPrice: 400000, renoCost: 60000, postWorkValue: 525000,
+                    propertyPrice: 400000, renoCost: 60000, postWorkValue: 525000, buyingCost: 2000, maintenanceRate: 1.0,
                     depositPercent: 25, mortgageTerm: 30, ratePersonal: 4.5, rateCompany: 5.5,
                     isFTB: true, lodgerIncome: 900, lodgerYears: 2, taxBand: 'additional'
                 },
@@ -372,6 +381,7 @@
                         depositPct: this.i.depositPercent/100, term: this.i.mortgageTerm,
                         rateP: this.i.ratePersonal, rateC: this.i.rateCompany, isFTB: this.i.isFTB,
                         lodgerInc: this.i.lodgerIncome, lodgerYears: this.i.lodgerYears, taxBand: this.i.taxBand,
+                        buyingCost: this.i.buyingCost, maintenanceRate: this.i.maintenanceRate,
                         isStockCrash: this.isStockCrash, isPropCrash: this.isPropCrash
                     };
                 },

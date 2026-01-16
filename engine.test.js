@@ -50,4 +50,30 @@ describe('Simulation Verification (Golden Snapshots)', () => {
         expect(data.stratB.netWorth[9]).toBeCloseTo(636405.08, 1);
         expect(data.possibleB).toBe(true);
     });
+
+    // 3. Maintenance Impact Test
+    test('High Maintenance Reduces Net Worth', () => {
+        const base = {
+            liquid: 130000, isa: 30000, monthlySavings: 1500,
+            stockGrowth: 7/100, rent: 2400, rentInf: 3/100,
+            price: 500000, reno: 10000, postValue: 510000,
+            depositPct: 20/100, term: 30, rateP: 4.5, rateC: 5.5, isFTB: true,
+            lodgerInc: 0, lodgerYears: 0, taxBand: 'higher',
+            isStockCrash: false, isPropCrash: false
+        };
+        
+        const resDefault = Engine.simulateStrategies(base);
+        const resHighMaint = Engine.simulateStrategies({ ...base, maintenanceRate: 2.0 });
+        const resHighCost = Engine.simulateStrategies({ ...base, buyingCost: 5000 });
+        
+        const nwDefault = resDefault.stratB.netWorth[9];
+        const nwHighMaint = resHighMaint.stratB.netWorth[9];
+        const nwHighCost = resHighCost.stratB.netWorth[9];
+        
+        expect(nwHighMaint).toBeLessThan(nwDefault);
+        expect(nwHighCost).toBeLessThan(nwDefault);
+        
+        // Check significant difference (approx 1% of 500k = 5k/yr * 10 years * growth)
+        expect(nwDefault - nwHighMaint).toBeGreaterThan(50000);
+    });
 });

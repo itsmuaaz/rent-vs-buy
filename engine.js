@@ -31,7 +31,10 @@ Engine.calculateMortgage = function(principal, rate, years) {
 Engine.simulateStrategies = function(V) {
     const isStockCrash = V.isStockCrash || false;
     const isPropCrash = V.isPropCrash || false;
-    const rates = Engine.getTaxRates(V.taxBand), years = 40, depositAmount = V.price * V.depositPct, legal = 2000, totalMonthlyBudget = V.monthlySavings + V.rent;
+    const maintRate = (V.maintenanceRate !== undefined) ? V.maintenanceRate / 100 : 0.01;
+    const buyingCost = (V.buyingCost !== undefined) ? V.buyingCost : 2000;
+
+    const rates = Engine.getTaxRates(V.taxBand), years = 40, depositAmount = V.price * V.depositPct, legal = buyingCost, totalMonthlyBudget = V.monthlySavings + V.rent;
     
     const getNW = (isa, gia, basis, houseV, debt, cashCo=0) => {
         const gain = Math.max(0, gia - basis);
@@ -72,7 +75,7 @@ Engine.simulateStrategies = function(V) {
     let isaF = V.isa, giaF = V.liquid - V.isa, basisF, dF1, hF1, dF2, hF2, coCashF = 0, deadF_c = 0;
     if (possibleF) {
         let c1 = depositAmount + Engine.calculateStampDuty(V.price, 'personal', V.isFTB) + legal + V.reno;
-        let c2 = Engine.calculateStampDuty(V.price, 'company', false) + depositAmount + legal; // Corrected order slightly for readability but math is same
+        let c2 = Engine.calculateStampDuty(V.price, 'company', false) + depositAmount + legal;
         let cost = c1 + c2;
         if (giaF >= cost) giaF -= cost; else { cost -= giaF; giaF = 0; isaF -= cost; }
         basisF = giaF; dF1 = V.price - depositAmount; hF1 = V.reno > 0 ? V.postValue : V.price; dF2 = V.price - depositAmount; hF2 = V.price;
@@ -90,11 +93,11 @@ Engine.simulateStrategies = function(V) {
                 else { let n = -sur; if (gia >= n) return [ isa*stockM, (gia-n)*stockM, basis-n ]; else return [ Math.max(0, isa-(n-gia))*stockM, 0, 0 ]; }
             };
             [isaA, giaA, basisA] = invest(totalMonthlyBudget - rentY, isaA, giaA, basisA);
-            if (possibleB) { let i = debtB*(V.rateP/1200); debtB -= (pB-i); deadB_c += (i + houseB*0.01/12); [isaB, giaB, basisB] = invest(totalMonthlyBudget - (pB + houseB*0.01/12), isaB, giaB, basisB); }
-            if (possibleC) { let i = debtC*(V.rateP/1200); debtC -= (pB-i); let l = (y<=V.lodgerYears)?V.lodgerInc:0; let netL = l - Math.max(0, (l*12>7500?(l-7500/12)*rates.income:0)); deadC_c += (i + houseC*0.01/12 - netL); [isaC, giaC, basisC] = invest(totalMonthlyBudget - (pB + houseC*0.01/12 - netL), isaC, giaC, basisC); }
-            if (possibleD) { let i = debtD*(V.rateC/1200); debtD -= (pD-i); let btlR = houseD*0.05/12, prof = btlR-(i+houseD*0.01/12), tax = Math.max(0, prof*0.25); coCashD += (prof-tax); deadD_c += (rentY + i + houseD*0.01/12 + tax - btlR); [isaD, giaD, basisD] = invest(totalMonthlyBudget - rentY, isaD, giaD, basisD); }
-            if (possibleE) { let i = debtE*(V.rateC/1200); debtE -= (pE-i); let btlR = houseE*0.05/12, prof = btlR-houseE*0.01/12, tax = Math.max(0, prof*rates.income-i*0.2); coCashD += 0; deadE_c += (rentY + i + houseE*0.01/12 + tax - btlR); [isaE, giaE, basisE] = invest(totalMonthlyBudget - rentY + (btlR-i-houseE*0.01/12-tax), isaE, giaE, basisE); }
-            if (possibleF) { let i1 = dF1*(V.rateP/1200); dF1 -= (pF1-i1); let i2 = dF2*(V.rateC/1200); dF2 -= (pF2-i2); let btlR = hF2*0.05/12, btlP = btlR-(i2+hF2*0.01/12), btlT = Math.max(0, btlP*0.25); coCashF += (btlP-btlT); deadF_c += (i1 + hF1*0.01/12 + i2 + hF2*0.01/12 + btlT - btlR); [isaF, giaF, basisF] = invest(totalMonthlyBudget - (pF1+hF1*0.01/12), isaF, giaF, basisF); }
+            if (possibleB) { let i = debtB*(V.rateP/1200); debtB -= (pB-i); let maint = houseB*maintRate/12; deadB_c += (i + maint); [isaB, giaB, basisB] = invest(totalMonthlyBudget - (pB + maint), isaB, giaB, basisB); }
+            if (possibleC) { let i = debtC*(V.rateP/1200); debtC -= (pB-i); let maint = houseC*maintRate/12; let l = (y<=V.lodgerYears)?V.lodgerInc:0; let netL = l - Math.max(0, (l*12>7500?(l-7500/12)*rates.income:0)); deadC_c += (i + maint - netL); [isaC, giaC, basisC] = invest(totalMonthlyBudget - (pB + maint - netL), isaC, giaC, basisC); }
+            if (possibleD) { let i = debtD*(V.rateC/1200); debtD -= (pD-i); let maint = houseD*maintRate/12; let btlR = houseD*0.05/12, prof = btlR-(i+maint), tax = Math.max(0, prof*0.25); coCashD += (prof-tax); deadD_c += (rentY + i + maint + tax - btlR); [isaD, giaD, basisD] = invest(totalMonthlyBudget - rentY, isaD, giaD, basisD); }
+            if (possibleE) { let i = debtE*(V.rateC/1200); debtE -= (pE-i); let maint = houseE*maintRate/12; let btlR = houseE*0.05/12, prof = btlR-maint, tax = Math.max(0, prof*rates.income-i*0.2); coCashD += 0; deadE_c += (rentY + i + maint + tax - btlR); [isaE, giaE, basisE] = invest(totalMonthlyBudget - rentY + (btlR-i-maint-tax), isaE, giaE, basisE); }
+            if (possibleF) { let i1 = dF1*(V.rateP/1200); dF1 -= (pF1-i1); let i2 = dF2*(V.rateC/1200); dF2 -= (pF2-i2); let m1 = hF1*maintRate/12, m2 = hF2*maintRate/12; let btlR = hF2*0.05/12, btlP = btlR-(i2+m2), btlT = Math.max(0, btlP*0.25); coCashF += (btlP-btlT); deadF_c += (i1 + m1 + i2 + m2 + btlT - btlR); [isaF, giaF, basisF] = invest(totalMonthlyBudget - (pF1+m1), isaF, giaF, basisF); }
         }
         deadA += (rentY * 12); if (possibleB) houseB *= propG; if (possibleC) houseC *= propG; if (possibleD) houseD *= propG; if (possibleE) houseE *= propG; if (possibleF) { hF1 *= propG; hF2 *= propG; }
         sA.netWorth.push(getNW(isaA, giaA, basisA, 0, 0)); sA.liquidHistory.push(getLiq(isaA, giaA, basisA)); sA.deadMoney.push(deadA);

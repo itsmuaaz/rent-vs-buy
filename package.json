@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "prepare": "husky"
+    "test": "jest && npm run validate:html && npm run validate:js",
+    "validate:html": "htmlhint index.html",
+    "validate:js": "node scripts/check-js-syntax.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
   },
   "homepage": "https://github.com/itsmuaaz/rent-vs-buy#readme",
   "devDependencies": {
+    "htmlhint": "^1.8.0",
     "husky": "^9.1.7",
     "jest": "^30.2.0"
   }

@@ -2,10 +2,10 @@ const Engine = {};
 
 Engine.getTaxRates = function(band) {
     switch(band) {
-        case 'basic': return { income: 0.20, cgt: 0.10, div: 0.0875 };
-        case 'higher': return { income: 0.40, cgt: 0.20, div: 0.3375 };
-        case 'additional': return { income: 0.45, cgt: 0.20, div: 0.3935 };
-        default: return { income: 0.45, cgt: 0.20, div: 0.3935 };
+        case 'basic': return { income: 0.20, cgt: 0.10, div: 0.0875, corp: 0.19 }; // Corp tax small profits
+        case 'higher': return { income: 0.40, cgt: 0.20, div: 0.3375, corp: 0.25 };
+        case 'additional': return { income: 0.45, cgt: 0.20, div: 0.3935, corp: 0.25 };
+        default: return { income: 0.45, cgt: 0.20, div: 0.3935, corp: 0.25 };
     }
 };
 
@@ -33,19 +33,68 @@ Engine.simulateStrategies = function(V) {
     const isPropCrash = V.isPropCrash || false;
     const maintRate = (V.maintenanceRate !== undefined) ? V.maintenanceRate / 100 : 0.01;
     const buyingCost = (V.buyingCost !== undefined) ? V.buyingCost : 2000;
+    const sellCostPct = (V.sellingCostPct !== undefined) ? V.sellingCostPct / 100 : 0.015;
 
     const rates = Engine.getTaxRates(V.taxBand), years = 40, depositAmount = V.price * V.depositPct, legal = buyingCost, totalMonthlyBudget = V.monthlySavings + V.rent;
-    
-    const getNW = (isa, gia, basis, houseV, debt, cashCo=0) => {
-        const gain = Math.max(0, gia - basis);
-        return isa + (gia - gain * rates.cgt) + (houseV - debt) + cashCo * (1 - rates.div);
-    };
-    const getLiq = (isa, gia, basis, cashCo=0) => {
-        const gain = Math.max(0, gia - basis);
-        return isa + (gia - gain * rates.cgt) + cashCo * (1 - rates.div);
-    };
+    const propBasis = V.price + buyingCost + V.reno;
 
-    const initStrat = (name) => ({ name, netWorth: [], deadMoney: [], liquidHistory: [] });
+    const getExitVal = (isa, gia, giaBasis, houseV, debt, type, cashCo=0) => {
+        // Gross (Paper Wealth)
+        // Stocks: Full value. House: Market Value - Debt. Company: Cash + House Equity.
+        // For Company, "Gross" is tricky. Is it Company NAV or User Gross? 
+        // Let's define Gross as "Pre-Personal-Tax Equity". 
+        // So for Company: (House + Cash - Debt). Corp tax on gains is usually considered "internal" debt, but for "Gross" we might ignore it?
+        // Let's stick to "Assets - Liabilities". Corp Tax on unrealized gain is a liability, but often ignored in "Gross".
+        const stockGross = isa + gia;
+        const propGross = Math.max(0, houseV - debt);
+        const coGross = cashCo;
+        const gross = stockGross + propGross + coGross;
+
+        // Liquid (Cash in Hand after ALL taxes/fees)
+        // Stocks
+        const stockGain = Math.max(0, gia - giaBasis);
+        const stockLiquid = isa + (gia - stockGain * rates.cgt);
+
+        // Property
+        let propLiquid = 0;
+        let coLiquid = 0;
+
+        if (type === 'company') {
+            // Company Sale:
+            // 1. Sell House: Proceeds = Value - SellFee - Debt.
+            // 2. Pay Corp Tax on Gain: Gain = (Value - SellFee) - OriginalCost.
+            const sellFee = houseV * sellCostPct;
+            let proceeds = Math.max(0, houseV - sellFee - debt);
+            const gain = (houseV - sellFee) - propBasis; // Simplification: ignoring indexation if any
+            if (gain > 0) {
+                const corpTax = gain * rates.corp;
+                proceeds -= corpTax;
+            }
+            // 3. Add Company Cash
+            const totalCoCash = proceeds + cashCo;
+            // 4. Extract as Dividend
+            coLiquid = Math.max(0, totalCoCash * (1 - rates.div));
+        } else {
+            // Personal
+            if (houseV > 0) {
+                const sellFee = houseV * sellCostPct;
+                let proceeds = Math.max(0, houseV - sellFee - debt);
+                if (type === 'btl') {
+                    const gain = (houseV - sellFee) - propBasis;
+                    if (gain > 0) proceeds -= (gain * rates.cgt);
+                }
+                propLiquid = proceeds;
+            }
+        }
+
+        const liquid = stockLiquid + propLiquid + coLiquid;
+        return { gross, liquid };
+    };
+    
+    // Helper to get liquid history (just cash buffers)
+    const getLiqHist = (isa, gia, cashCo=0) => isa + gia + cashCo * (1 - rates.div);
+
+    const initStrat = (name) => ({ name, netWorth: [], netWorthLiquid: [], deadMoney: [], liquidHistory: [] });
     let sA = initStrat("Rent & Invest"), isaA = V.isa, giaA = V.liquid - V.isa, basisA = giaA, deadA = 0;
     
     let sB = initStrat("Buy & Live In"), possibleB = (depositAmount + Engine.calculateStampDuty(V.price, 'personal', V.isFTB) + legal + V.reno) <= V.liquid;
@@ -55,6 +104,13 @@ Engine.simulateStrategies = function(V) {
         if (giaB >= cost) giaB -= cost; else { cost -= giaB; giaB = 0; isaB -= cost; }
         basisB = giaB; debtB = V.price - depositAmount; houseB = V.reno > 0 ? V.postValue : V.price;
     }
+    // ... Strategies C, D, E, F setup ... 
+    // I need to copy this carefully or use a pattern.
+    // I will copy the previous file's logic blocks but update the push() calls.
+    
+    // ... (To save tokens, I will implement the full logic in the write_file call, 
+    // mirroring the previous file but adding the getExitVal call at the end of the loop) ...
+    
     let sC = initStrat("Buy + Lodger"), possibleC = possibleB, isaC = isaB, giaC = giaB, basisC = basisB, debtC = debtB, houseC = houseB, deadC_c = 0;
     
     let sD = initStrat("Co. BTL + Rent"), possibleD = (depositAmount + Engine.calculateStampDuty(V.price, 'company', false) + legal + V.reno) <= V.liquid;
@@ -100,19 +156,71 @@ Engine.simulateStrategies = function(V) {
             if (possibleF) { let i1 = dF1*(V.rateP/1200); dF1 -= (pF1-i1); let i2 = dF2*(V.rateC/1200); dF2 -= (pF2-i2); let m1 = hF1*maintRate/12, m2 = hF2*maintRate/12; let btlR = hF2*0.05/12, btlP = btlR-(i2+m2), btlT = Math.max(0, btlP*0.25); coCashF += (btlP-btlT); deadF_c += (i1 + m1 + i2 + m2 + btlT - btlR); [isaF, giaF, basisF] = invest(totalMonthlyBudget - (pF1+m1), isaF, giaF, basisF); }
         }
         deadA += (rentY * 12); if (possibleB) houseB *= propG; if (possibleC) houseC *= propG; if (possibleD) houseD *= propG; if (possibleE) houseE *= propG; if (possibleF) { hF1 *= propG; hF2 *= propG; }
-        sA.netWorth.push(getNW(isaA, giaA, basisA, 0, 0)); sA.liquidHistory.push(getLiq(isaA, giaA, basisA)); sA.deadMoney.push(deadA);
-        if (possibleB) { sB.netWorth.push(getNW(isaB, giaB, basisB, houseB, debtB)); sB.liquidHistory.push(getLiq(isaB, giaB, basisB)); sB.deadMoney.push(deadB_c + (y===1?(depositAmount+Engine.calculateStampDuty(V.price,'personal',V.isFTB)+legal):0)); } else { sB.netWorth.push(0); sB.liquidHistory.push(0); sB.deadMoney.push(0); }
-        if (possibleC) { sC.netWorth.push(getNW(isaC, giaC, basisC, houseC, debtC)); sC.liquidHistory.push(getLiq(isaC, giaC, basisC)); sC.deadMoney.push(deadC_c + (y===1?(depositAmount+Engine.calculateStampDuty(V.price,'personal',V.isFTB)+legal):0)); } else { sC.netWorth.push(0); sC.liquidHistory.push(0); sC.deadMoney.push(0); }
-        if (possibleD) { sD.netWorth.push(getNW(isaD, giaD, basisD, houseD, debtD, coCashD)); sD.liquidHistory.push(getLiq(isaD, giaD, basisD, coCashD)); sD.deadMoney.push(deadD_c + (y===1?(depositAmount+Engine.calculateStampDuty(V.price,'company',false)+legal):0)); } else { sD.netWorth.push(0); sD.liquidHistory.push(0); sD.deadMoney.push(0); }
-        if (possibleE) { sE.netWorth.push(getNW(isaE, giaE, basisE, houseE, debtE)); sE.liquidHistory.push(getLiq(isaE, giaE, basisE)); sE.deadMoney.push(deadE_c + (y===1?(depositAmount+Engine.calculateStampDuty(V.price,'additional',false)+legal):0)); } else { sE.netWorth.push(0); sE.liquidHistory.push(0); sE.deadMoney.push(0); }
-        if (possibleF) { sF.netWorth.push(getNW(isaF, giaF, basisF, hF1+hF2, dF1+dF2, coCashF)); sF.liquidHistory.push(getLiq(isaF, giaF, basisF, coCashF)); sF.deadMoney.push(deadF_c + (y===1?(2*depositAmount+Engine.calculateStampDuty(V.price,'personal',V.isFTB)+Engine.calculateStampDuty(V.price,'company',false)+2*legal):0)); } else { sF.netWorth.push(0); sF.liquidHistory.push(0); sF.deadMoney.push(0); }
+        
+        // Push Results
+        const resA = getExitVal(isaA, giaA, basisA, 0, 0, 'none');
+        sA.netWorth.push(resA.gross); sA.netWorthLiquid.push(resA.liquid); sA.liquidHistory.push(getLiqHist(isaA, giaA)); sA.deadMoney.push(deadA);
+
+        const pushStrat = (s, possible, isa, gia, basis, h, d, type, co=0, dead) => {
+            if (possible) {
+                const res = getExitVal(isa, gia, basis, h, d, type, co);
+                s.netWorth.push(res.gross); s.netWorthLiquid.push(res.liquid);
+                s.liquidHistory.push(getLiqHist(isa, gia, co));
+                s.deadMoney.push(dead + (y===1?depositAmount+Engine.calculateStampDuty(V.price,type==='company'?'company':(type==='btl'?'additional':'personal'),type==='home'?V.isFTB:false)+legal:0)); // Rough dead money adjustment
+            } else { s.netWorth.push(0); s.netWorthLiquid.push(0); s.liquidHistory.push(0); s.deadMoney.push(0); }
+        };
+        // Note: Dead money initial calc above is rough approximation for simplicity, matching previous logic
+        
+        pushStrat(sB, possibleB, isaB, giaB, basisB, houseB, debtB, 'home', 0, deadB_c);
+        pushStrat(sC, possibleC, isaC, giaC, basisC, houseC, debtC, 'home', 0, deadC_c);
+        pushStrat(sD, possibleD, isaD, giaD, basisD, houseD, debtD, 'company', coCashD, deadD_c);
+        pushStrat(sE, possibleE, isaE, giaE, basisE, houseE, debtE, 'btl', 0, deadE_c);
+        
+        // Strat F (Home + BTL) - Custom handling for double property
+        if (possibleF) {
+            // Need to sum two properties
+            // We can hack getExitVal by calling it twice? Or update getExitVal to handle multiple?
+            // Easier: call getExitVal for Home, getExitVal for Co BTL, sum them.
+            // But Stocks are shared. 
+            // Solution: Calculate Stocks separately. Calculate Home Equity. Calculate Co BTL Equity. Sum.
+            
+            // Re-use logic:
+            const stockGross = isaF + giaF;
+            const stockGain = Math.max(0, giaF - basisF);
+            const stockLiquid = isaF + (giaF - stockGain * rates.cgt);
+            
+            // Home
+            const homeSellFee = hF1 * sellCostPct;
+            const homeGross = Math.max(0, hF1 - dF1);
+            const homeLiquid = Math.max(0, hF1 - homeSellFee - dF1); // No tax
+            
+            // Co BTL
+            const coSellFee = hF2 * sellCostPct;
+            const coGross = Math.max(0, hF2 - dF2) + coCashF;
+            let coProceeds = Math.max(0, hF2 - coSellFee - dF2);
+            const coGain = (hF2 - coSellFee) - propBasis; 
+            if (coGain > 0) coProceeds -= (coGain * rates.corp);
+            const coLiquid = Math.max(0, (coProceeds + coCashF) * (1 - rates.div));
+            
+            sF.netWorth.push(stockGross + homeGross + coGross);
+            sF.netWorthLiquid.push(stockLiquid + homeLiquid + coLiquid);
+            sF.liquidHistory.push(getLiqHist(isaF, giaF, coCashF));
+            sF.deadMoney.push(deadF_c + (y===1?(2*depositAmount+Engine.calculateStampDuty(V.price,'personal',V.isFTB)+Engine.calculateStampDuty(V.price,'company',false)+2*legal):0));
+        } else { sF.netWorth.push(0); sF.netWorthLiquid.push(0); sF.liquidHistory.push(0); sF.deadMoney.push(0); }
     }
+    
+    // Breakeven logic needs to know WHICH metric to use.
+    // Usually Breakeven is based on "Liquid" (can I walk away with more money?).
+    // But previously it was Gross (ish).
+    // Let's calculate Breakeven on LIQUID. It's the fairer comparison.
     const be = {B:null, C:null, D:null, E:null, F:null};
     for (let i=0; i<years; i++) {
-        let r = sA.netWorth[i];
-        if (possibleB && !be.B && sB.netWorth[i] > r) be.B = i+1; if (possibleC && !be.C && sC.netWorth[i] > r) be.C = i+1;
-        if (possibleD && !be.D && sD.netWorth[i] > r) be.D = i+1; if (possibleE && !be.E && sE.netWorth[i] > r) be.E = i+1;
-        if (possibleF && !be.F && sF.netWorth[i] > r) be.F = i+1;
+        let r = sA.netWorthLiquid[i]; // Compare against Liquid Rent
+        if (possibleB && !be.B && sB.netWorthLiquid[i] > r) be.B = i+1; 
+        if (possibleC && !be.C && sC.netWorthLiquid[i] > r) be.C = i+1;
+        if (possibleD && !be.D && sD.netWorthLiquid[i] > r) be.D = i+1; 
+        if (possibleE && !be.E && sE.netWorthLiquid[i] > r) be.E = i+1;
+        if (possibleF && !be.F && sF.netWorthLiquid[i] > r) be.F = i+1;
     }
     return { stratA:sA, stratB:sB, stratC:sC, stratD:sD, stratE:sE, stratF:sF, possibleB, possibleD, possibleE, possibleF, be };
 };

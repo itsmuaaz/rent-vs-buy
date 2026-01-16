@@ -115,9 +115,15 @@
                     <input type="number" x-model.number="i.propertyPrice" class="input-field">
                     <input type="range" x-model.number="i.propertyPrice" min="100000" max="1000000" step="5000">
                 </div>
-                <div class="input-group">
-                    <label class="input-label"><span class="has-tooltip">Buying Costs (£)<span class="tooltip">Solicitor, Surveyor, Mortgage Broker fees.</span></span></label>
-                    <input type="number" x-model.number="i.buyingCost" class="input-field">
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="input-group">
+                        <label class="input-label"><span class="has-tooltip">Buying Costs (£)<span class="tooltip">Solicitor, Surveyor, Mortgage Broker fees.</span></span></label>
+                        <input type="number" x-model.number="i.buyingCost" class="input-field">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label"><span class="has-tooltip">Selling Costs (%)<span class="tooltip">Estate Agent fees (typically 1-2%). Deducted from Liquid Cash view.</span></span></label>
+                        <input type="number" x-model.number="i.sellingCostPct" class="input-field" step="0.1">
+                    </div>
                 </div>
                 <div class="input-group">
                     <label class="input-label"><span class="has-tooltip">Maintenance (%/yr)<span class="tooltip">Annual repairs. Usually 1% of property value.</span></span></label>
@@ -254,12 +260,18 @@
             </div>
 
             <!-- Chart Controls -->
-            <div class="flex justify-between items-center mb-2 no-print">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-2 no-print gap-2">
                 <h3 class="text-lg font-semibold text-gray-700">Projections</h3>
-                <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
-                    <template x-for="y in [5, 10, 15, 25, 40]">
-                        <button @click="simYears = y" :class="simYears === y ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:bg-gray-50'" class="px-3 py-1 rounded transition" x-text="y + 'y'"></button>
-                    </template>
+                <div class="flex gap-4">
+                    <div class="bg-gray-200 p-1 rounded-lg flex text-xs font-medium">
+                        <button @click="valuationMode = 'liquid'" :class="valuationMode === 'liquid' ? 'bg-white shadow text-indigo-700' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1 rounded transition">💰 Liquid Cash</button>
+                        <button @click="valuationMode = 'gross'" :class="valuationMode === 'gross' ? 'bg-white shadow text-indigo-700' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1 rounded transition">📄 Gross Equity</button>
+                    </div>
+                    <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
+                        <template x-for="y in [5, 10, 15, 25, 40]">
+                            <button @click="simYears = y" :class="simYears === y ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:bg-gray-50'" class="px-3 py-1 rounded transition" x-text="y + 'y'"></button>
+                        </template>
+                    </div>
                 </div>
             </div>
 
@@ -342,13 +354,14 @@
                 isPropCrash: false,
                 simYears: 10,
                 inspectorYear: 5,
+                valuationMode: 'liquid',
                 copied: false,
                 i: { // inputs
                     liquidAssets: 50000, isaBalance: 20000, monthlySavings: 1000, stockGrowth: 8,
                     currentRent: 1500, rentInflation: 3,
                     propertyPrice: 400000, renoCost: 60000, postWorkValue: 525000, buyingCost: 2000, maintenanceRate: 1.0,
                     depositPercent: 25, mortgageTerm: 30, ratePersonal: 4.5, rateCompany: 5.5,
-                    isFTB: true, lodgerIncome: 900, lodgerYears: 2, taxBand: 'additional'
+                    isFTB: true, lodgerIncome: 900, lodgerYears: 2, taxBand: 'additional', sellingCostPct: 1.5
                 },
                 results: null,
                 nwChart: null,
@@ -368,6 +381,7 @@
                     this.$watch('simYears', () => this.updateCharts());
                     this.$watch('isStockCrash', () => this.calculate());
                     this.$watch('isPropCrash', () => this.calculate());
+                    this.$watch('valuationMode', () => this.updateCharts());
                     
                     // Initial calculation and charts setup
                     this.$nextTick(() => { this.calculate(); });
@@ -382,6 +396,7 @@
                         rateP: this.i.ratePersonal, rateC: this.i.rateCompany, isFTB: this.i.isFTB,
                         lodgerInc: this.i.lodgerIncome, lodgerYears: this.i.lodgerYears, taxBand: this.i.taxBand,
                         buyingCost: this.i.buyingCost, maintenanceRate: this.i.maintenanceRate,
+                        sellingCostPct: this.i.sellingCostPct,
                         isStockCrash: this.isStockCrash, isPropCrash: this.isPropCrash
                     };
                 },
@@ -396,17 +411,23 @@
                     return errs;
                 },
 
+                getNW(s, idx) {
+                    if (!s) return -Infinity;
+                    const arr = (this.valuationMode === 'gross') ? s.netWorth : s.netWorthLiquid;
+                    return arr ? (arr[idx] || 0) : 0;
+                },
+
                 get headlineHTML() {
                     if (!this.results) return '<h2>Calculating...</h2>';
                     const idx = this.simYears - 1;
                     const r = this.results;
                     const strats = [
-                        {name: 'Renting', val: r.stratA.netWorth[idx], code: 'A', type: 'Rent'},
-                        {name: 'Buy & Live In', val: r.possibleB ? r.stratB.netWorth[idx] : -Infinity, code: 'B', type: 'Buy'},
-                        {name: 'Buy + Lodger', val: r.possibleB ? r.stratC.netWorth[idx] : -Infinity, code: 'C', type: 'Buy', show: this.isAdvanced},
-                        {name: 'Company BTL', val: r.possibleD ? r.stratD.netWorth[idx] : -Infinity, code: 'D', type: 'Buy', show: this.isAdvanced},
-                        {name: 'Personal BTL', val: r.possibleE ? r.stratE.netWorth[idx] : -Infinity, code: 'E', type: 'Buy', show: this.isAdvanced},
-                        {name: 'Home + Co. BTL', val: r.possibleF ? r.stratF.netWorth[idx] : -Infinity, code: 'F', type: 'Buy', show: this.isAdvanced}
+                        {name: 'Renting', val: this.getNW(r.stratA, idx), code: 'A', type: 'Rent'},
+                        {name: 'Buy & Live In', val: r.possibleB ? this.getNW(r.stratB, idx) : -Infinity, code: 'B', type: 'Buy'},
+                        {name: 'Buy + Lodger', val: r.possibleB ? this.getNW(r.stratC, idx) : -Infinity, code: 'C', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Company BTL', val: r.possibleD ? this.getNW(r.stratD, idx) : -Infinity, code: 'D', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Personal BTL', val: r.possibleE ? this.getNW(r.stratE, idx) : -Infinity, code: 'E', type: 'Buy', show: this.isAdvanced},
+                        {name: 'Home + Co. BTL', val: r.possibleF ? this.getNW(r.stratF, idx) : -Infinity, code: 'F', type: 'Buy', show: this.isAdvanced}
                     ].filter(s => s.show !== false); // Default true if undefined
                     
                     strats.sort((a,b) => b.val - a.val);
@@ -414,7 +435,7 @@
                     
                     if (!strats.some(s => s.type === 'Buy' && s.val > -Infinity)) return `<h2 class="text-2xl font-bold">Renting is the only option</h2><p class="opacity-90">Insufficient liquid assets.</p>`;
                     
-                    const rentVal = r.stratA.netWorth[idx];
+                    const rentVal = this.getNW(r.stratA, idx);
                     let title, desc, subtext;
                     if (winner.type === 'Rent') {
                         const diff = winner.val - strats[1].val;
@@ -436,12 +457,12 @@
                     const y = this.inspectorYear - 1;
                     const r = this.results;
                     const list = [
-                        {name: 'Rent', nw: r.stratA.netWorth[y], liq: r.stratA.liquidHistory[y], code: 'A', visible: true},
-                        {name: 'Buy', nw: r.stratB.netWorth[y], liq: r.stratB.liquidHistory[y], code: 'B', visible: r.possibleB},
-                        {name: 'Lodger', nw: r.stratC.netWorth[y], liq: r.stratC.liquidHistory[y], code: 'C', visible: r.possibleB && this.isAdvanced},
-                        {name: 'Co. BTL', nw: r.stratD.netWorth[y], liq: r.stratD.liquidHistory[y], code: 'D', visible: r.possibleD && this.isAdvanced},
-                        {name: 'Pers. BTL', nw: r.stratE.netWorth[y], liq: r.stratE.liquidHistory[y], code: 'E', visible: r.possibleE && this.isAdvanced},
-                        {name: 'Home+Co', nw: r.stratF.netWorth[y], liq: r.stratF.liquidHistory[y], code: 'F', visible: r.possibleF && this.isAdvanced}
+                        {name: 'Rent', nw: this.getNW(r.stratA, y), liq: r.stratA.liquidHistory[y], code: 'A', visible: true},
+                        {name: 'Buy', nw: this.getNW(r.stratB, y), liq: r.stratB.liquidHistory[y], code: 'B', visible: r.possibleB},
+                        {name: 'Lodger', nw: this.getNW(r.stratC, y), liq: r.stratC.liquidHistory[y], code: 'C', visible: r.possibleB && this.isAdvanced},
+                        {name: 'Co. BTL', nw: this.getNW(r.stratD, y), liq: r.stratD.liquidHistory[y], code: 'D', visible: r.possibleD && this.isAdvanced},
+                        {name: 'Pers. BTL', nw: this.getNW(r.stratE, y), liq: r.stratE.liquidHistory[y], code: 'E', visible: r.possibleE && this.isAdvanced},
+                        {name: 'Home+Co', nw: this.getNW(r.stratF, y), liq: r.stratF.liquidHistory[y], code: 'F', visible: r.possibleF && this.isAdvanced}
                     ].filter(s => s.visible).map(s => ({...s, eq: s.nw - s.liq}));
 
                     const max = Math.max(...list.map(s=>s.nw)), min = Math.min(...list.map(s=>s.nw));
@@ -468,13 +489,13 @@
                     const years = [2, 5, 10, 15, 25, 40];
                     const yearStats = {};
                     years.forEach(y => {
-                        const vals = strategies.map(str => str.s.netWorth[y-1]);
+                        const vals = strategies.map(str => this.getNW(str.s, y-1));
                         yearStats[y] = { max: Math.max(...vals), min: Math.min(...vals), count: vals.length };
                     });
 
                     return strategies.map(str => {
                         const cells = years.map(y => {
-                            const val = str.s.netWorth[y-1];
+                            const val = this.getNW(str.s, y-1);
                             const stats = yearStats[y];
                             let style = "text-gray-600";
                             if (val === stats.max) style = "font-bold text-green-700 bg-green-50 rounded-lg";
@@ -506,18 +527,19 @@
                     const len = this.simYears;
                     const labels = Array.from({length: len}, (_, i) => `Year ${i+1}`);
                     
-                    const mkDs = (lbl, data, color, hidden) => ({ label: lbl, data: data.slice(0, len), borderColor: color, borderWidth: 2, tension: 0.3, hidden });
+                    const getData = (s) => (this.valuationMode === 'gross' ? s.netWorth : s.netWorthLiquid).slice(0, len);
+                    const mkDs = (lbl, s, color, hidden) => ({ label: lbl, data: getData(s), borderColor: color, borderWidth: 2, tension: 0.3, hidden });
                     
                     const nwDatasets = [
-                        mkDs('Rent & Invest', r.stratA.netWorth, '#94a3b8', false),
-                        mkDs('Buy & Live In', r.stratB.netWorth, '#3b82f6', !r.possibleB)
+                        mkDs('Rent & Invest', r.stratA, '#94a3b8', false),
+                        mkDs('Buy & Live In', r.stratB, '#3b82f6', !r.possibleB)
                     ];
                     if (this.isAdvanced) {
                         nwDatasets.push(
-                            mkDs('Buy + Lodger', r.stratC.netWorth, '#10b981', !r.possibleB),
-                            mkDs('Company BTL', r.stratD.netWorth, '#8b5cf6', !r.possibleD),
-                            mkDs('Personal BTL', r.stratE.netWorth, '#f97316', !r.possibleE),
-                            mkDs('Home + Co. BTL', r.stratF.netWorth, '#eab308', !r.possibleF)
+                            mkDs('Buy + Lodger', r.stratC, '#10b981', !r.possibleB),
+                            mkDs('Company BTL', r.stratD, '#8b5cf6', !r.possibleD),
+                            mkDs('Personal BTL', r.stratE, '#f97316', !r.possibleE),
+                            mkDs('Home + Co. BTL', r.stratF, '#eab308', !r.possibleF)
                         );
                     }
                     // Filter out hidden entirely if !isAdvanced is handled by pushing logic

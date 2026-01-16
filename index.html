@@ -484,7 +484,7 @@
                     if (idx >= 2 && !isAdvanced) return;
                     vals.push(s.netWorth[y-1] || 0);
                 });
-                yearStats[y] = { max: Math.max(...vals), min: Math.min(...vals) };
+                yearStats[y] = { max: Math.max(...vals), min: Math.min(...vals), count: vals.length };
             });
             strategies.forEach((s, idx) => {
                 if ((idx === 1 || idx === 2) && !data.possibleB) return;
@@ -498,7 +498,7 @@
                     const val = s.netWorth[y-1] || 0; const stats = yearStats[y];
                     let style = "text-gray-600";
                     if (val === stats.max) style = "font-bold text-green-700 bg-green-50 rounded-lg";
-                    else if (val === stats.min && vals.length > 1) style = "text-red-600 bg-red-50 rounded-lg";
+                    else if (val === stats.min && stats.count > 1) style = "text-red-600 bg-red-50 rounded-lg";
                     cells += `<td class="px-6 py-4 text-right"><span class="px-2 py-1 ${style}">£${Math.round(val/1000).toLocaleString()}k</span></td>`;
                 });
                 tr.innerHTML = cells; table.appendChild(tr);

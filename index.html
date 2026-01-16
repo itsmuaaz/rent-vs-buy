@@ -275,6 +275,28 @@
                 </div>
             </div>
 
+            <!-- Valuation Mode Explainer -->
+            <div class="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 no-print">
+                <div x-show="valuationMode === 'liquid'">
+                    <span class="font-bold text-indigo-700">💰 Liquid Cash Mode (Recommended):</span>
+                    Shows what you would have if you <strong>sold everything today</strong>.
+                    <ul class="list-disc list-inside mt-1 ml-1 opacity-80">
+                        <li>Deducts <strong>Selling Costs</strong> (Estate Agent fees, etc).</li>
+                        <li>Deducts <strong>Exit Taxes</strong> (Capital Gains Tax, Corporation Tax).</li>
+                        <li><strong>Why use this?</strong> It's the only fair way to compare "Cash in the Bank" (Rent) vs "Equity in a House" (Buy).</li>
+                    </ul>
+                </div>
+                <div x-show="valuationMode === 'gross'">
+                    <span class="font-bold text-indigo-700">📄 Gross Equity Mode:</span>
+                    Shows the "Paper Value" of your assets.
+                    <ul class="list-disc list-inside mt-1 ml-1 opacity-80">
+                        <li><strong>Ignores</strong> selling fees and taxes.</li>
+                        <li>Useful if you <strong>never plan to sell</strong> the property.</li>
+                        <li><em>Warning:</em> Makes Property look wealthier than it actually is compared to Renting.</li>
+                    </ul>
+                </div>
+            </div>
+
             <!-- Charts Container -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-100">

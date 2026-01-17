@@ -193,7 +193,7 @@
                     </div>
 
                     <!-- Summary Card -->
-                    <div x-show="homeStats" class="mt-2 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 space-y-1">
+                    <div x-show="i.home.active" class="mt-2 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 space-y-1">
                         <div class="flex justify-between"><span>Stamp Duty:</span> <span class="font-mono" x-text="'£' + Math.round(homeStats.stamp).toLocaleString()"></span></div>
                         <div class="flex justify-between"><span>Monthly Mortgage:</span> <span class="font-mono" x-text="'£' + Math.round(homeStats.mortgage).toLocaleString()"></span></div>
                         <div class="flex justify-between border-t border-slate-200 pt-1 mt-1">
@@ -266,7 +266,7 @@
                     </div>
 
                     <!-- Summary Card -->
-                    <div x-show="btlStats" class="mt-2 p-3 bg-purple-50 border border-purple-200 rounded text-xs text-purple-900 space-y-1">
+                    <div x-show="i.btl.active" class="mt-2 p-3 bg-purple-50 border border-purple-200 rounded text-xs text-purple-900 space-y-1">
                         <div class="flex justify-between"><span>Stamp Duty:</span> <span class="font-mono" x-text="'£' + Math.round(btlStats.stamp).toLocaleString()"></span></div>
                         <div class="flex justify-between"><span>Est. Monthly Rent:</span> <span class="font-mono" x-text="'£' + Math.round(btlStats.rent).toLocaleString()"></span></div>
                         <div class="flex justify-between"><span>Monthly Mortgage:</span> <span class="font-mono" x-text="'£' + Math.round(btlStats.mortgage).toLocaleString()"></span></div>

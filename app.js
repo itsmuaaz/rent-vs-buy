@@ -65,7 +65,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         get homeStats() {
-            if (!this.i.home.active) return null;
+            const def = { stamp: 0, upfront: 0, mortgage: 0, debt: 0 };
+            if (!this.i.home.active) return def;
+
             const H = this.i.home; const P = this.i.personal;
             const stamp = Engine.calculateStampDuty(H.price, 'personal', P.isFTB);
             const deposit = H.price * (H.depositPct / 100);
@@ -76,7 +78,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         get btlStats() {
-            if (!this.i.btl.active) return null;
+            const def = { stamp: 0, upfront: 0, mortgage: 0, rent: 0, debt: 0 };
+            if (!this.i.btl.active) return def;
+
             const B = this.i.btl;
             const stamp = Engine.calculateStampDuty(B.price, 'company', false);
             const deposit = B.price * (B.depositPct / 100);

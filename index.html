@@ -285,7 +285,7 @@
             <div class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-8" x-html="headlineHTML"></div>
 
             <!-- Insights (Context) -->
-            <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
                 <template x-for="insight in insights" :key="insight.title">
                     <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3">
                         <span class="text-2xl" x-text="insight.icon"></span>
@@ -295,6 +295,20 @@
                         </div>
                     </div>
                 </template>
+            </div>
+
+            <!-- Strategy Glossary -->
+            <div class="mb-8 no-print" x-data="{ open: false }">
+                <button @click="open = !open" class="text-xs text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none bg-indigo-50 px-3 py-2 rounded-full transition-colors">
+                    <span :class="open ? 'rotate-90' : ''" class="transform transition-transform">▶</span> 
+                    <span>Glossary: What do these strategies mean?</span>
+                </button>
+                <div x-show="open" x-collapse class="mt-4 p-4 bg-white rounded border border-gray-200 text-sm text-gray-600 max-w-2xl shadow-sm">
+                    <p class="mb-2"><strong>Rent:</strong> The baseline. You rent forever and invest the surplus cash flow into stocks.</p>
+                    <p class="mb-2"><strong>Buy Home:</strong> You buy the main residence defined in the Sidebar to live in.</p>
+                    <p class="mb-2"><strong>BTL:</strong> You continue Renting personally, but buy an Investment Property (Buy-to-Let).</p>
+                    <p><strong>Home + BTL:</strong> You buy both a Main Home AND an Investment Property.</p>
+                </div>
             </div>
 
             <!-- 2. Chart Settings -->
@@ -413,20 +427,6 @@
                             </template>
                         </tbody>
                     </table>
-                </div>
-            </div>
-            
-            <!-- 8. Strategy Guide (Moved to Bottom) -->
-            <div class="mb-12 no-print" x-data="{ open: false }">
-                <button @click="open = !open" class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none">
-                    <span :class="open ? 'rotate-90' : ''" class="transform transition-transform">▶</span> 
-                    <span>Glossary: What do these strategies mean?</span>
-                </button>
-                <div x-show="open" class="mt-4 p-4 bg-white rounded border border-gray-200 text-sm text-gray-600 max-w-2xl">
-                    <p class="mb-2"><strong>Rent:</strong> The baseline. You rent forever and invest the surplus cash flow into stocks.</p>
-                    <p class="mb-2"><strong>Buy Home:</strong> You buy the main residence defined in the Sidebar to live in.</p>
-                    <p class="mb-2"><strong>BTL:</strong> You continue Renting personally, but buy an Investment Property (Buy-to-Let).</p>
-                    <p><strong>Home + BTL:</strong> You buy both a Main Home AND an Investment Property.</p>
                 </div>
             </div>
             

@@ -48,8 +48,11 @@ document.addEventListener('alpine:init', () => {
         },
         
         get payload() {
-            this.i.settings.valuationMode = this.valuationMode;
-            return JSON.parse(JSON.stringify(this.i));
+            // Create a clean copy
+            const copy = JSON.parse(JSON.stringify(this.i));
+            // Apply view-state overrides to the COPY, not the source
+            copy.settings.valuationMode = this.valuationMode; 
+            return copy;
         },
         
         get errors() {
@@ -386,7 +389,9 @@ document.addEventListener('alpine:init', () => {
             if (this.nwChart) {
                 this.nwChart.data.labels = labels;
                 this.nwChart.data.datasets = nwDatasets;
-                this.nwChart.options.plugins.verticalLine.year = this.inspectorYear;
+                if (this.nwChart.options.plugins.verticalLine) {
+                    this.nwChart.options.plugins.verticalLine.year = this.inspectorYear;
+                }
                 this.nwChart.update('none'); // Efficient update
             } else {
             // Custom Plugin for Vertical Indicator

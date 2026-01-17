@@ -389,22 +389,29 @@ document.addEventListener('alpine:init', () => {
                 this.nwChart.options.plugins.verticalLine.year = this.inspectorYear;
                 this.nwChart.update('none'); // Efficient update
             } else {
-                const verticalLinePlugin = {
-                    id: 'verticalLine',
-                    afterDraw: (chart) => {
-                        if (chart.config.options.plugins.verticalLine && chart.config.options.plugins.verticalLine.year) {
-                            const ctx = chart.ctx;
-                            const year = chart.config.options.plugins.verticalLine.year;
-                            const xAxis = chart.scales.x; const yAxis = chart.scales.y;
-                            const xPixel = xAxis.getPixelForValue(year - 1);
-                            if (xPixel >= xAxis.left && xPixel <= xAxis.right) {
-                                ctx.save(); ctx.beginPath(); ctx.moveTo(xPixel, yAxis.top); ctx.lineTo(xPixel, yAxis.bottom);
-                                ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(79, 70, 229, 0.4)'; ctx.setLineDash([5, 5]);
-                                ctx.stroke(); ctx.restore();
-                            }
+            // Custom Plugin for Vertical Indicator
+            const verticalLinePlugin = {
+                id: 'verticalLine',
+                afterDraw: (chart) => {
+                    if (chart.config.options.plugins.verticalLine && chart.config.options.plugins.verticalLine.year) {
+                        const ctx = chart.ctx;
+                        if (!ctx) return; // Safety check
+                        
+                        const year = chart.config.options.plugins.verticalLine.year;
+                        const xAxis = chart.scales.x; const yAxis = chart.scales.y;
+                        
+                        // Safety check for scales
+                        if (!xAxis || !yAxis) return;
+
+                        const xPixel = xAxis.getPixelForValue(year - 1);
+                        if (xPixel >= xAxis.left && xPixel <= xAxis.right) {
+                            ctx.save(); ctx.beginPath(); ctx.moveTo(xPixel, yAxis.top); ctx.lineTo(xPixel, yAxis.bottom);
+                            ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(79, 70, 229, 0.4)'; ctx.setLineDash([5, 5]);
+                            ctx.stroke(); ctx.restore();
                         }
                     }
-                };
+                }
+            };
                 
                 this.nwChart = new Chart(document.getElementById('netWorthChart').getContext('2d'), {
                     type: 'line', data: { labels, datasets: nwDatasets },

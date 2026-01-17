@@ -366,8 +366,11 @@ document.addEventListener('alpine:init', () => {
             if (!this.results) return;
             const r = this.results; const len = this.simYears;
             const labels = Array.from({length: len}, (_, i) => `Year ${i+1}`);
+            
+            // Prepare Data
             const getData = (s) => (this.valuationMode === 'gross' ? s.netWorth : s.netWorthLiquid).slice(0, len);
             const mkDs = (lbl, s, color, hidden) => ({ label: lbl, data: getData(s), borderColor: color, borderWidth: 2, tension: 0.3, hidden });
+            
             const nwDatasets = [ mkDs('Rent', r.stratA, '#94a3b8', false) ];
             if (this.i.home.active) {
                 nwDatasets.push(mkDs('Buy Home', r.stratB, '#3b82f6', !r.possibleB));
@@ -379,37 +382,43 @@ document.addEventListener('alpine:init', () => {
             }
             if (this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company) nwDatasets.push(mkDs('Home + BTL', r.stratF, '#eab308', !r.possibleF));
             
-            // Custom Plugin for Vertical Indicator
-            const verticalLinePlugin = {
-                id: 'verticalLine',
-                afterDraw: (chart) => {
-                    if (chart.config.options.plugins.verticalLine && chart.config.options.plugins.verticalLine.year) {
-                        const ctx = chart.ctx;
-                        const year = chart.config.options.plugins.verticalLine.year;
-                        const xAxis = chart.scales.x; const yAxis = chart.scales.y;
-                        const xPixel = xAxis.getPixelForValue(year - 1);
-                        if (xPixel >= xAxis.left && xPixel <= xAxis.right) {
-                            ctx.save(); ctx.beginPath(); ctx.moveTo(xPixel, yAxis.top); ctx.lineTo(xPixel, yAxis.bottom);
-                            ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(79, 70, 229, 0.4)'; ctx.setLineDash([5, 5]);
-                            ctx.stroke(); ctx.restore();
+            // --- Net Worth Chart ---
+            if (this.nwChart) {
+                this.nwChart.data.labels = labels;
+                this.nwChart.data.datasets = nwDatasets;
+                this.nwChart.options.plugins.verticalLine.year = this.inspectorYear;
+                this.nwChart.update('none'); // Efficient update
+            } else {
+                const verticalLinePlugin = {
+                    id: 'verticalLine',
+                    afterDraw: (chart) => {
+                        if (chart.config.options.plugins.verticalLine && chart.config.options.plugins.verticalLine.year) {
+                            const ctx = chart.ctx;
+                            const year = chart.config.options.plugins.verticalLine.year;
+                            const xAxis = chart.scales.x; const yAxis = chart.scales.y;
+                            const xPixel = xAxis.getPixelForValue(year - 1);
+                            if (xPixel >= xAxis.left && xPixel <= xAxis.right) {
+                                ctx.save(); ctx.beginPath(); ctx.moveTo(xPixel, yAxis.top); ctx.lineTo(xPixel, yAxis.bottom);
+                                ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(79, 70, 229, 0.4)'; ctx.setLineDash([5, 5]);
+                                ctx.stroke(); ctx.restore();
+                            }
                         }
                     }
-                }
-            };
+                };
+                
+                this.nwChart = new Chart(document.getElementById('netWorthChart').getContext('2d'), {
+                    type: 'line', data: { labels, datasets: nwDatasets },
+                    plugins: [verticalLinePlugin],
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        interaction: { mode: 'index', intersect: false }, 
+                        scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } },
+                        plugins: { verticalLine: { year: this.inspectorYear } }
+                    }
+                });
+            }
 
-            if (this.nwChart) this.nwChart.destroy();
-            this.nwChart = new Chart(document.getElementById('netWorthChart').getContext('2d'), {
-                type: 'line', data: { labels, datasets: nwDatasets },
-                plugins: [verticalLinePlugin],
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    interaction: { mode: 'index', intersect: false }, 
-                    scales: { y: { ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } },
-                    plugins: { verticalLine: { year: this.inspectorYear } }
-                }
-            });
-
-            // Dead Money Breakdown
+            // --- Dead Money Chart ---
             const idx = len - 1;
             const strategies = [
                 {l:'Rent', s:r.stratA, v:true},
@@ -419,17 +428,27 @@ document.addEventListener('alpine:init', () => {
                 {l:'BTL (Pers)', s:r.stratE, v:r.possibleE && this.i.btl.active && this.i.btl.wrappers.personal},
                 {l:'Home+BTL', s:r.stratF, v:r.possibleF && this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
             ].filter(x => x.v);
+            
             const labelsDM = strategies.map(x => x.l);
-            const dsRent = { label: 'Rent', data: strategies.map(x => x.s.breakdown.rent[idx]), backgroundColor: '#94a3b8', stack: 'Stack 0' };
-            const dsInt = { label: 'Interest', data: strategies.map(x => x.s.breakdown.interest[idx]), backgroundColor: '#ef4444', stack: 'Stack 0' };
-            const dsMaint = { label: 'Maintenance', data: strategies.map(x => x.s.breakdown.maintenance[idx]), backgroundColor: '#f59e0b', stack: 'Stack 0' };
-            const dsTax = { label: 'Tax', data: strategies.map(x => x.s.breakdown.tax[idx]), backgroundColor: '#8b5cf6', stack: 'Stack 0' };
-            const dsFees = { label: 'Fees (Stamp/Legal)', data: strategies.map(x => x.s.breakdown.fees[idx]), backgroundColor: '#64748b', stack: 'Stack 0' };
-            if (this.dmChart) this.dmChart.destroy();
-            this.dmChart = new Chart(document.getElementById('deadMoneyChart').getContext('2d'), {
-                type: 'bar', data: { labels: labelsDM, datasets: [dsRent, dsInt, dsMaint, dsTax, dsFees] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } }, interaction: { mode: 'index', intersect: false } }
-            });
+            const datasetsDM = [
+                { label: 'Rent', data: strategies.map(x => x.s.breakdown.rent[idx]), backgroundColor: '#94a3b8', stack: 'Stack 0' },
+                { label: 'Interest', data: strategies.map(x => x.s.breakdown.interest[idx]), backgroundColor: '#ef4444', stack: 'Stack 0' },
+                { label: 'Maintenance', data: strategies.map(x => x.s.breakdown.maintenance[idx]), backgroundColor: '#f59e0b', stack: 'Stack 0' },
+                { label: 'Tax', data: strategies.map(x => x.s.breakdown.tax[idx]), backgroundColor: '#8b5cf6', stack: 'Stack 0' },
+                { label: 'Fees (Stamp/Legal)', data: strategies.map(x => x.s.breakdown.fees[idx]), backgroundColor: '#64748b', stack: 'Stack 0' }
+            ];
+
+            if (this.dmChart) {
+                this.dmChart.data.labels = labelsDM;
+                this.dmChart.data.datasets = datasetsDM;
+                this.dmChart.update('none');
+            } else {
+                this.dmChart = new Chart(document.getElementById('deadMoneyChart').getContext('2d'), {
+                    type: 'bar', 
+                    data: { labels: labelsDM, datasets: datasetsDM },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => '£' + (v/1000).toFixed(0) + 'k' } } }, interaction: { mode: 'index', intersect: false } }
+                });
+            }
         },
 
         applyPreset(name) {

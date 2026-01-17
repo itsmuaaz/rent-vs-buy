@@ -282,7 +282,16 @@
         <main class="flex-1 md:overflow-y-auto p-4 md:p-8 pb-32 md:pb-32 bg-gray-50">
 
             <!-- 1. Headline (The Verdict) -->
-            <div class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-8" x-html="headlineHTML"></div>
+            <div class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-4" x-html="headlineHTML"></div>
+
+            <!-- Narrative Analysis (Expandable) -->
+            <div class="mb-8 no-print" x-data="{ expanded: false }">
+                <button @click="expanded = !expanded" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-colors">
+                    <span :class="expanded ? 'rotate-90' : ''" class="transform transition-transform">▶</span>
+                    <span x-text="expanded ? 'Hide detailed explanation' : 'Read full analysis (Why did this win?)'"></span>
+                </button>
+                <div x-show="expanded" x-collapse class="mt-4 bg-white p-5 rounded-lg border border-gray-200 shadow-sm" x-html="narrativeHTML"></div>
+            </div>
 
             <!-- Insights (Context) -->
             <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4 no-print">

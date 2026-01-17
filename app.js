@@ -122,7 +122,77 @@ document.addEventListener('alpine:init', () => {
 
         
 
-                get headlineHTML() {
+                get narrativeHTML() {
+            if (!this.results) return '';
+            const r = this.results;
+            const idx = this.simYears - 1;
+            
+            // 1. Identify Players
+            const strats = [
+                {name: 'Renting', s: r.stratA, type: 'Rent', active: true},
+                {name: 'Buying a Home', s: r.stratB, type: 'Buy', active: this.i.home.active && r.possibleB},
+                {name: 'Buying & Lodger', s: r.stratC, type: 'Buy', active: this.i.home.active && this.i.home.lodger.active && r.possibleB},
+                {name: 'BTL (Company)', s: r.stratD, type: 'Inv', active: this.i.btl.active && this.i.btl.wrappers.company && r.possibleD},
+                {name: 'BTL (Personal)', s: r.stratE, type: 'Inv', active: this.i.btl.active && this.i.btl.wrappers.personal && r.possibleE},
+                {name: 'Home + BTL', s: r.stratF, type: 'Mix', active: this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company && r.possibleF}
+            ].filter(x => x.active).map(x => ({...x, nw: this.getNW(x.s, idx)}));
+            
+            strats.sort((a,b) => b.nw - a.nw);
+            const winner = strats[0];
+            const loser = strats.length > 1 ? strats[1] : null; // Compare against 2nd best
+            
+            // 2. Helper Formatter
+            const fmt = (v) => `<strong>£${Math.round(v).toLocaleString()}</strong>`;
+            const fmtK = (v) => `<strong>£${Math.round(v/1000)}k</strong>`;
+            
+            // 3. Construct The Story
+            let html = `<div class="space-y-4 text-sm text-slate-700">`;
+            
+            // Part A: The Summary
+            html += `<div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+                        After ${this.simYears} years, <strong>${winner.name}</strong> results in a Net Worth of ${fmt(winner.nw)}.
+                        ${loser ? `Compared to <strong>${loser.name}</strong> (${fmt(loser.nw)}), you are better off by ${fmt(winner.nw - loser.nw)}.` : ''}
+                     </div>`;
+
+            // Part B: The Breakdown (Winner)
+            const wBreakdown = winner.s.breakdown;
+            const wCosts = wBreakdown.interest[idx] + wBreakdown.rent[idx] + wBreakdown.maintenance[idx] + wBreakdown.tax[idx] + wBreakdown.fees[idx];
+            
+            html += `<div><h4 class="font-bold text-slate-900 mb-1">Why ${winner.name} wins:</h4>
+                     <ul class="list-disc list-inside space-y-1 ml-1">`;
+            
+            if (winner.type === 'Rent') {
+                html += `<li>You avoided property ownership costs (Interest, Maintenance, Stamp Duty).</li>`;
+                html += `<li>Your "Dead Money" costs were limited to Rent (${fmtK(wBreakdown.rent[idx])}).</li>`;
+                html += `<li>The surplus cash invested in the stock market compounded significantly.</li>`;
+            } else if (winner.type === 'Buy') {
+                const equity = this.valuationMode === 'gross' ? winner.s.netWorth[idx] : winner.s.netWorthLiquid[idx]; // Rough approx
+                html += `<li>Although you paid ${fmtK(wBreakdown.interest[idx])} in Mortgage Interest, you gained significant Equity.</li>`;
+                html += `<li>Your property grew in value, acting as a "forced savings" account.</li>`;
+                if (wBreakdown.rent[idx] > 0) html += `<li>You earned rental income (Lodger) which offset costs.</li>`;
+            }
+            html += `</ul></div>`;
+            
+            // Part C: The Runner Up (Contrast)
+            if (loser) {
+                const lBreakdown = loser.s.breakdown;
+                html += `<div><h4 class="font-bold text-slate-900 mb-1">Why ${loser.name} lost:</h4>
+                         <ul class="list-disc list-inside space-y-1 ml-1">`;
+                if (loser.type === 'Rent') {
+                    html += `<li>Rent payments (${fmtK(lBreakdown.rent[idx])}) consumed too much wealth compared to owning.</li>`;
+                    html += `<li>Stock market returns didn't outpace property leverage in this scenario.</li>`;
+                } else {
+                    html += `<li>High "Dead Money" costs: Interest (${fmtK(lBreakdown.interest[idx])}), Stamp Duty/Fees (${fmtK(lBreakdown.fees[idx])}), and Maintenance (${fmtK(lBreakdown.maintenance[idx])}).</li>`;
+                    html += `<li>These unrecoverable costs exceeded the cost of simply renting.</li>`;
+                }
+                html += `</ul></div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        },
+
+        get headlineHTML() {
 
                     if (!this.results) return '<h2>Calculating...</h2>';
 

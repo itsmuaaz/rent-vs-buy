@@ -99,12 +99,12 @@ Engine.simulateStrategies = function(V) {
     });
 
     // --- Strategy A: Rent & Invest ---
-    let sA = initStrat("Rent & Invest");
+    let sA = initStrat("Rent");
     let isaA = P.isaBalance, giaA = P.liquidAssets - P.isaBalance, basisA = giaA, deadA = 0;
     let cRentA = 0;
 
     // --- Strategy B: Buy Home ---
-    let sB = initStrat("Buy & Live In");
+    let sB = initStrat("Buy Home");
     let possibleB = false, isaB = P.isaBalance, giaB = P.liquidAssets - P.isaBalance, basisB = giaB, deadB = 0;
     let debtB = 0, houseB = 0, cIntB = 0, cMaintB = 0, cFeesB = 0, pB = 0, propBasisB = 0;
     if (H.active) {
@@ -132,13 +132,13 @@ Engine.simulateStrategies = function(V) {
     }
 
     // --- Strategy C: Buy + Lodger ---
-    let sC = initStrat("Buy + Lodger");
+    let sC = initStrat("Buy Home + Lodger");
     let possibleC = possibleB && H.lodger.active; 
     let isaC = isaB, giaC = giaB, basisC = basisB, debtC = debtB, houseC = houseB, deadC = deadB;
     let cIntC = 0, cMaintC = 0, cFeesC = cFeesB;
 
     // --- Strategy D: Company BTL ---
-    let sD = initStrat("Company BTL");
+    let sD = initStrat("BTL (Ltd Co)");
     let possibleD = false, isaD = P.isaBalance, giaD = P.liquidAssets - P.isaBalance, basisD = giaD, deadD = 0;
     let debtD = 0, houseD = 0, coCashD = 0, cIntD = 0, cMaintD = 0, cRentD = 0, cTaxD = 0, cFeesD = 0, pD = 0, propBasisD = 0;
     if (B.active && B.wrappers.company) {
@@ -159,7 +159,7 @@ Engine.simulateStrategies = function(V) {
     }
 
     // --- Strategy E: Personal BTL ---
-    let sE = initStrat("Personal BTL");
+    let sE = initStrat("BTL (Personal)");
     let possibleE = false, isaE = P.isaBalance, giaE = P.liquidAssets - P.isaBalance, basisE = giaE, deadE = 0;
     let debtE = 0, houseE = 0, cIntE = 0, cMaintE = 0, cRentE = 0, cTaxE = 0, cFeesE = 0, pE = 0, propBasisE = 0;
     if (B.active && B.wrappers.personal) {
@@ -180,7 +180,7 @@ Engine.simulateStrategies = function(V) {
     }
 
     // --- Strategy F: Home + Co. BTL ---
-    let sF = initStrat("Home + Co. BTL");
+    let sF = initStrat("Home + BTL");
     let possibleF = false, isaF = P.isaBalance, giaF = P.liquidAssets - P.isaBalance, basisF = giaF, deadF = 0;
     let dF1 = 0, hF1 = 0, dF2 = 0, hF2 = 0, coCashF = 0, cIntF = 0, cMaintF = 0, cTaxF = 0, cFeesF = 0, pF1 = 0, pF2 = 0, pbF2 = 0;
     

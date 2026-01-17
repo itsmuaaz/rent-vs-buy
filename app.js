@@ -114,12 +114,12 @@ document.addEventListener('alpine:init', () => {
             const idx = this.simYears - 1;
             const r = this.results;
             const strats = [
-                {name: 'Renting', val: this.getNW(r.stratA, idx), interest: 0, code: 'A', type: 'Rent', show: true},
-                {name: 'Buy & Live In', val: r.possibleB ? this.getNW(r.stratB, idx) : -Infinity, interest: r.possibleB ? r.stratB.totalInterest[idx] : 0, code: 'B', type: 'Buy', show: this.i.home.active},
-                {name: 'Buy + Lodger', val: r.possibleB ? this.getNW(r.stratC, idx) : -Infinity, interest: r.possibleB ? r.stratC.totalInterest[idx] : 0, code: 'C', type: 'Buy', show: this.i.home.active && this.i.home.lodger.active},
-                {name: 'Company BTL', val: r.possibleD ? this.getNW(r.stratD, idx) : -Infinity, interest: r.possibleD ? r.stratD.totalInterest[idx] : 0, code: 'D', type: 'Buy', show: this.i.btl.active && this.i.btl.wrappers.company},
-                {name: 'Personal BTL', val: r.possibleE ? this.getNW(r.stratE, idx) : -Infinity, interest: r.possibleE ? r.stratE.totalInterest[idx] : 0, code: 'E', type: 'Buy', show: this.i.btl.active && this.i.btl.wrappers.personal},
-                {name: 'Home + Co. BTL', val: r.possibleF ? this.getNW(r.stratF, idx) : -Infinity, interest: r.possibleF ? r.stratF.totalInterest[idx] : 0, code: 'F', type: 'Buy', show: this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
+                {name: 'Rent', val: this.getNW(r.stratA, idx), interest: 0, code: 'A', type: 'Rent', show: true},
+                {name: 'Buy Home', val: r.possibleB ? this.getNW(r.stratB, idx) : -Infinity, interest: r.possibleB ? r.stratB.totalInterest[idx] : 0, code: 'B', type: 'Buy', show: this.i.home.active},
+                {name: 'Buy Home + Lodger', val: r.possibleB ? this.getNW(r.stratC, idx) : -Infinity, interest: r.possibleB ? r.stratC.totalInterest[idx] : 0, code: 'C', type: 'Buy', show: this.i.home.active && this.i.home.lodger.active},
+                {name: 'BTL (Ltd Co)', val: r.possibleD ? this.getNW(r.stratD, idx) : -Infinity, interest: r.possibleD ? r.stratD.totalInterest[idx] : 0, code: 'D', type: 'Buy', show: this.i.btl.active && this.i.btl.wrappers.company},
+                {name: 'BTL (Personal)', val: r.possibleE ? this.getNW(r.stratE, idx) : -Infinity, interest: r.possibleE ? r.stratE.totalInterest[idx] : 0, code: 'E', type: 'Buy', show: this.i.btl.active && this.i.btl.wrappers.personal},
+                {name: 'Home + BTL', val: r.possibleF ? this.getNW(r.stratF, idx) : -Infinity, interest: r.possibleF ? r.stratF.totalInterest[idx] : 0, code: 'F', type: 'Buy', show: this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
             ].filter(s => s.show); 
             
             if (strats.length === 0) return '';
@@ -152,11 +152,11 @@ document.addEventListener('alpine:init', () => {
             const r = this.results;
             const list = [
                 {name: 'Rent', nw: this.getNW(r.stratA, y), liq: r.stratA.liquidHistory[y], int: r.stratA.totalInterest[y], code: 'A', visible: true},
-                {name: 'Buy', nw: this.getNW(r.stratB, y), liq: r.stratB.liquidHistory[y], int: r.stratB.totalInterest[y], code: 'B', visible: r.possibleB && this.i.home.active},
+                {name: 'Buy Home', nw: this.getNW(r.stratB, y), liq: r.stratB.liquidHistory[y], int: r.stratB.totalInterest[y], code: 'B', visible: r.possibleB && this.i.home.active},
                 {name: 'Lodger', nw: this.getNW(r.stratC, y), liq: r.stratC.liquidHistory[y], int: r.stratC.totalInterest[y], code: 'C', visible: r.possibleB && this.i.home.active && this.i.home.lodger.active},
-                {name: 'Co. BTL', nw: this.getNW(r.stratD, y), liq: r.stratD.liquidHistory[y], int: r.stratD.totalInterest[y], code: 'D', visible: r.possibleD && this.i.btl.active && this.i.btl.wrappers.company},
-                {name: 'Pers. BTL', nw: this.getNW(r.stratE, y), liq: r.stratE.liquidHistory[y], int: r.stratE.totalInterest[y], code: 'E', visible: r.possibleE && this.i.btl.active && this.i.btl.wrappers.personal},
-                {name: 'Home+Co', nw: this.getNW(r.stratF, y), liq: r.stratF.liquidHistory[y], int: r.stratF.totalInterest[y], code: 'F', visible: r.possibleF && this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
+                {name: 'BTL (Co)', nw: this.getNW(r.stratD, y), liq: r.stratD.liquidHistory[y], int: r.stratD.totalInterest[y], code: 'D', visible: r.possibleD && this.i.btl.active && this.i.btl.wrappers.company},
+                {name: 'BTL (Pers)', nw: this.getNW(r.stratE, y), liq: r.stratE.liquidHistory[y], int: r.stratE.totalInterest[y], code: 'E', visible: r.possibleE && this.i.btl.active && this.i.btl.wrappers.personal},
+                {name: 'Home+BTL', nw: this.getNW(r.stratF, y), liq: r.stratF.liquidHistory[y], int: r.stratF.totalInterest[y], code: 'F', visible: r.possibleF && this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
             ].filter(s => s.visible).map(s => ({...s, eq: s.nw - s.liq}));
 
             const max = Math.max(...list.map(s=>s.nw)), min = Math.min(...list.map(s=>s.nw));
@@ -172,12 +172,12 @@ document.addEventListener('alpine:init', () => {
             if (!this.results) return [];
             const r = this.results;
             const strategies = [
-                {name: 'Rent & Invest', s: r.stratA, show: true},
-                {name: 'Buy & Live In', s: r.stratB, show: r.possibleB && this.i.home.active},
-                {name: 'Buy + Lodger', s: r.stratC, show: r.possibleB && this.i.home.active && this.i.home.lodger.active},
-                {name: 'Company BTL', s: r.stratD, show: r.possibleD && this.i.btl.active && this.i.btl.wrappers.company},
-                {name: 'Personal BTL', s: r.stratE, show: r.possibleE && this.i.btl.active && this.i.btl.wrappers.personal},
-                {name: 'Home + Co. BTL', s: r.stratF, show: r.possibleF && this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
+                {name: 'Rent', s: r.stratA, show: true},
+                {name: 'Buy Home', s: r.stratB, show: r.possibleB && this.i.home.active},
+                {name: 'Buy Home + Lodger', s: r.stratC, show: r.possibleB && this.i.home.active && this.i.home.lodger.active},
+                {name: 'BTL (Ltd Co)', s: r.stratD, show: r.possibleD && this.i.btl.active && this.i.btl.wrappers.company},
+                {name: 'BTL (Personal)', s: r.stratE, show: r.possibleE && this.i.btl.active && this.i.btl.wrappers.personal},
+                {name: 'Home + BTL', s: r.stratF, show: r.possibleF && this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
             ].filter(i => i.show);
 
             const years = [2, 5, 10, 15, 25, 40];
@@ -230,19 +230,19 @@ document.addEventListener('alpine:init', () => {
             const mkDs = (lbl, s, color, hidden) => ({ label: lbl, data: getData(s), borderColor: color, borderWidth: 2, tension: 0.3, hidden });
             
             const nwDatasets = [
-                mkDs('Rent & Invest', r.stratA, '#94a3b8', false)
+                mkDs('Rent', r.stratA, '#94a3b8', false)
             ];
             
             if (this.i.home.active) {
-                nwDatasets.push(mkDs('Buy & Live In', r.stratB, '#3b82f6', !r.possibleB));
-                if (this.i.home.lodger.active) nwDatasets.push(mkDs('Buy + Lodger', r.stratC, '#10b981', !r.possibleB));
+                nwDatasets.push(mkDs('Buy Home', r.stratB, '#3b82f6', !r.possibleB));
+                if (this.i.home.lodger.active) nwDatasets.push(mkDs('Buy Home + Lodger', r.stratC, '#10b981', !r.possibleB));
             }
             if (this.i.btl.active) {
-                if (this.i.btl.wrappers.company) nwDatasets.push(mkDs('Company BTL', r.stratD, '#8b5cf6', !r.possibleD));
-                if (this.i.btl.wrappers.personal) nwDatasets.push(mkDs('Personal BTL', r.stratE, '#f97316', !r.possibleE));
+                if (this.i.btl.wrappers.company) nwDatasets.push(mkDs('BTL (Ltd Co)', r.stratD, '#8b5cf6', !r.possibleD));
+                if (this.i.btl.wrappers.personal) nwDatasets.push(mkDs('BTL (Personal)', r.stratE, '#f97316', !r.possibleE));
             }
             if (this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company) {
-                nwDatasets.push(mkDs('Home + Co. BTL', r.stratF, '#eab308', !r.possibleF));
+                nwDatasets.push(mkDs('Home + BTL', r.stratF, '#eab308', !r.possibleF));
             }
             
             if (this.nwChart) this.nwChart.destroy();
@@ -255,11 +255,11 @@ document.addEventListener('alpine:init', () => {
             const idx = len - 1;
             const strategies = [
                 {l:'Rent', s:r.stratA, v:true},
-                {l:'Buy & Live In', s:r.stratB, v:r.possibleB && this.i.home.active},
-                {l:'Buy + Lodger', s:r.stratC, v:r.possibleB && this.i.home.active && this.i.home.lodger.active},
-                {l:'Co. BTL', s:r.stratD, v:r.possibleD && this.i.btl.active && this.i.btl.wrappers.company},
-                {l:'Pers. BTL', s:r.stratE, v:r.possibleE && this.i.btl.active && this.i.btl.wrappers.personal},
-                {l:'Home + Co.', s:r.stratF, v:r.possibleF && this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
+                {l:'Buy Home', s:r.stratB, v:r.possibleB && this.i.home.active},
+                {l:'Lodger', s:r.stratC, v:r.possibleB && this.i.home.active && this.i.home.lodger.active},
+                {l:'BTL (Co)', s:r.stratD, v:r.possibleD && this.i.btl.active && this.i.btl.wrappers.company},
+                {l:'BTL (Pers)', s:r.stratE, v:r.possibleE && this.i.btl.active && this.i.btl.wrappers.personal},
+                {l:'Home+BTL', s:r.stratF, v:r.possibleF && this.i.home.active && this.i.btl.active && this.i.btl.wrappers.company}
             ].filter(x => x.v);
 
             const labelsDM = strategies.map(x => x.l);

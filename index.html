@@ -290,47 +290,13 @@
 
         <!-- Main Content: Outputs -->
         <main class="flex-1 md:overflow-y-auto p-4 md:p-8 pb-32 md:pb-32 bg-gray-50">
-            
-            <!-- Strategy Guide (Collapsible) -->
-             <div class="mb-8 no-print" x-data="{ open: false }">
-                <button @click="open = !open" class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none">
-                    <span :class="open ? 'rotate-90' : ''" class="transform transition-transform">▶</span> 
-                    <span>How to read this?</span>
-                </button>
-                <div x-show="open" class="mt-4 p-4 bg-white rounded border border-gray-200 text-sm text-gray-600">
-                    <p class="mb-2"><strong>Rent:</strong> The baseline. You rent forever and invest the surplus cash flow.</p>
-                    <p class="mb-2"><strong>Buy Home:</strong> You buy the home defined in Section 2 to live in.</p>
-                    <p class="mb-2"><strong>BTL:</strong> You continue Renting, but buy an Investment Property (Section 3).</p>
-                    <p><strong>Home + BTL:</strong> You buy both a Main Home AND an Investment Property.</p>
-                </div>
-            </div>
 
-            <!-- Headline -->
+            <!-- 1. Headline (The Verdict) -->
             <div class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-8" x-html="headlineHTML"></div>
 
-            <!-- Insights -->
-            <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
-                <template x-for="insight in insights" :key="insight.title">
-                    <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3">
-                        <span class="text-2xl" x-text="insight.icon"></span>
-                        <div>
-                            <h4 class="font-bold text-blue-900 text-sm" x-text="insight.title"></h4>
-                            <p class="text-xs text-blue-800 leading-relaxed" x-text="insight.text"></p>
-                        </div>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Error Area -->
-            <div x-show="errors.length > 0" class="mt-6 mb-6 bg-red-50 border-l-4 border-red-500 p-4">
-                <template x-for="err in errors">
-                    <p class="text-red-700 font-medium" x-text="err"></p>
-                </template>
-            </div>
-
-            <!-- Chart Controls -->
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-2 no-print gap-2">
-                <h3 class="text-lg font-semibold text-gray-700">Projections</h3>
+            <!-- 2. Chart Settings -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 no-print gap-2">
+                <h3 class="text-lg font-semibold text-gray-700">Wealth Projection</h3>
                 <div class="flex gap-4">
                     <div class="bg-gray-200 p-1 rounded-lg flex text-xs font-medium">
                         <button @click="valuationMode = 'liquid'" :class="valuationMode === 'liquid' ? 'bg-white shadow text-indigo-700' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1 rounded transition">💰 Liquid Cash</button>
@@ -348,41 +314,27 @@
             <div class="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 no-print">
                 <div x-show="valuationMode === 'liquid'">
                     <span class="font-bold text-indigo-700">💰 Liquid Cash Mode (Recommended):</span>
-                    Shows what you would have if you <strong>sold everything today</strong>.
-                    <ul class="list-disc list-inside mt-1 ml-1 opacity-80">
-                        <li>Deducts <strong>Selling Costs</strong> (Estate Agent fees, etc).</li>
-                        <li>Deducts <strong>Exit Taxes</strong> (Capital Gains Tax, Corporation Tax).</li>
-                        <li><strong>Why use this?</strong> It's the only fair way to compare "Cash in the Bank" (Rent) vs "Equity in a House" (Buy).</li>
-                    </ul>
+                    Shows what you would have if you <strong>sold everything today</strong> (deducting fees and exit taxes).
                 </div>
                 <div x-show="valuationMode === 'gross'">
                     <span class="font-bold text-indigo-700">📄 Gross Equity Mode:</span>
-                    Shows the "Paper Value" of your assets.
-                    <ul class="list-disc list-inside mt-1 ml-1 opacity-80">
-                        <li><strong>Ignores</strong> selling fees and taxes.</li>
-                        <li>Useful if you <strong>never plan to sell</strong> the property.</li>
-                        <li><em>Warning:</em> Makes Property look wealthier than it actually is compared to Renting.</li>
-                    </ul>
+                    Shows "Paper Wealth" (Asset - Debt). Ignores selling fees and taxes.
                 </div>
             </div>
 
-            <!-- Charts Container -->
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-                <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="`Net Worth Projection (${simYears} Years)`"></h3>
-                    <div class="relative h-72 w-full"><canvas id="netWorthChart"></canvas></div>
-                </div>
-                <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2" x-text="`Cumulative Dead Money (${simYears} Years)`"></h3>
-                    <p class="text-xs text-gray-500 mb-4">"Dead Money" is unrecoverable cost: Rent, Mortgage Interest, Maintenance, Taxes, and Buying Fees.</p>
-                    <div class="relative h-72 w-full"><canvas id="deadMoneyChart"></canvas></div>
-                </div>
+            <!-- 3. Net Worth Hero Chart -->
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-100 mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="`Total Wealth Timeline (${simYears} Years)`"></h3>
+                <div class="relative h-80 w-full"><canvas id="netWorthChart"></canvas></div>
             </div>
 
-            <!-- Year Inspector Slider -->
-            <div class="bg-white p-4 rounded-lg shadow border border-gray-100 mb-8 no-print">
+            <!-- 4. Time Travel Inspector (Scrubber) -->
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-100 mb-12 no-print ring-2 ring-indigo-50">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">⏱️ Time Travel Inspector</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        ⏱️ Time Travel Inspector 
+                        <span class="text-xs font-normal text-gray-400 uppercase tracking-tighter">Scrub the chart above</span>
+                    </h3>
                     <span class="text-2xl font-bold text-indigo-600" x-text="`Year ${inspectorYear}`"></span>
                 </div>
                 <input type="range" min="1" max="40" x-model.number="inspectorYear" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 mb-6">
@@ -404,9 +356,37 @@
                 </div>
             </div>
 
-            <!-- Detailed Table -->
-            <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200"><h3 class="text-lg font-semibold text-gray-800">Snapshot Analysis</h3></div>
+            <!-- 5. Dead Money (Cost Analysis) -->
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-100 mb-12">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800" x-text="`Cumulative Dead Money (${simYears} Years)`"></h3>
+                    <p class="text-xs text-gray-500">Unrecoverable costs: Rent, Interest, Maintenance, Taxes, and Fees.</p>
+                </div>
+                <div class="relative h-72 w-full"><canvas id="deadMoneyChart"></canvas></div>
+            </div>
+
+            <!-- 6. Insights & Errors -->
+            <div x-show="errors.length > 0" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
+                <template x-for="err in errors">
+                    <p class="text-red-700 font-medium" x-text="err"></p>
+                </template>
+            </div>
+
+            <div class="mb-12 grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+                <template x-for="insight in insights" :key="insight.title">
+                    <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-3">
+                        <span class="text-2xl" x-text="insight.icon"></span>
+                        <div>
+                            <h4 class="font-bold text-blue-900 text-sm" x-text="insight.title"></h4>
+                            <p class="text-xs text-blue-800 leading-relaxed" x-text="insight.text"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- 7. Detailed Data Table -->
+            <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden mb-16">
+                <div class="px-6 py-4 border-b border-gray-200"><h3 class="text-lg font-semibold text-gray-800">Data Snapshot</h3></div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-600">
                         <thead class="bg-gray-50 text-gray-900 font-medium">
@@ -430,6 +410,20 @@
                             </template>
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- 8. Strategy Guide (Moved to Bottom) -->
+            <div class="mb-12 no-print" x-data="{ open: false }">
+                <button @click="open = !open" class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-2 focus:outline-none">
+                    <span :class="open ? 'rotate-90' : ''" class="transform transition-transform">▶</span> 
+                    <span>Glossary: What do these strategies mean?</span>
+                </button>
+                <div x-show="open" class="mt-4 p-4 bg-white rounded border border-gray-200 text-sm text-gray-600 max-w-2xl">
+                    <p class="mb-2"><strong>Rent:</strong> The baseline. You rent forever and invest the surplus cash flow into stocks.</p>
+                    <p class="mb-2"><strong>Buy Home:</strong> You buy the main residence defined in the Sidebar to live in.</p>
+                    <p class="mb-2"><strong>BTL:</strong> You continue Renting personally, but buy an Investment Property (Buy-to-Let).</p>
+                    <p><strong>Home + BTL:</strong> You buy both a Main Home AND an Investment Property.</p>
                 </div>
             </div>
             

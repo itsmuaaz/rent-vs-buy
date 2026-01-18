@@ -173,6 +173,16 @@
                             <input type="number" x-model.number="i.home.repairRate" class="input-field" step="0.1">
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="input-label"><span class="has-tooltip">Buying Fees (£)<span class="tooltip">Solicitor, Surveyor, Moving costs.</span></span></label>
+                            <input type="number" x-model.number="i.home.buyingCost" class="input-field">
+                        </div>
+                        <div>
+                            <label class="input-label"><span class="has-tooltip">Selling Fee (%)<span class="tooltip">Estate Agent fee (1% - 2%) + VAT.</span></span></label>
+                            <input type="number" x-model.number="i.home.sellingCostPct" class="input-field" step="0.1">
+                        </div>
+                    </div>
                      <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="input-label"><span class="has-tooltip">Reno Cost (£)<span class="tooltip">Increases value to 'Post-Work Value' instantly (Forced Equity).</span></span></label>
@@ -244,6 +254,16 @@
                         <div>
                              <label class="input-label">Maint (%)</label>
                              <input type="number" x-model.number="i.btl.repairRate" class="input-field" step="0.1">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="input-label">Buying Fees (£)</label>
+                            <input type="number" x-model.number="i.btl.buyingCost" class="input-field">
+                        </div>
+                        <div>
+                             <label class="input-label">Selling Fee (%)</label>
+                             <input type="number" x-model.number="i.btl.sellingCostPct" class="input-field" step="0.1">
                         </div>
                     </div>
                     

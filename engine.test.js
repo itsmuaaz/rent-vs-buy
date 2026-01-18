@@ -253,4 +253,26 @@ describe('Simulation Verification (New Asset Model)', () => {
         expect(resCrash).toBeLessThan(resNormal);
         expect(resNormal - resCrash).toBeGreaterThan(40000); // ~46k diff expected
     });
+
+    test('Selling Fee Impact: Higher fee reduces liquid wealth', () => {
+        // Case A: 0% Fee
+        const V1 = buildState({ 
+            personal: { liquidAssets: 100000 },
+            home: { active: true, price: 300000, renoCost: 0, sellingCostPct: 0 } 
+        });
+        const res1 = Engine.simulateStrategies(V1).stratB.netWorthLiquid[9];
+
+        // Case B: 2% Fee
+        const V2 = buildState({ 
+            personal: { liquidAssets: 100000 },
+            home: { active: true, price: 300000, renoCost: 0, sellingCostPct: 2.0 } 
+        });
+        const res2 = Engine.simulateStrategies(V2).stratB.netWorthLiquid[9];
+
+        // Result 1 should be > Result 2
+        // House Value at Y10 ~ 403k
+        // 2% of 403k = 8k.
+        expect(res1).toBeGreaterThan(res2);
+        expect(res1 - res2).toBeGreaterThan(7000); 
+    });
 });

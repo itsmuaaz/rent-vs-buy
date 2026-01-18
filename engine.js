@@ -216,10 +216,12 @@ Engine.simulateStrategies = function(V) {
     }
 
 
+    const propGrowth = (P.propertyGrowth !== undefined ? P.propertyGrowth : 3.0) / 100;
+
     // --- Simulation Loop ---
     for (let y = 1; y <= years; y++) {
-        let stockM = (1 + stockGrowth / 12), propG = 1.03;
-        if (y === 1) { if (isStockCrash) stockM = Math.pow(0.7, 1/12); if (isPropCrash) propG = 0.85; }
+        let stockM = (1 + stockGrowth / 12), propG = 1 + propGrowth;
+        if (y === 1) { if (isStockCrash) stockM = Math.pow(0.7, 1/12); if (isPropCrash) propG = propG * 0.85; }
         let rentY = P.rent.current * Math.pow(1 + rentInf, y - 1);
         
         // Annual Service Charge Inflation

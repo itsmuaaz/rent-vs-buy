@@ -96,14 +96,18 @@
                             <input type="number" x-model.number="i.personal.isaBalance" class="input-field">
                         </div>
                     </div>
+                    <div class="input-group">
+                        <label class="input-label">Monthly Save (£)</label>
+                        <input type="number" x-model.number="i.personal.monthlySavings" class="input-field">
+                    </div>
                     <div class="grid grid-cols-2 gap-2">
-                         <div>
-                            <label class="input-label">Monthly Save (£)</label>
-                            <input type="number" x-model.number="i.personal.monthlySavings" class="input-field">
-                        </div>
                          <div>
                             <label class="input-label">Stock Growth (%)</label>
                             <input type="number" x-model.number="i.personal.stockGrowth" class="input-field" step="0.1">
+                        </div>
+                        <div>
+                            <label class="input-label">Property Growth (%)</label>
+                            <input type="number" x-model.number="i.personal.propertyGrowth" class="input-field" step="0.1">
                         </div>
                     </div>
                     <div class="flex items-center justify-between">

@@ -45,6 +45,21 @@ describe('Simulation Verification (New Asset Model)', () => {
         return s;
     };
 
+    test('Property Growth Input: Higher growth increases Buy wealth', () => {
+        // Case A: 1% Growth
+        const V1 = buildState({ personal: { propertyGrowth: 1.0, liquidAssets: 100000 }, home: { active: true, price: 300000, renoCost: 0, lodger:{active:false} } });
+        const res1 = Engine.simulateStrategies(V1).stratB.netWorth[9];
+
+        // Case B: 5% Growth
+        const V2 = buildState({ personal: { propertyGrowth: 5.0, liquidAssets: 100000 }, home: { active: true, price: 300000, renoCost: 0, lodger:{active:false} } });
+        const res2 = Engine.simulateStrategies(V2).stratB.netWorth[9];
+
+        expect(res2).toBeGreaterThan(res1);
+        // Approx check: 300k * 1.05^10 vs 300k * 1.01^10
+        // diff is large.
+        expect(res2 - res1).toBeGreaterThan(100000);
+    });
+
     test('Rent Strategy: Matches Historical Baseline', () => {
         const V = buildState();
         const data = Engine.simulateStrategies(V);

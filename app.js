@@ -18,7 +18,7 @@ function calculatorLogic() {
         i: {
             personal: {
                 liquidAssets: 50000, isaBalance: 20000, monthlySavings: 1000,
-                stockGrowth: 8, taxBand: 'additional',
+                stockGrowth: 8, propertyGrowth: 3.0, taxBand: 'additional',
                 rent: { current: 1500, inflation: 3 },
                 isFTB: true
             },

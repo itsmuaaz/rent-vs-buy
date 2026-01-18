@@ -151,8 +151,60 @@ function calculatorLogic() {
 
             const fmt = (v) => `<strong>£${Math.round(v).toLocaleString()}</strong>`;
             const fmtK = (v) => `<strong>£${Math.round(v/1000)}k</strong>`;
+
+            // --- Cash Flow Table Generation ---
+            let cashFlowTable = '';
+            if (this.i.home.active && r.possibleB) {
+                const P = this.i.personal;
+                const H = this.i.home;
+                const totalBudget = P.monthlySavings + P.rent.current;
+                
+                // Rent
+                const rentCost = P.rent.current;
+                const rentSurplus = Math.max(0, totalBudget - rentCost);
+                
+                // Buy
+                const buyMaint = (H.price * H.repairRate / 100 / 12) + (H.serviceCharge / 12);
+                const buyMortgage = this.homeStats.mortgage;
+                const buyCost = buyMortgage + buyMaint;
+                const buySurplus = Math.max(0, totalBudget - buyCost);
+                
+                let rows = [
+                    {n: 'Rent', cost: rentCost, save: rentSurplus},
+                    {n: 'Buy Home', cost: buyCost, save: buySurplus}
+                ];
+
+                if (this.i.home.lodger.active) {
+                    const lIncome = H.lodger.income;
+                    const lCost = buyCost - lIncome;
+                    const lSurplus = Math.max(0, totalBudget - lCost);
+                    rows.push({n: 'Buy + Lodger', cost: lCost, save: lSurplus});
+                }
+
+                cashFlowTable = `<div class="mb-4 overflow-hidden border border-gray-200 rounded-lg">
+                    <div class="bg-gray-50 px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Monthly Cash Flow Breakdown (Year 1)</div>
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-white border-b border-gray-100 text-gray-500 font-medium">
+                            <tr><th class="px-3 py-2">Strategy</th><th class="px-3 py-2">Net Housing Cost</th><th class="px-3 py-2 text-right text-green-700">Investable Surplus</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white">
+                            ${rows.map(row => `
+                                <tr>
+                                    <td class="px-3 py-2 font-medium text-gray-700">${row.n}</td>
+                                    <td class="px-3 py-2 text-gray-600">£${Math.round(row.cost).toLocaleString()}</td>
+                                    <td class="px-3 py-2 text-right font-bold text-green-700">£${Math.round(row.save).toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="bg-gray-50 px-3 py-2 text-[10px] text-gray-400">
+                        * Surplus = Total Budget (£${totalBudget.toLocaleString()}) - Housing Cost. This surplus is invested in stocks.
+                    </div>
+                </div>`;
+            }
             
             let html = `<div class="space-y-4 text-sm text-slate-700">`;
+            html += cashFlowTable; // Prepend Table
             
             if (baseline) {
                 html += `<div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg">

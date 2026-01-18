@@ -1,5 +1,36 @@
 const Engine = require('./engine');
 
+// Helper to build default state (Top-level for all tests)
+const buildState = (overrides = {}) => {
+    const s = {
+        personal: {
+            liquidAssets: 50000, isaBalance: 20000, monthlySavings: 1000,
+            stockGrowth: 8, taxBand: 'additional',
+            rent: { current: 1500, inflation: 3 },
+            isFTB: true
+        },
+        home: {
+            active: true, price: 400000, depositPct: 25, term: 30, rate: 4.5,
+            repairRate: 1.0, serviceCharge: 0, buyingCost: 2000, sellingCostPct: 1.5,
+            renoCost: 60000, postWorkValue: 525000,
+            lodger: { active: true, income: 900, years: 2 }
+        },
+        btl: {
+            active: false, price: 200000, depositPct: 25, term: 30,
+            ratePersonal: 4.5, rateCompany: 5.5,
+            repairRate: 0.5, serviceCharge: 2000, rentYield: 5.0,
+            wrappers: { personal: true, company: true }
+        },
+        settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false }
+    };
+    // Deep merge overrides (simplified for test)
+    if (overrides.personal) Object.assign(s.personal, overrides.personal);
+    if (overrides.home) Object.assign(s.home, overrides.home);
+    if (overrides.btl) Object.assign(s.btl, overrides.btl);
+    if (overrides.settings) Object.assign(s.settings, overrides.settings);
+    return s;
+};
+
 describe('Financial Engine Sanity Check', () => {
     test('Calculates Mortgage Correctly', () => {
         const p = Engine.calculateMortgage(200000, 4.5, 25);
@@ -15,37 +46,6 @@ describe('Financial Engine Sanity Check', () => {
 
 describe('Simulation Verification (New Asset Model)', () => {
     
-    // Helper to build default state
-    const buildState = (overrides = {}) => {
-        const s = {
-            personal: {
-                liquidAssets: 50000, isaBalance: 20000, monthlySavings: 1000,
-                stockGrowth: 8, taxBand: 'additional',
-                rent: { current: 1500, inflation: 3 },
-                isFTB: true
-            },
-            home: {
-                active: true, price: 400000, depositPct: 25, term: 30, rate: 4.5,
-                repairRate: 1.0, serviceCharge: 0, buyingCost: 2000, sellingCostPct: 1.5,
-                renoCost: 60000, postWorkValue: 525000,
-                lodger: { active: true, income: 900, years: 2 }
-            },
-            btl: {
-                active: false, price: 200000, depositPct: 25, term: 30,
-                ratePersonal: 4.5, rateCompany: 5.5,
-                repairRate: 0.5, serviceCharge: 2000, rentYield: 5.0,
-                wrappers: { personal: true, company: true }
-            },
-            settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false }
-        };
-        // Deep merge overrides (simplified for test)
-        if (overrides.personal) Object.assign(s.personal, overrides.personal);
-        if (overrides.home) Object.assign(s.home, overrides.home);
-        if (overrides.btl) Object.assign(s.btl, overrides.btl);
-        if (overrides.settings) Object.assign(s.settings, overrides.settings);
-        return s;
-    };
-
     test('Property Growth Input: Higher growth increases Buy wealth', () => {
         // Case A: 1% Growth
         const V1 = buildState({ personal: { propertyGrowth: 1.0, liquidAssets: 100000 }, home: { active: true, price: 300000, renoCost: 0, lodger:{active:false} } });
@@ -274,5 +274,36 @@ describe('Simulation Verification (New Asset Model)', () => {
         // 2% of 403k = 8k.
         expect(res1).toBeGreaterThan(res2);
         expect(res1 - res2).toBeGreaterThan(7000); 
+    });
+});
+
+describe('Sensitivity Matrix Verification', () => {
+    test('Matrix returns 5x5 grid with correct labels', () => {
+        const V = buildState({
+            personal: { liquidAssets: 100000, propertyGrowth: 3.0 },
+            home: { active: true, price: 300000, rate: 4.5, renoCost: 0 }
+        });
+        
+        const matrix = Engine.calculateSensitivityMatrix(V);
+        
+        expect(matrix.rows.length).toBe(5);
+        expect(matrix.rows[0].length).toBe(5);
+        expect(matrix.xLabels).toContain('3.0%');
+        expect(matrix.yLabels).toContain('4.5%');
+    });
+
+    test('High growth favors Buy, High rate favors Rent', () => {
+        const V = buildState({
+            personal: { liquidAssets: 100000, propertyGrowth: 3.0 },
+            home: { active: true, price: 300000, rate: 4.5, renoCost: 0 }
+        });
+        
+        const matrix = Engine.calculateSensitivityMatrix(V);
+        
+        const bestForRent = matrix.rows[0][0]; // Highest Rate (6.5%), Lowest Growth (1.0%)
+        const bestForBuy = matrix.rows[4][4];  // Lowest Rate (2.5%), Highest Growth (5.0%)
+        
+        expect(bestForRent.winner).toBe('Rent');
+        expect(bestForBuy.winner).toBe('Buy');
     });
 });

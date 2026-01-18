@@ -387,6 +387,45 @@ Engine.simulateStrategies = function(V) {
     return { stratA:sA, stratB:sB, stratC:sC, stratD:sD, stratE:sE, stratF:sF, possibleB, possibleD, possibleE, possibleF };
 };
 
+Engine.calculateSensitivityMatrix = function(V) {
+    const years = 10; // Fixed horizon for heatmap
+    const baseGrowth = V.personal.propertyGrowth || 3.0;
+    const baseRate = V.home.rate || 4.5;
+    
+    // Generate ranges (+/- 2% in 1% steps)
+    const growthRange = [baseGrowth - 2, baseGrowth - 1, baseGrowth, baseGrowth + 1, baseGrowth + 2];
+    const rateRange = [baseRate + 2, baseRate + 1, baseRate, baseRate - 1, baseRate - 2]; // Reversed so higher rates are bottom
+    
+    const matrix = [];
+    for (const r of rateRange) {
+        const row = [];
+        for (const g of growthRange) {
+            // Deep clone state
+            const clone = JSON.parse(JSON.stringify(V));
+            clone.personal.propertyGrowth = g;
+            clone.home.rate = r;
+            
+            const results = Engine.simulateStrategies(clone);
+            const rentNW = results.stratA.netWorthLiquid[years - 1];
+            const buyNW = results.stratB.netWorthLiquid[years - 1];
+            
+            const diff = buyNW - rentNW;
+            row.push({
+                val: diff,
+                winner: diff > 0 ? 'Buy' : 'Rent',
+                isCenter: (g === baseGrowth && r === baseRate)
+            });
+        }
+        matrix.push(row);
+    }
+    
+    return {
+        xLabels: growthRange.map(v => v.toFixed(1) + '%'),
+        yLabels: rateRange.map(v => v.toFixed(1) + '%'),
+        rows: matrix
+    };
+};
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Engine;
 } else {

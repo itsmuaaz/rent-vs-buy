@@ -39,25 +39,40 @@ function calculatorLogic() {
         },
         
         results: null,
+        matrix: null,
+        matrixTimer: null,
         
         init() {
             const saved = localStorage.getItem('rentVsBuyData_v3');
             if (saved) { try { const parsed = JSON.parse(saved); if(parsed.personal) this.i = parsed; } catch(e){} }
             
-            // Note: In Node/Jest, $watch is not available automatically.
-            // We mock it or manually call calculate in tests.
             if (this.$watch) {
-                this.$watch('i', () => { this.calculate(); this.save(); }, { deep: true });
+                this.$watch('i', () => { 
+                    this.calculate(); 
+                    this.save();
+                    this.calculateMatrixDebounced();
+                }, { deep: true });
                 this.$watch('simYears', () => this.updateCharts());
                 this.$watch('inspectorYear', () => this.updateCharts());
                 this.$watch('valuationMode', () => { this.updateCharts(); });
             }
             
             if (this.$nextTick) {
-                this.$nextTick(() => { this.calculate(); });
+                this.$nextTick(() => { this.calculate(); this.calculateMatrix(); });
             } else {
-                this.calculate(); // Fallback for synchronous start
+                this.calculate(); this.calculateMatrix(); 
             }
+        },
+        
+        calculateMatrixDebounced() {
+            if (this.matrixTimer) clearTimeout(this.matrixTimer);
+            this.matrixTimer = setTimeout(() => { this.calculateMatrix(); }, 500);
+        },
+
+        calculateMatrix() {
+            try {
+                this.matrix = Engine.calculateSensitivityMatrix(this.payload);
+            } catch(e) { console.error("Matrix Error", e); }
         },
         
         get payload() {

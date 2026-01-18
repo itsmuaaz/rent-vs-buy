@@ -1,0 +1,56 @@
+
+> rent-vs-buy@1.0.0 test
+> jest && npm run validate:html && npm run validate:js
+
+FAIL ./engine.test.js
+  Financial Engine Sanity Check
+    ✓ Calculates Mortgage Correctly (2 ms)
+    ✓ Calculates Stamp Duty Correctly (1 ms)
+  Simulation Verification (New Asset Model)
+    ✓ Property Growth Input: Higher growth increases Buy wealth (3 ms)
+    ✓ Rent Strategy: Matches Historical Baseline
+    ✓ Buy Strategy: Liquid < Gross due to Fees (2 ms)
+    ✓ Service Charge Impact: Wealth should be lower with SC (4 ms)
+    ✓ Strategy F (Home + BTL): Correctly sums costs (3 ms)
+    ✓ Lodger Tax: Rent-a-Room Relief applies correctly (7 ms)
+    ✓ Section 24 (Personal BTL): Higher Rate taxpayers pay more (6 ms)
+    ✓ ISA Limit: Excess savings spill to GIA (1 ms)
+    ✓ Market Crash Simulator: Year 1 drop (3 ms)
+    ✓ Selling Fee Impact: Higher fee reduces liquid wealth (3 ms)
+  Sensitivity Matrix Verification
+    ✕ Matrix returns 5x5 grid with correct labels
+    ✕ High growth favors Buy, High rate favors Rent
+
+  ● Sensitivity Matrix Verification › Matrix returns 5x5 grid with correct labels
+
+    ReferenceError: buildState is not defined
+
+      280 | describe('Sensitivity Matrix Verification', () => {
+      281 |     test('Matrix returns 5x5 grid with correct labels', () => {
+    > 282 |         const V = buildState({
+          |                   ^
+      283 |             personal: { liquidAssets: 100000, propertyGrowth: 3.0 },
+      284 |             home: { active: true, price: 300000, rate: 4.5, renoCost: 0 }
+      285 |         });
+
+      at Object.buildState (engine.test.js:282:19)
+
+  ● Sensitivity Matrix Verification › High growth favors Buy, High rate favors Rent
+
+    ReferenceError: buildState is not defined
+
+      294 |
+      295 |     test('High growth favors Buy, High rate favors Rent', () => {
+    > 296 |         const V = buildState({
+          |                   ^
+      297 |             personal: { liquidAssets: 100000, propertyGrowth: 3.0 },
+      298 |             home: { active: true, price: 300000, rate: 4.5, renoCost: 0 }
+      299 |         });
+
+      at Object.buildState (engine.test.js:296:19)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 12 passed, 14 total
+Snapshots:   0 total
+Time:        0.242 s, estimated 1 s
+Ran all test suites.

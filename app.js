@@ -25,7 +25,7 @@ function calculatorLogic() {
             home: {
                 active: true, price: 300000, depositPct: 15, term: 30, rate: 4.5,
                 repairRate: 1.0, serviceCharge: 0, buyingCost: 3000, sellingCostPct: 1.5,
-                renoCost: 0, postWorkValue: 300000,
+                renoCost: 0, postWorkValue: 300000, overpayment: 0,
                 lodger: { active: false, income: 625, years: 2 }
             },
             btl: {
@@ -35,7 +35,7 @@ function calculatorLogic() {
                 wrappers: { personal: true, company: true },
                 buyingCost: 3000, sellingCostPct: 1.5
             },
-            settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false }
+            settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false, inflationAdjusted: false }
         },
         
         results: null,
@@ -205,6 +205,35 @@ function calculatorLogic() {
                 if (buyNW[i] > rentNW[i]) return i + 1;
             }
             return null;
+        },
+
+        getYear1CashFlows() {
+            if (!this.results) return [];
+            const P = this.i.personal;
+            const H = this.i.home;
+            const totalBudget = P.monthlySavings + P.rent.current;
+            
+            const flows = [];
+
+            // Rent
+            const rentCost = P.rent.current;
+            flows.push({ n: 'Rent', cost: rentCost, save: Math.max(0, totalBudget - rentCost), type: 'Rent' });
+
+            if (this.i.home.active && this.results.possibleB) {
+                // Buy Home
+                const buyMaint = (H.price * H.repairRate / 100 / 12) + (H.serviceCharge / 12);
+                const buyMortgage = this.homeStats.mortgage;
+                const buyCost = buyMortgage + buyMaint;
+                flows.push({ n: 'Buy Home', cost: buyCost, save: Math.max(0, totalBudget - buyCost), type: 'Buy' });
+
+                // Buy + Lodger
+                if (H.lodger.active) {
+                    const lIncome = H.lodger.income;
+                    const lCost = buyCost - lIncome;
+                    flows.push({ n: 'Buy + Lodger', cost: lCost, save: Math.max(0, totalBudget - lCost), type: 'Buy' });
+                }
+            }
+            return flows;
         },
 
         getYear1CashFlows() {
@@ -499,7 +528,11 @@ function calculatorLogic() {
 
         calculate() {
             try {
-                this.results = Engine.simulateStrategies(this.payload);
+                let res = Engine.simulateStrategies(this.payload);
+                if (this.i.settings.inflationAdjusted) {
+                    res = Engine.adjustForInflation(res, this.i.personal.rent.inflation);
+                }
+                this.results = res;
                 this.updateCharts();
             } catch(e) { console.error("Calc Error", e); }
         },

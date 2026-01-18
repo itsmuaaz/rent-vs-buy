@@ -307,3 +307,52 @@ describe('Sensitivity Matrix Verification', () => {
         expect(bestForBuy.winner).toBe('Buy');
     });
 });
+
+describe('Inflation Adjustment (Real Terms)', () => {
+    test('Adjusts future values correctly', () => {
+        const nominal = {
+            stratA: { netWorth: [10300, 10609], netWorthLiquid: [10300, 10609] },
+            stratB: { netWorth: [20600, 21218], netWorthLiquid: [20600, 21218] }
+        };
+        const inflationRate = 3.0;
+        
+        const real = Engine.adjustForInflation(nominal, inflationRate);
+        
+        // Year 1: 10300 / 1.03 = 10000
+        expect(real.stratA.netWorth[0]).toBeCloseTo(10000, 0);
+        
+        // Year 2: 10609 / (1.03^2) = 10609 / 1.0609 = 10000
+        expect(real.stratA.netWorth[1]).toBeCloseTo(10000, 0);
+        
+        // Ensure StratB also adjusted
+        expect(real.stratB.netWorth[0]).toBeCloseTo(20000, 0);
+    });
+});
+
+describe('Mortgage Overpayments', () => {
+    test('Overpaying reduces total interest', () => {
+        const base = {
+            personal: { liquidAssets: 100000, monthlySavings: 2000, rent: {current:1000, inflation:3}, propertyGrowth:3, stockGrowth:7, isaBalance:0 },
+            home: { active: true, price: 300000, depositPct: 10, rate: 5.0, term: 25, overpayment: 0, renoCost: 0, lodger:{active:false} }
+        };
+        
+        // Scenario A: No Overpayment
+        const VA = buildState(base);
+        const resA = Engine.simulateStrategies(VA).stratB;
+        
+        // Scenario B: £500/mo Overpayment
+        const VB = buildState(base);
+        VB.home.overpayment = 500;
+        const resB = Engine.simulateStrategies(VB).stratB;
+        
+        // Interest paid in first 10 years
+        // Array sums
+        const sumInt = (arr) => arr.slice(0, 10).reduce((a, b) => a + b, 0);
+        const intA = sumInt(resA.breakdown.interest);
+        const intB = sumInt(resB.breakdown.interest);
+        
+        expect(intB).toBeLessThan(intA);
+        // Approx check: 500/mo * 12 * 10 = 60k extra paid.
+        // Principal reduces faster, so interest drops.
+    });
+});

@@ -216,6 +216,12 @@
                                 <input type="number" x-model.number="i.home.sellingCostPct" class="input-field" step="0.1">
                             </div>
                         </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="input-label"><span class="has-tooltip">Overpayment (£/mo)<span class="tooltip">Extra monthly payment to reduce mortgage term.</span></span></label>
+                                <input type="number" x-model.number="i.home.overpayment" class="input-field">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Renovations Toggle -->
@@ -405,6 +411,12 @@
                             <button @click="valuationMode = 'liquid'" :class="valuationMode === 'liquid' ? 'bg-white shadow text-indigo-700' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1 rounded transition">💰 Liquid Cash</button>
                             <button @click="valuationMode = 'gross'" :class="valuationMode === 'gross' ? 'bg-white shadow text-indigo-700' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1 rounded transition">📄 Gross Equity</button>
                         </div>
+                        <button @click="i.settings.inflationAdjusted = !i.settings.inflationAdjusted; calculate()" 
+                                :class="i.settings.inflationAdjusted ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-white text-gray-500 border-gray-200'"
+                                class="border rounded-lg px-3 py-1 text-xs font-medium transition flex items-center gap-1">
+                            <span x-text="i.settings.inflationAdjusted ? '✅' : '⬜'"></span>
+                            Real Terms (Inflation Adj.)
+                        </button>
                         <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
                             <template x-for="y in [5, 10, 15, 25, 40]">
                                 <button @click="simYears = y" :class="simYears === y ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:bg-gray-50'" class="px-3 py-1 rounded transition" x-text="y + 'y'"></button>

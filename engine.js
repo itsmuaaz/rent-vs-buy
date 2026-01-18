@@ -92,6 +92,35 @@ Engine.simulateStrategies = function(V) {
     
     const getLiqHist = (isa, gia, cashCo=0) => isa + gia + cashCo * (1 - rates.div);
 
+    // Helper: Mortgage Step with Overpayment
+    const calculateMortgageStep = (debt, rate, scheduledPayment, overpayment = 0) => {
+        if (debt <= 0) return { interest: 0, principal: 0, totalPaid: 0, newDebt: 0 };
+        
+        const monthlyRate = rate / 1200;
+        let interest = debt * monthlyRate;
+        
+        // Handle final payment (if scheduled payment > remaining balance + interest)
+        // scheduledPayment is fixed.
+        // If (debt + interest) < scheduledPayment, we just pay off everything.
+        let actualPayment = scheduledPayment;
+        if ((debt + interest) < scheduledPayment) actualPayment = debt + interest;
+        
+        let principal = actualPayment - interest;
+        let extra = 0;
+        
+        if (overpayment > 0) {
+            // Can we afford overpayment? Assumed yes (check caller).
+            // Cap at remaining debt
+            extra = Math.min(overpayment, debt - principal);
+        }
+        
+        let totalPaid = actualPayment + extra;
+        let newDebt = debt - (principal + extra);
+        if (newDebt < 0.01) newDebt = 0; // Floating point hygiene
+        
+        return { interest, principal: principal + extra, totalPaid, newDebt };
+    };
+
     const initStrat = (name) => ({ 
         name, 
         netWorth: [], netWorthLiquid: [], deadMoney: [], liquidHistory: [], 
@@ -241,24 +270,28 @@ Engine.simulateStrategies = function(V) {
             
             // Strat B: Buy Home
             if (possibleB) {
-                let i = debtB * (H.rate / 1200);
-                cIntB += i; debtB -= (pB - i);
+                const step = calculateMortgageStep(debtB, H.rate, pB, H.overpayment || 0);
+                cIntB += step.interest;
+                debtB = step.newDebt;
+
                 let maint = (houseB * (H.repairRate / 100) / 12) + (scH / 12);
-                cMaintB += maint; deadB += (i + maint);
-                [isaB, giaB, basisB] = invest(totalMonthlyBudget - (pB + maint), isaB, giaB, basisB);
+                cMaintB += maint; deadB += (step.interest + maint);
+                [isaB, giaB, basisB] = invest(totalMonthlyBudget - (step.totalPaid + maint), isaB, giaB, basisB);
             }
             
             // Strat C: Buy + Lodger
             if (possibleC) {
-                let i = debtC * (H.rate / 1200);
-                cIntC += i; debtC -= (pB - i);
+                const step = calculateMortgageStep(debtC, H.rate, pB, H.overpayment || 0);
+                cIntC += step.interest;
+                debtC = step.newDebt;
+
                 let maint = (houseC * (H.repairRate / 100) / 12) + (scH / 12);
                 cMaintC += maint;
                 let l = (y <= H.lodger.years) ? H.lodger.income : 0;
                 // Lodger Tax Relief (Rent a Room Scheme: £7500 tax free)
                 let netL = l - Math.max(0, (l * 12 > 7500 ? (l - 7500 / 12) * rates.income : 0));
-                deadC += (i + maint - netL);
-                [isaC, giaC, basisC] = invest(totalMonthlyBudget - (pB + maint - netL), isaC, giaC, basisC);
+                deadC += (step.interest + maint - netL);
+                [isaC, giaC, basisC] = invest(totalMonthlyBudget - (step.totalPaid + maint - netL), isaC, giaC, basisC);
             }
 
             // Strat D: Co BTL
@@ -385,6 +418,24 @@ Engine.simulateStrategies = function(V) {
     [sA, sB, sC, sD, sE, sF].forEach(s => s.totalInterest = s.breakdown.interest);
 
     return { stratA:sA, stratB:sB, stratC:sC, stratD:sD, stratE:sE, stratF:sF, possibleB, possibleD, possibleE, possibleF };
+};
+
+Engine.adjustForInflation = function(nominalResults, ratePct) {
+    const rate = ratePct / 100;
+    const adjust = (val, year) => val / Math.pow(1 + rate, year);
+    
+    // Deep clone results to avoid mutation
+    const realResults = JSON.parse(JSON.stringify(nominalResults));
+    
+    // Iterate over all strategies (A-F) and arrays (netWorth, netWorthLiquid)
+    ['stratA', 'stratB', 'stratC', 'stratD', 'stratE', 'stratF'].forEach(s => {
+        const strat = realResults[s];
+        if(strat) {
+            if (strat.netWorth) strat.netWorth = strat.netWorth.map((v, i) => adjust(v, i + 1));
+            if (strat.netWorthLiquid) strat.netWorthLiquid = strat.netWorthLiquid.map((v, i) => adjust(v, i + 1));
+        }
+    });
+    return realResults;
 };
 
 Engine.calculateSensitivityMatrix = function(V, targetYear = 10) {

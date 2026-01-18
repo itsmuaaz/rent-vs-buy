@@ -355,4 +355,26 @@ describe('Mortgage Overpayments', () => {
         // Approx check: 500/mo * 12 * 10 = 60k extra paid.
         // Principal reduces faster, so interest drops.
     });
+
+    test('BTL Overpayment reduces total interest (Strat D)', () => {
+        const base = {
+            personal: { liquidAssets: 100000, monthlySavings: 2000, rent: {current:1000, inflation:3}, propertyGrowth:3, stockGrowth:7, isaBalance:0 },
+            btl: { active: true, price: 200000, depositPct: 25, term: 25, overpayment: 0, wrappers: { company: true } }
+        };
+        
+        // Scenario A: No Overpayment
+        const VA = buildState(base);
+        const resA = Engine.simulateStrategies(VA).stratD;
+        
+        // Scenario B: £500/mo Overpayment
+        const VB = buildState(base);
+        VB.btl.overpayment = 500;
+        const resB = Engine.simulateStrategies(VB).stratD;
+        
+        const sumInt = (arr) => arr.slice(0, 10).reduce((a, b) => a + b, 0);
+        const intA = sumInt(resA.breakdown.interest);
+        const intB = sumInt(resB.breakdown.interest);
+        
+        expect(intB).toBeLessThan(intA);
+    });
 });

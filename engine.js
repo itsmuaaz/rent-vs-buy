@@ -118,7 +118,7 @@ Engine.simulateStrategies = function(V) {
         let newDebt = debt - (principal + extra);
         if (newDebt < 0.01) newDebt = 0; // Floating point hygiene
         
-        return { interest, principal: principal + extra, totalPaid, newDebt };
+        return { interest, principal: principal + extra, totalPaid, newDebt, extra };
     };
 
     const initStrat = (name) => ({ 
@@ -296,60 +296,66 @@ Engine.simulateStrategies = function(V) {
 
             // Strat D: Co BTL
             if (possibleD) {
-                let i = debtD * (B.rateCompany / 1200);
-                cIntD += i; debtD -= (pD - i);
+                const step = calculateMortgageStep(debtD, B.rateCompany, pD, B.overpayment || 0);
+                cIntD += step.interest;
+                debtD = step.newDebt;
+                
                 let maint = (houseD * (B.repairRate / 100) / 12) + (scB / 12);
-                cMaintD += maint; cRentD += rentY; // You still pay rent
+                cMaintD += maint; cRentD += rentY;
                 
                 let btlIncome = houseD * (B.rentYield / 100) / 12;
-                let profit = btlIncome - (i + maint);
-                let tax = Math.max(0, profit * rates.corp); // Corporation tax on profit
+                let profit = btlIncome - (step.interest + maint);
+                let tax = Math.max(0, profit * rates.corp); 
                 
                 cTaxD += tax; coCashD += (profit - tax);
-                deadD += (rentY + i + maint + tax - btlIncome);
-                [isaD, giaD, basisD] = invest(totalMonthlyBudget - rentY, isaD, giaD, basisD);
+                deadD += (rentY + step.interest + maint + tax - btlIncome);
+                [isaD, giaD, basisD] = invest(totalMonthlyBudget - rentY - step.extra, isaD, giaD, basisD);
             }
 
             // Strat E: Personal BTL
             if (possibleE) {
-                let i = debtE * (B.ratePersonal / 1200);
-                cIntE += i; debtE -= (pE - i);
+                const step = calculateMortgageStep(debtE, B.ratePersonal, pE, B.overpayment || 0);
+                cIntE += step.interest;
+                debtE = step.newDebt;
+                
                 let maint = (houseE * (B.repairRate / 100) / 12) + (scB / 12);
                 cMaintE += maint; cRentE += rentY;
                 
                 let btlIncome = houseE * (B.rentYield / 100) / 12;
-                let profit = btlIncome - maint; // Interest not deductible yet
-                // Section 24: Tax on profit, then subtract 20% of interest
+                let profit = btlIncome - maint; 
+                
                 let taxLiability = profit * rates.income;
-                let relief = i * 0.20;
+                let relief = step.interest * 0.20;
                 let tax = Math.max(0, taxLiability - relief);
                 
                 cTaxE += tax;
-                deadE += (rentY + i + maint + tax - btlIncome);
-                let cashFlow = btlIncome - i - maint - tax;
+                deadE += (rentY + step.interest + maint + tax - btlIncome);
+                let cashFlow = btlIncome - step.interest - maint - tax - step.extra;
                 [isaE, giaE, basisE] = invest(totalMonthlyBudget - rentY + cashFlow, isaE, giaE, basisE);
             }
 
             // Strat F: Home + Co BTL
             if (possibleF) {
                 // Home Loop
-                let i1 = dF1 * (H.rate / 1200); dF1 -= (pF1 - i1);
+                const step1 = calculateMortgageStep(dF1, H.rate, pF1, H.overpayment || 0);
+                dF1 = step1.newDebt;
                 let m1 = (hF1 * (H.repairRate / 100) / 12) + (scH / 12);
                 
                 // BTL Loop
-                let i2 = dF2 * (B.rateCompany / 1200); dF2 -= (pF2 - i2);
+                const step2 = calculateMortgageStep(dF2, B.rateCompany, pF2, B.overpayment || 0);
+                dF2 = step2.newDebt;
                 let m2 = (hF2 * (B.repairRate / 100) / 12) + (scB / 12);
                 
-                cIntF += (i1 + i2); cMaintF += (m1 + m2);
+                cIntF += (step1.interest + step2.interest); cMaintF += (m1 + m2);
                 
                 // BTL Profit
                 let btlIncome = hF2 * (B.rentYield / 100) / 12;
-                let profit = btlIncome - (i2 + m2);
+                let profit = btlIncome - (step2.interest + m2);
                 let tax = Math.max(0, profit * rates.corp);
                 cTaxF += tax; coCashF += (profit - tax);
                 
-                deadF += (i1 + m1 + i2 + m2 + tax - btlIncome);
-                [isaF, giaF, basisF] = invest(totalMonthlyBudget - (pF1 + m1), isaF, giaF, basisF);
+                deadF += (step1.interest + m1 + step2.interest + m2 + tax - btlIncome);
+                [isaF, giaF, basisF] = invest(totalMonthlyBudget - (step1.totalPaid + m1) - step2.extra, isaF, giaF, basisF);
             }
         }
         

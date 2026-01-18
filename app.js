@@ -33,7 +33,7 @@ function calculatorLogic() {
                 ratePersonal: 4.5, rateCompany: 5.5,
                 repairRate: 0.5, serviceCharge: 1500, rentYield: 5.0,
                 wrappers: { personal: true, company: true },
-                buyingCost: 3000, sellingCostPct: 1.5
+                buyingCost: 3000, sellingCostPct: 1.5, overpayment: 0
             },
             settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false, inflationAdjusted: false }
         },

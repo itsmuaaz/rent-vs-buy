@@ -112,11 +112,17 @@
                         <div class="grid grid-cols-2 gap-2">
                              <div>
                                 <label class="input-label">Stock Growth (%)</label>
-                                <input type="number" x-model.number="i.personal.stockGrowth" class="input-field" step="0.1">
+                                <div class="flex flex-col gap-1">
+                                    <input type="number" x-model.number="i.personal.stockGrowth" class="input-field" step="0.1">
+                                    <input type="range" x-model.number="i.personal.stockGrowth" min="0" max="12" step="0.1" class="accent-indigo-600 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                </div>
                             </div>
                             <div>
                                 <label class="input-label">Property Growth (%)</label>
-                                <input type="number" x-model.number="i.personal.propertyGrowth" class="input-field" step="0.1">
+                                <div class="flex flex-col gap-1">
+                                    <input type="number" x-model.number="i.personal.propertyGrowth" class="input-field" step="0.1">
+                                    <input type="range" x-model.number="i.personal.propertyGrowth" min="-2" max="10" step="0.1" class="accent-indigo-600 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                </div>
                             </div>
                         </div>
                         
@@ -178,7 +184,10 @@
                         </div>
                         <div>
                             <label class="input-label">Mortgage Rate (%)</label>
-                            <input type="number" x-model.number="i.home.rate" class="input-field" step="0.1">
+                            <div class="flex flex-col gap-1">
+                                <input type="number" x-model.number="i.home.rate" class="input-field" step="0.1">
+                                <input type="range" x-model.number="i.home.rate" min="0" max="10" step="0.1" class="accent-indigo-600 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
                         </div>
                     </div>
 

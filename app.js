@@ -52,7 +52,7 @@ function calculatorLogic() {
                     this.save();
                     this.calculateMatrixDebounced();
                 }, { deep: true });
-                this.$watch('simYears', () => this.updateCharts());
+                this.$watch('simYears', () => { this.updateCharts(); this.calculateMatrixDebounced(); });
                 this.$watch('inspectorYear', () => this.updateCharts());
                 this.$watch('valuationMode', () => { this.updateCharts(); });
             }
@@ -71,7 +71,7 @@ function calculatorLogic() {
 
         calculateMatrix() {
             try {
-                this.matrix = Engine.calculateSensitivityMatrix(this.payload);
+                this.matrix = Engine.calculateSensitivityMatrix(this.payload, this.simYears);
             } catch(e) { console.error("Matrix Error", e); }
         },
         

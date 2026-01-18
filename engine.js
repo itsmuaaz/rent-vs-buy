@@ -387,8 +387,8 @@ Engine.simulateStrategies = function(V) {
     return { stratA:sA, stratB:sB, stratC:sC, stratD:sD, stratE:sE, stratF:sF, possibleB, possibleD, possibleE, possibleF };
 };
 
-Engine.calculateSensitivityMatrix = function(V) {
-    const years = 10; // Fixed horizon for heatmap
+Engine.calculateSensitivityMatrix = function(V, targetYear = 10) {
+    const years = targetYear; // Evaluation horizon
     const baseGrowth = V.personal.propertyGrowth || 3.0;
     const baseRate = V.home.rate || 4.5;
     

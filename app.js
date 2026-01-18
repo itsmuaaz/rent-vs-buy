@@ -81,9 +81,38 @@ function calculatorLogic() {
             // No need to manually call calculate, the watcher will catch it.
         },
 
+        async copyLink() {
+            const json = JSON.stringify(this.i);
+            const b64 = btoa(json);
+            const url = new URL(window.location);
+            url.searchParams.set('data', b64);
+            
+            try {
+                await navigator.clipboard.writeText(url.toString());
+                this.copied = true;
+                setTimeout(() => this.copied = false, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                alert("Could not copy to clipboard. URL updated in address bar.");
+                window.history.replaceState(null, '', url.toString());
+            }
+        },
+
         init() {
-            const saved = localStorage.getItem('rentVsBuyData_v3');
-            if (saved) { try { const parsed = JSON.parse(saved); if(parsed.personal) this.i = parsed; } catch(e){} }
+            // Priority 1: Load from URL (Share Link)
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('data')) {
+                try {
+                    const json = atob(params.get('data'));
+                    const parsed = JSON.parse(json);
+                    if (parsed.personal) this.i = parsed;
+                } catch(e) { console.error("URL Load Error", e); }
+            } 
+            // Priority 2: Load from LocalStorage
+            else {
+                const saved = localStorage.getItem('rentVsBuyData_v3');
+                if (saved) { try { const parsed = JSON.parse(saved); if(parsed.personal) this.i = parsed; } catch(e){} }
+            }
             
             if (this.$watch) {
                 this.$watch('i', () => { 

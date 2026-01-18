@@ -81,46 +81,64 @@
                     <div class="text-gray-400 transform transition-transform" :class="open ? 'rotate-180' : ''">▼</div>
                 </div>
                 
-                <div x-show="open" x-collapse class="pl-8 space-y-3">
+                <div x-show="open" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: false }">
                      <div class="input-group">
                         <label class="input-label">Current Rent (£/mo)</label>
                         <input type="number" x-model.number="i.personal.rent.current" class="input-field">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="input-label">Liquid Cash (£)</label>
+                            <label class="input-label"><span class="has-tooltip">Total Cash Savings (£)<span class="tooltip">Total money available for deposit and investing.</span></span></label>
                             <input type="number" x-model.number="i.personal.liquidAssets" class="input-field">
                         </div>
                         <div>
-                            <label class="input-label">In ISA (£)</label>
-                            <input type="number" x-model.number="i.personal.isaBalance" class="input-field">
+                            <label class="input-label"><span class="has-tooltip">Monthly Savings (£)<span class="tooltip">Money left over after rent and lifestyle expenses.</span></span></label>
+                            <input type="number" x-model.number="i.personal.monthlySavings" class="input-field">
                         </div>
                     </div>
-                    <div class="input-group">
-                        <label class="input-label">Monthly Save (£)</label>
-                        <input type="number" x-model.number="i.personal.monthlySavings" class="input-field">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                         <div>
-                            <label class="input-label">Stock Growth (%)</label>
-                            <input type="number" x-model.number="i.personal.stockGrowth" class="input-field" step="0.1">
+
+                    <!-- Advanced Toggle -->
+                    <button @click="showAdv = !showAdv" class="text-xs font-bold text-indigo-600 flex items-center gap-1 mt-2 focus:outline-none">
+                        <span x-text="showAdv ? '▼ Hide Advanced Settings' : '▶ Advanced Settings (Inflation, Growth, Tax)'"></span>
+                    </button>
+
+                    <!-- Advanced Block -->
+                    <div x-show="showAdv" x-collapse class="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-100 mt-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Assumptions</span>
+                            <button @click="i.personal.stockGrowth=7; i.personal.propertyGrowth=3; i.personal.rent.inflation=3;" class="text-[10px] text-indigo-500 hover:underline">Reset to UK Avg 🇬🇧</button>
                         </div>
-                        <div>
-                            <label class="input-label">Property Growth (%)</label>
-                            <input type="number" x-model.number="i.personal.propertyGrowth" class="input-field" step="0.1">
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                             <div>
+                                <label class="input-label">Stock Growth (%)</label>
+                                <input type="number" x-model.number="i.personal.stockGrowth" class="input-field" step="0.1">
+                            </div>
+                            <div>
+                                <label class="input-label">Property Growth (%)</label>
+                                <input type="number" x-model.number="i.personal.propertyGrowth" class="input-field" step="0.1">
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                         <label class="input-label mb-0">First Time Buyer?</label>
-                         <input type="checkbox" x-model="i.personal.isFTB" class="w-5 h-5 text-blue-600 rounded">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Tax Band</label>
-                        <select x-model="i.personal.taxBand" class="input-field">
-                            <option value="basic">Basic (20%)</option>
-                            <option value="higher">Higher (40%)</option>
-                            <option value="additional">Additional (45%)</option>
-                        </select>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="input-label">In ISA (£)</label>
+                                <input type="number" x-model.number="i.personal.isaBalance" class="input-field">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Tax Band</label>
+                                <select x-model="i.personal.taxBand" class="input-field">
+                                    <option value="basic">Basic (20%)</option>
+                                    <option value="higher">Higher (40%)</option>
+                                    <option value="additional">Additional (45%)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                             <label class="input-label mb-0">First Time Buyer?</label>
+                             <input type="checkbox" x-model="i.personal.isFTB" class="w-5 h-5 text-blue-600 rounded">
+                        </div>
                     </div>
                     
                     <!-- Total Budget Display -->
@@ -148,9 +166,9 @@
                     </div>
                 </div>
                 
-                <div x-show="i.home.active" x-collapse class="pl-8 space-y-3">
+                <div x-show="i.home.active" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: false, showReno: false }">
                     <div class="input-group">
-                        <label class="input-label">Price (£)</label>
+                        <label class="input-label">Property Price (£)</label>
                         <input type="number" x-model.number="i.home.price" class="input-field">
                     </div>
                      <div class="grid grid-cols-2 gap-2">
@@ -159,50 +177,66 @@
                             <input type="number" x-model.number="i.home.depositPct" class="input-field">
                         </div>
                         <div>
-                            <label class="input-label">Rate (%)</label>
+                            <label class="input-label">Mortgage Rate (%)</label>
                             <input type="number" x-model.number="i.home.rate" class="input-field" step="0.1">
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="input-label"><span class="has-tooltip">Service Chg (£/yr)<span class="tooltip">Annual Service Charge + Ground Rent (Flat)</span></span></label>
-                            <input type="number" x-model.number="i.home.serviceCharge" class="input-field">
+
+                    <!-- Advanced Toggle -->
+                    <button @click="showAdv = !showAdv" class="text-xs font-bold text-gray-500 flex items-center gap-1 mt-1 focus:outline-none hover:text-gray-700">
+                        <span x-text="showAdv ? '▼ Hide Ownership Costs' : '▶ Advanced Ownership Costs (Fees, Maint)'"></span>
+                    </button>
+
+                    <div x-show="showAdv" x-collapse class="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="input-label"><span class="has-tooltip">Service Chg (£/yr)<span class="tooltip">Annual Service Charge + Ground Rent (Flat)</span></span></label>
+                                <input type="number" x-model.number="i.home.serviceCharge" class="input-field">
+                            </div>
+                            <div>
+                                <label class="input-label"><span class="has-tooltip">Maint (%/yr)<span class="tooltip">Annual repairs. Usually 1% of property value.</span></span></label>
+                                <input type="number" x-model.number="i.home.repairRate" class="input-field" step="0.1">
+                            </div>
                         </div>
-                        <div>
-                            <label class="input-label"><span class="has-tooltip">Maint (%/yr)<span class="tooltip">Annual repairs. Usually 1% of property value.</span></span></label>
-                            <input type="number" x-model.number="i.home.repairRate" class="input-field" step="0.1">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="input-label"><span class="has-tooltip">Buying Fees (£)<span class="tooltip">Solicitor, Surveyor, Moving costs.</span></span></label>
-                            <input type="number" x-model.number="i.home.buyingCost" class="input-field">
-                        </div>
-                        <div>
-                            <label class="input-label"><span class="has-tooltip">Selling Fee (%)<span class="tooltip">Estate Agent fee (1% - 2%) + VAT.</span></span></label>
-                            <input type="number" x-model.number="i.home.sellingCostPct" class="input-field" step="0.1">
-                        </div>
-                    </div>
-                     <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="input-label"><span class="has-tooltip">Reno Cost (£)<span class="tooltip">Increases value to 'Post-Work Value' instantly (Forced Equity).</span></span></label>
-                            <input type="number" x-model.number="i.home.renoCost" class="input-field">
-                        </div>
-                        <div>
-                            <label class="input-label">Post-Work Value</label>
-                             <input type="number" x-model.number="i.home.postWorkValue" class="input-field">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="input-label"><span class="has-tooltip">Buying Fees (£)<span class="tooltip">Solicitor, Surveyor, Moving costs.</span></span></label>
+                                <input type="number" x-model.number="i.home.buyingCost" class="input-field">
+                            </div>
+                            <div>
+                                <label class="input-label"><span class="has-tooltip">Selling Fee (%)<span class="tooltip">Estate Agent fee (1% - 2%) + VAT.</span></span></label>
+                                <input type="number" x-model.number="i.home.sellingCostPct" class="input-field" step="0.1">
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Lodger Sub-Section -->
-                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                        <div class="flex items-center justify-between mb-2">
-                             <label class="text-sm font-bold text-blue-900">Have a Lodger?</label>
-                             <input type="checkbox" x-model="i.home.lodger.active" class="w-4 h-4 text-blue-600">
+
+                    <!-- Renovations Toggle -->
+                    <button @click="showReno = !showReno" class="text-xs font-bold text-gray-500 flex items-center gap-1 mt-1 focus:outline-none hover:text-gray-700">
+                        <span x-text="showReno ? '▼ Hide Renovations & Income' : '▶ Renovations & Lodger Income'"></span>
+                    </button>
+
+                    <div x-show="showReno" x-collapse class="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                         <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="input-label"><span class="has-tooltip">Reno Cost (£)<span class="tooltip">Increases value to 'Post-Work Value' instantly (Forced Equity).</span></span></label>
+                                <input type="number" x-model.number="i.home.renoCost" class="input-field">
+                            </div>
+                            <div>
+                                <label class="input-label">Post-Work Value</label>
+                                 <input type="number" x-model.number="i.home.postWorkValue" class="input-field">
+                            </div>
                         </div>
-                        <div x-show="i.home.lodger.active" class="grid grid-cols-2 gap-2">
-                            <div><label class="text-xs">Income (£/mo)</label><input type="number" x-model.number="i.home.lodger.income" class="input-field text-sm"></div>
-                            <div><label class="text-xs">Years</label><input type="number" x-model.number="i.home.lodger.years" class="input-field text-sm"></div>
+                        
+                        <!-- Lodger Sub-Section -->
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <div class="flex items-center justify-between mb-2">
+                                 <label class="text-sm font-bold text-blue-900">Have a Lodger?</label>
+                                 <input type="checkbox" x-model="i.home.lodger.active" class="w-4 h-4 text-blue-600">
+                            </div>
+                            <div x-show="i.home.lodger.active" class="grid grid-cols-2 gap-2">
+                                <div><label class="text-xs">Income (£/mo)</label><input type="number" x-model.number="i.home.lodger.income" class="input-field text-sm"></div>
+                                <div><label class="text-xs">Years</label><input type="number" x-model.number="i.home.lodger.years" class="input-field text-sm"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -231,7 +265,7 @@
                     </div>
                 </div>
 
-                 <div x-show="i.btl.active" x-collapse class="pl-8 space-y-3">
+                 <div x-show="i.btl.active" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: false }">
                      <div class="input-group">
                         <label class="input-label">Price (£)</label>
                         <input type="number" x-model.number="i.btl.price" class="input-field">
@@ -246,46 +280,54 @@
                             <input type="number" x-model.number="i.btl.rentYield" class="input-field" step="0.1">
                         </div>
                     </div>
-                     <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="input-label">Service Chg (£)</label>
-                            <input type="number" x-model.number="i.btl.serviceCharge" class="input-field">
+
+                    <!-- Advanced Toggle -->
+                    <button @click="showAdv = !showAdv" class="text-xs font-bold text-purple-600 flex items-center gap-1 mt-1 focus:outline-none hover:text-purple-800">
+                        <span x-text="showAdv ? '▼ Hide Advanced BTL Settings' : '▶ Advanced BTL Settings (Fees, Wrappers)'"></span>
+                    </button>
+
+                    <div x-show="showAdv" x-collapse class="space-y-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                         <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="input-label">Service Chg (£)</label>
+                                <input type="number" x-model.number="i.btl.serviceCharge" class="input-field">
+                            </div>
+                            <div>
+                                 <label class="input-label">Maint (%)</label>
+                                 <input type="number" x-model.number="i.btl.repairRate" class="input-field" step="0.1">
+                            </div>
                         </div>
-                        <div>
-                             <label class="input-label">Maint (%)</label>
-                             <input type="number" x-model.number="i.btl.repairRate" class="input-field" step="0.1">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="input-label">Buying Fees (£)</label>
-                            <input type="number" x-model.number="i.btl.buyingCost" class="input-field">
-                        </div>
-                        <div>
-                             <label class="input-label">Selling Fee (%)</label>
-                             <input type="number" x-model.number="i.btl.sellingCostPct" class="input-field" step="0.1">
-                        </div>
-                    </div>
-                    
-                    <!-- Wrappers -->
-                    <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 space-y-2">
-                        <label class="text-xs font-bold text-purple-900 block mb-1">Ownership Wrappers:</label>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm">Personal Name</span>
-                            <input type="checkbox" x-model="i.btl.wrappers.personal" class="w-4 h-4 text-purple-600">
-                        </div>
-                         <div x-show="i.btl.wrappers.personal" class="pl-2 border-l-2 border-purple-200 mb-2">
-                            <label class="text-xs text-gray-500">Mortgage Rate (%)</label>
-                            <input type="number" x-model.number="i.btl.ratePersonal" class="input-field text-sm p-1 h-8">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="input-label">Buying Fees (£)</label>
+                                <input type="number" x-model.number="i.btl.buyingCost" class="input-field">
+                            </div>
+                            <div>
+                                 <label class="input-label">Selling Fee (%)</label>
+                                 <input type="number" x-model.number="i.btl.sellingCostPct" class="input-field" step="0.1">
+                            </div>
                         </div>
                         
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm">Limited Company</span>
-                            <input type="checkbox" x-model="i.btl.wrappers.company" class="w-4 h-4 text-purple-600">
-                        </div>
-                        <div x-show="i.btl.wrappers.company" class="pl-2 border-l-2 border-purple-200">
-                            <label class="text-xs text-gray-500">Mortgage Rate (%)</label>
-                            <input type="number" x-model.number="i.btl.rateCompany" class="input-field text-sm p-1 h-8">
+                        <!-- Wrappers -->
+                        <div class="bg-white/50 p-2 rounded-lg border border-purple-200 space-y-2">
+                            <label class="text-xs font-bold text-purple-900 block mb-1">Ownership Wrappers:</label>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Personal Name</span>
+                                <input type="checkbox" x-model="i.btl.wrappers.personal" class="w-4 h-4 text-purple-600">
+                            </div>
+                             <div x-show="i.btl.wrappers.personal" class="pl-2 border-l-2 border-purple-200 mb-2">
+                                <label class="text-xs text-gray-500">Mortgage Rate (%)</label>
+                                <input type="number" x-model.number="i.btl.ratePersonal" class="input-field text-sm p-1 h-8">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Limited Company</span>
+                                <input type="checkbox" x-model="i.btl.wrappers.company" class="w-4 h-4 text-purple-600">
+                            </div>
+                            <div x-show="i.btl.wrappers.company" class="pl-2 border-l-2 border-purple-200">
+                                <label class="text-xs text-gray-500">Mortgage Rate (%)</label>
+                                <input type="number" x-model.number="i.btl.rateCompany" class="input-field text-sm p-1 h-8">
+                            </div>
                         </div>
                     </div>
 

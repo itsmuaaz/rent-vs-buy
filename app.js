@@ -207,6 +207,64 @@ function calculatorLogic() {
             return null;
         },
 
+        getYear1CashFlows() {
+            if (!this.results) return [];
+            const P = this.i.personal;
+            const H = this.i.home;
+            const totalBudget = P.monthlySavings + P.rent.current;
+            
+            const flows = [];
+
+            // Rent
+            const rentCost = P.rent.current;
+            flows.push({ n: 'Rent', cost: rentCost, save: Math.max(0, totalBudget - rentCost), type: 'Rent' });
+
+            if (this.i.home.active && this.results.possibleB) {
+                // Buy Home
+                const buyMaint = (H.price * H.repairRate / 100 / 12) + (H.serviceCharge / 12);
+                const buyMortgage = this.homeStats.mortgage;
+                const buyCost = buyMortgage + buyMaint;
+                flows.push({ n: 'Buy Home', cost: buyCost, save: Math.max(0, totalBudget - buyCost), type: 'Buy' });
+
+                // Buy + Lodger
+                if (H.lodger.active) {
+                    const lIncome = H.lodger.income;
+                    const lCost = buyCost - lIncome;
+                    flows.push({ n: 'Buy + Lodger', cost: lCost, save: Math.max(0, totalBudget - lCost), type: 'Buy' });
+                }
+            }
+            return flows;
+        },
+
+        getYear1CashFlows() {
+            if (!this.results) return [];
+            const P = this.i.personal;
+            const H = this.i.home;
+            const totalBudget = P.monthlySavings + P.rent.current;
+            
+            const flows = [];
+
+            // Rent
+            const rentCost = P.rent.current;
+            flows.push({ n: 'Rent', cost: rentCost, save: Math.max(0, totalBudget - rentCost), type: 'Rent' });
+
+            if (this.i.home.active && this.results.possibleB) {
+                // Buy Home
+                const buyMaint = (H.price * H.repairRate / 100 / 12) + (H.serviceCharge / 12);
+                const buyMortgage = this.homeStats.mortgage;
+                const buyCost = buyMortgage + buyMaint;
+                flows.push({ n: 'Buy Home', cost: buyCost, save: Math.max(0, totalBudget - buyCost), type: 'Buy' });
+
+                // Buy + Lodger
+                if (H.lodger.active) {
+                    const lIncome = H.lodger.income;
+                    const lCost = buyCost - lIncome;
+                    flows.push({ n: 'Buy + Lodger', cost: lCost, save: Math.max(0, totalBudget - lCost), type: 'Buy' });
+                }
+            }
+            return flows;
+        },
+
         get narrativeHTML() {
             if (!this.results) return '';
             const r = this.results;
@@ -237,33 +295,10 @@ function calculatorLogic() {
 
             // --- Cash Flow Table Generation ---
             let cashFlowTable = '';
-            if (this.i.home.active && r.possibleB) {
-                const P = this.i.personal;
-                const H = this.i.home;
-                const totalBudget = P.monthlySavings + P.rent.current;
-                
-                // Rent
-                const rentCost = P.rent.current;
-                const rentSurplus = Math.max(0, totalBudget - rentCost);
-                
-                // Buy
-                const buyMaint = (H.price * H.repairRate / 100 / 12) + (H.serviceCharge / 12);
-                const buyMortgage = this.homeStats.mortgage;
-                const buyCost = buyMortgage + buyMaint;
-                const buySurplus = Math.max(0, totalBudget - buyCost);
-                
-                let rows = [
-                    {n: 'Rent', cost: rentCost, save: rentSurplus},
-                    {n: 'Buy Home', cost: buyCost, save: buySurplus}
-                ];
-
-                if (this.i.home.lodger.active) {
-                    const lIncome = H.lodger.income;
-                    const lCost = buyCost - lIncome;
-                    const lSurplus = Math.max(0, totalBudget - lCost);
-                    rows.push({n: 'Buy + Lodger', cost: lCost, save: lSurplus});
-                }
-
+            const flows = this.getYear1CashFlows();
+            
+            if (flows.length > 1) { // Only show if we have comparison
+                const totalBudget = this.i.personal.monthlySavings + this.i.personal.rent.current;
                 cashFlowTable = `<div class="mb-4 overflow-hidden border border-gray-200 rounded-lg">
                     <div class="bg-gray-50 px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Monthly Cash Flow Breakdown (Year 1)</div>
                     <table class="w-full text-sm text-left">
@@ -271,7 +306,7 @@ function calculatorLogic() {
                             <tr><th class="px-3 py-2">Strategy</th><th class="px-3 py-2">Net Housing Cost</th><th class="px-3 py-2 text-right text-green-700">Investable Surplus</th></tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white">
-                            ${rows.map(row => `
+                            ${flows.map(row => `
                                 <tr>
                                     <td class="px-3 py-2 font-medium text-gray-700">${row.n}</td>
                                     <td class="px-3 py-2 text-gray-600">£${Math.round(row.cost).toLocaleString()}</td>
@@ -362,19 +397,37 @@ function calculatorLogic() {
                 }
             }
             
+            let realityCheck = '';
+
             if (winner.type === 'Rent') {
                 const runnerUp = strats[1];
                 const diff = winner.val - (runnerUp ? runnerUp.val : 0);
                 title = `Renting is the Wealthier Choice 🏖️ ${badge}`;
                 desc = `Projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${runnerUp ? runnerUp.name : 'buying'}.`;
                 subtext = `You avoided mortgage interest and buying costs. Investing the surplus returns more.`;
+
+                // Reality Check Logic
+                const flows = this.getYear1CashFlows();
+                const rentFlow = flows.find(f => f.type === 'Rent');
+                if (rentFlow && rentFlow.save > 500) {
+                    realityCheck = `<div class="mt-4 p-3 bg-orange-100 border-l-4 border-orange-500 text-orange-800 text-sm">
+                        <strong>⚠️ Reality Check:</strong> This result assumes you rigidly invest your <strong>£${Math.round(rentFlow.save).toLocaleString()}</strong> monthly surplus. 
+                        If you spend this cash instead, Buying is likely the better choice.
+                    </div>`;
+                }
+
             } else {
                 const diff = winner.val - rentVal;
                 title = `${winner.name} Wins 🏡 ${badge}`;
                 desc = `Projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting.`;
                 subtext = `Although you paid interest, the property equity growth and leverage outweighed it.`;
             }
-            return `<div class="flex flex-col md:flex-row md:items-center gap-4"><div class="flex-1"><h2 class="text-2xl font-bold leading-tight">${title}</h2><p class="text-lg mt-1">${desc}</p><p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p></div></div>`;
+            return `<div class="flex flex-col gap-2">
+                        <div class="flex flex-col md:flex-row md:items-center gap-4">
+                            <div class="flex-1"><h2 class="text-2xl font-bold leading-tight">${title}</h2><p class="text-lg mt-1">${desc}</p><p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p></div>
+                        </div>
+                        ${realityCheck}
+                    </div>`;
         },
 
         get inspectorData() {

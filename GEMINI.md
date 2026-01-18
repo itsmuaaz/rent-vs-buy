@@ -13,9 +13,9 @@ This project follows a strict **"Engine vs. Dashboard"** separation of concerns.
     *   **Responsibility:** Calculates Mortgages, Stamp Duty, Section 24 Tax, Compound Interest loops.
     *   **Testing:** Fully covered by `engine.test.js`.
 
-2.  **The Dashboard (`index.html`)**
+2.  **The Dashboard (`index.html` + `app.js`)**
     *   **Role:** The View Layer.
-    *   **Content:** HTML, TailwindCSS, Chart.js.
+    *   **Content:** HTML, TailwindCSS, Chart.js, Alpine.js.
     *   **Responsibility:** Collects inputs, calls `Engine`, renders Charts/Tables.
     *   **Constraint:** NEVER calculate financial logic here. Only formatting and display.
 
@@ -39,12 +39,14 @@ This is a financial tool. A math error is worse than a crash.
     *   EDIT `engine.js`.
     *   UPDATE `engine.test.js`.
 *   **IF** you are fixing a UI bug (e.g., "Button is wrong color"):
-    *   EDIT `index.html`.
+    *   EDIT `index.html` or `app.js`.
     *   DO NOT touch `engine.js`.
 
-### 3. Testing is Mandatory
-*   A `pre-commit` hook (Husky) prevents committing broken code.
-*   If you find yourself trying to bypass the hook, **STOP**. You are doing something wrong. Fix the test.
+### 3. Testing is Mandatory & Systematic
+*   **Regression:** A `pre-commit` hook (Husky) prevents committing broken code. Never bypass it.
+*   **New Features:** Any new logic added to `engine.js` **MUST** have a corresponding test case in `engine.test.js`.
+    *   *Example:* Added "Property Growth Rate"? Add a test proving 5% growth beats 1% growth.
+*   **Coverage:** Ensure tests cover edge cases (e.g., 0% interest, massive crashes, tax thresholds).
 
 ---
 
@@ -52,22 +54,24 @@ This is a financial tool. A math error is worse than a crash.
 
 1.  **Start:** Run `npm test` to confirm baseline health.
 2.  **Edit:** Make your changes.
-    *   *Logic:* Edit `engine.js` -> Run `npm test` -> Update expectations if needed.
-    *   *UI:* Edit `index.html` -> Verify in browser (manual).
+    *   *Logic:* Edit `engine.js` -> Add/Update Test in `engine.test.js` -> Run `npm test`.
+    *   *UI:* Edit `index.html` / `app.js` -> Verify in browser (manual).
 3.  **Commit:** `git commit` will auto-run tests.
 
 ## 📂 Key Files
 
 *   `engine.js`: Core logic. (Pure JS, CommonJS/Browser hybrid export).
 *   `app.js`: UI logic and state management (Alpine.js).
-*   `engine.test.js`: Jest test suite. Defines "Golden Scenarios".
+*   `engine.test.js`: Jest test suite. Defines "Golden Scenarios" and logic verification.
 *   `index.html`: Main UI. Imports `engine.js`.
 *   `.husky/pre-commit`: Ensures tests pass before commit.
 
 ## 🚀 Future Roadmap
 
-*   **Phase 2:** Refactor `index.html` to use **Alpine.js** for data binding (removing `document.getElementById` spaghetti).
-*   **Phase 3:** Advanced Visualization (better charts).
+*   **Phase 1 (Complete):** Core Engine & Basic UI.
+*   **Phase 2 (Complete):** Alpine.js Refactor (Reactivity).
+*   **Phase 3 (Active):** Advanced Scenarios (Variable Growth Rates, Stress Tests).
+*   **Phase 4:** User Accounts / Save Scenarios (Backend).
 
 ---
 *Created by Gemini for Gemini. adhere strictly to these protocols.*

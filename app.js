@@ -17,23 +17,23 @@ function calculatorLogic() {
         // Data State (Asset Model)
         i: {
             personal: {
-                liquidAssets: 50000, isaBalance: 20000, monthlySavings: 1000,
-                stockGrowth: 8, propertyGrowth: 3.0, taxBand: 'additional',
-                rent: { current: 1500, inflation: 3 },
+                liquidAssets: 45000, isaBalance: 20000, monthlySavings: 1000,
+                stockGrowth: 7.0, propertyGrowth: 3.0, taxBand: 'higher',
+                rent: { current: 1250, inflation: 3 },
                 isFTB: true
             },
             home: {
-                active: true, price: 400000, depositPct: 25, term: 30, rate: 4.5,
-                repairRate: 1.0, serviceCharge: 0, buyingCost: 2000, sellingCostPct: 1.5,
-                renoCost: 60000, postWorkValue: 525000,
-                lodger: { active: true, income: 900, years: 2 }
+                active: true, price: 300000, depositPct: 15, term: 30, rate: 4.5,
+                repairRate: 1.0, serviceCharge: 0, buyingCost: 3000, sellingCostPct: 1.5,
+                renoCost: 0, postWorkValue: 300000,
+                lodger: { active: false, income: 625, years: 2 }
             },
             btl: {
                 active: false, price: 200000, depositPct: 25, term: 30,
                 ratePersonal: 4.5, rateCompany: 5.5,
-                repairRate: 0.5, serviceCharge: 2000, rentYield: 5.0,
+                repairRate: 0.5, serviceCharge: 1500, rentYield: 5.0,
                 wrappers: { personal: true, company: true },
-                buyingCost: 2000, sellingCostPct: 1.5
+                buyingCost: 3000, sellingCostPct: 1.5
             },
             settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false }
         },
@@ -42,6 +42,45 @@ function calculatorLogic() {
         matrix: null,
         matrixTimer: null,
         
+        applyPreset(type) {
+            const defaults = JSON.parse(JSON.stringify(this.i)); // Backup structure
+            // Reset common fields
+            defaults.home.active = true;
+            defaults.btl.active = false;
+            defaults.personal.isFTB = true;
+
+            if (type === 'nomad') {
+                defaults.personal.rent.current = 800;
+                defaults.personal.monthlySavings = 2000;
+                defaults.personal.stockGrowth = 8.0;
+                defaults.home.active = false; // Pure renter
+            } else if (type === 'london') {
+                defaults.personal.liquidAssets = 100000;
+                defaults.personal.rent.current = 2200;
+                defaults.personal.monthlySavings = 1500;
+                defaults.home.price = 550000;
+                defaults.home.depositPct = 20;
+                defaults.home.buyingCost = 5000;
+            } else if (type === 'starter') {
+                defaults.personal.liquidAssets = 30000;
+                defaults.personal.rent.current = 1000;
+                defaults.personal.monthlySavings = 800;
+                defaults.home.price = 250000;
+                defaults.home.depositPct = 10;
+                defaults.home.lodger.active = true;
+                defaults.home.lodger.income = 625; // Tax free limit
+            } else if (type === 'landlord') {
+                defaults.personal.liquidAssets = 150000;
+                defaults.personal.taxBand = 'additional';
+                defaults.btl.active = true;
+                defaults.btl.price = 250000;
+                defaults.btl.rentYield = 6.0;
+            }
+            
+            this.i = defaults;
+            // No need to manually call calculate, the watcher will catch it.
+        },
+
         init() {
             const saved = localStorage.getItem('rentVsBuyData_v3');
             if (saved) { try { const parsed = JSON.parse(saved); if(parsed.personal) this.i = parsed; } catch(e){} }

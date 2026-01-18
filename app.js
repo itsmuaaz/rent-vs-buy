@@ -197,8 +197,9 @@ function calculatorLogic() {
                             `).join('')}
                         </tbody>
                     </table>
-                    <div class="bg-gray-50 px-3 py-2 text-[10px] text-gray-400">
-                        * Surplus = Total Budget (£${totalBudget.toLocaleString()}) - Housing Cost. This surplus is invested in stocks.
+                    <div class="bg-gray-50 px-3 py-2 text-[10px] text-gray-400 space-y-1">
+                        <p><strong>* Year 1 Snapshot:</strong> Surplus = Total Budget (£${totalBudget.toLocaleString()}) - Housing Cost. This surplus is automatically invested in the stock market.</p>
+                        <p><strong>Note:</strong> Rent and maintenance costs increase with inflation over time, while mortgage payments remain fixed. This causes the homeowner's cash flow to typically improve relative to renting as the simulation progresses.</p>
                     </div>
                 </div>`;
             }

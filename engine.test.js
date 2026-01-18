@@ -42,6 +42,7 @@ describe('Simulation Verification (New Asset Model)', () => {
         if (overrides.personal) Object.assign(s.personal, overrides.personal);
         if (overrides.home) Object.assign(s.home, overrides.home);
         if (overrides.btl) Object.assign(s.btl, overrides.btl);
+        if (overrides.settings) Object.assign(s.settings, overrides.settings);
         return s;
     };
 
@@ -124,5 +125,132 @@ describe('Simulation Verification (New Asset Model)', () => {
         
         const maintYear1 = data.stratF.breakdown.maintenance[0];
         expect(maintYear1).toBeCloseTo(5750, 0);
+    });
+
+    test('Lodger Tax: Rent-a-Room Relief applies correctly', () => {
+        // Scenario 1: Tax Free (Income <= 7500/yr)
+        const V1 = buildState({
+            personal: { liquidAssets: 100000, taxBand: 'higher' },
+            home: { active: true, price: 300000, renoCost: 0, lodger: { active: true, income: 600, years: 10 } }
+        });
+        // 600 * 12 = 7200 < 7500. Tax should be 0.
+        // StratC DeadMoney should include reduced rent but no extra tax penalty
+        // We can check implicitly by comparing with taxBand 'basic' -> should be identical
+        
+        const V2 = buildState({
+            personal: { liquidAssets: 100000, taxBand: 'basic' },
+            home: { active: true, price: 300000, renoCost: 0, lodger: { active: true, income: 600, years: 10 } }
+        });
+        
+        const nw1 = Engine.simulateStrategies(V1).stratC.netWorth[9];
+        const nw2 = Engine.simulateStrategies(V2).stratC.netWorth[9];
+        expect(nw1).toBeCloseTo(nw2, 1); // Should be equal
+
+        // Scenario 2: Taxed (Income = 1000/yr -> 12000/yr)
+        // Taxable: 12000 - 7500 = 4500.
+        // Higher Rate (40%) tax = 1800/yr.
+        // Basic Rate (20%) tax = 900/yr.
+        // Basic Rate person should be wealthier by ~900 * 10 (compounded)
+        
+        const V3 = buildState({
+            personal: { liquidAssets: 100000, taxBand: 'higher' },
+            home: { active: true, price: 300000, renoCost: 0, lodger: { active: true, income: 1000, years: 10 } }
+        });
+        const V4 = buildState({
+            personal: { liquidAssets: 100000, taxBand: 'basic' },
+            home: { active: true, price: 300000, renoCost: 0, lodger: { active: true, income: 1000, years: 10 } }
+        });
+        
+        const nw3 = Engine.simulateStrategies(V3).stratC.netWorth[9];
+        const nw4 = Engine.simulateStrategies(V4).stratC.netWorth[9];
+        
+        expect(nw4).toBeGreaterThan(nw3);
+        expect(nw4 - nw3).toBeGreaterThan(9000); // At least the tax diff
+    });
+
+    test('Section 24 (Personal BTL): Higher Rate taxpayers pay more', () => {
+        // Setup BTL Personal
+        const V_Basic = buildState({
+            personal: { liquidAssets: 100000, taxBand: 'basic' }, // 20%
+            btl: { active: true, price: 200000, depositPct: 25, wrappers: { personal: true } }
+        });
+        const V_Higher = buildState({
+            personal: { liquidAssets: 100000, taxBand: 'higher' }, // 40%
+            btl: { active: true, price: 200000, depositPct: 25, wrappers: { personal: true } }
+        });
+        
+        const nwBasic = Engine.simulateStrategies(V_Basic).stratE.netWorth[9];
+        const nwHigher = Engine.simulateStrategies(V_Higher).stratE.netWorth[9];
+        
+        // Basic rate payer effectively pays 0 extra tax if loan interest covers profit?
+        // With S24, Basic payer gets 20% relief on interest, and pays 20% on profit.
+        // Higher payer pays 40% on profit, but only 20% relief. 
+        // So Higher payer suffers.
+        
+        expect(nwBasic).toBeGreaterThan(nwHigher);
+    });
+
+    test('ISA Limit: Excess savings spill to GIA', () => {
+        const V = buildState({
+            personal: { monthlySavings: 4000, isaBalance: 0, liquidAssets: 0 } // Start fresh
+        });
+        
+        // Year 1: Save 4000 * 12 = 48000.
+        // ISA Cap = 20000.
+        // GIA = 28000.
+        // Growth applied.
+        
+        const res = Engine.simulateStrategies(V);
+        // Access internal state? No, result doesn't expose ISA/GIA split directly in `stratA` object 
+        // except via `liquidHistory`.
+        // But `liquidHistory` sums them.
+        // Wait, `invest` function logic is internal.
+        // However, we can deduce it from tax? 
+        // GIA growth is taxed. ISA is not.
+        // But tax is only applied on exit in this model?
+        // `stratA` has `netWorth` (Gross) and `netWorthLiquid` (After CGT).
+        
+        // If we put 48k in ISA (impossible), liquid = gross.
+        // If we put 28k in GIA, liquid < gross (if growth > 0).
+        
+        // Let's check liquid vs gross.
+        const gross = res.stratA.netWorth[0];
+        const liquid = res.stratA.netWorthLiquid[0];
+        
+        // With 8% growth, there is gain.
+        // GIA gain is taxed at 20% (Higher rate CGT).
+        // ISA gain is 0 tax.
+        
+        expect(liquid).toBeLessThan(gross); // Proves GIA was used and taxed
+    });
+
+    test('Market Crash Simulator: Year 1 drop', () => {
+        const V = buildState({
+            personal: { propertyGrowth: 3.0, liquidAssets: 100000 },
+            home: { active: true, price: 300000, renoCost: 0 },
+            settings: { propCrash: true }
+        });
+        
+        const res = Engine.simulateStrategies(V);
+        
+        // Year 1 House Value
+        // Start: 300k
+        // Normal Year 1: 300k * 1.03 = 309k
+        // Crash Year 1: 309k * 0.85 = 262.65k
+        // `houseB` is private in engine, but `netWorth` reflects it.
+        // Net Worth = House - Debt + Cash.
+        // Debt start = 225k. Debt Year 1 slightly less.
+        
+        // Let's compare with Normal run
+        const V_Normal = buildState({
+            personal: { propertyGrowth: 3.0, liquidAssets: 100000 },
+            home: { active: true, price: 300000, renoCost: 0 },
+            settings: { propCrash: false }
+        });
+        const resNormal = Engine.simulateStrategies(V_Normal).stratB.netWorth[0];
+        const resCrash = res.stratB.netWorth[0];
+        
+        expect(resCrash).toBeLessThan(resNormal);
+        expect(resNormal - resCrash).toBeGreaterThan(40000); // ~46k diff expected
     });
 });

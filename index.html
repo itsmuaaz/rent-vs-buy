@@ -10,6 +10,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <!-- Alpine.js Core -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="engine.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,7 +54,9 @@
                 🇬🇧 UK Property Strategy Simulator
             </h1>
             <div class="flex items-center gap-3 no-print">
-                <button onclick="window.print()" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200 transition">Print / PDF 🖨️</button>
+                <button @click="window.generatePDF($data)" class="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition shadow-sm font-medium flex items-center gap-2">
+                    <span>📄</span> Export Report
+                </button>
                 <button @click="copyLink" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition" x-text="copied ? 'Copied! ✅' : 'Share 🔗'"></button>
             </div>
         </div>
@@ -61,7 +65,7 @@
     <div class="flex flex-col md:flex-row flex-1 min-h-0 overflow-auto md:overflow-hidden">
         
         <!-- SIDEBAR: ASSET CONFIGURATION -->
-        <aside class="w-full md:w-96 bg-white border-b md:border-b-0 md:border-r border-gray-200 md:overflow-y-auto flex-shrink-0 p-4 pb-8 md:pb-32 no-print">
+        <aside class="w-full md:w-96 bg-white border-b md:border-b-0 md:border-r border-gray-200 md:overflow-y-auto flex-shrink-0 p-4 pb-24 md:pb-32 no-print">
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quick Start (Presets)</h2>
             
             <!-- PRESETS GRID -->
@@ -89,16 +93,16 @@
                 <div x-show="open" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: false }">
                      <div class="input-group">
                         <label class="input-label">Current Rent (£/mo)</label>
-                        <input type="number" x-model.number="i.personal.rent.current" class="input-field">
+                        <input type="text" inputmode="numeric" x-money="i.personal.rent.current" class="input-field">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="input-label"><span class="has-tooltip">Total Cash Savings (£)<span class="tooltip">Total money available for deposit and investing.</span></span></label>
-                            <input type="number" x-model.number="i.personal.liquidAssets" class="input-field">
+                            <input type="text" inputmode="numeric" x-money="i.personal.liquidAssets" class="input-field">
                         </div>
                         <div>
                             <label class="input-label"><span class="has-tooltip">Monthly Savings (£)<span class="tooltip">Money left over after rent and lifestyle expenses.</span></span></label>
-                            <input type="number" x-model.number="i.personal.monthlySavings" class="input-field">
+                            <input type="text" inputmode="numeric" x-money="i.personal.monthlySavings" class="input-field">
                         </div>
                     </div>
 
@@ -134,7 +138,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label">In ISA (£)</label>
-                                <input type="number" x-model.number="i.personal.isaBalance" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.personal.isaBalance" class="input-field">
                             </div>
                             <div class="input-group">
                                 <label class="input-label">Tax Band</label>
@@ -180,7 +184,7 @@
                 <div x-show="i.home.active" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: false, showReno: false }">
                     <div class="input-group">
                         <label class="input-label">Property Price (£)</label>
-                        <input type="number" x-model.number="i.home.price" class="input-field">
+                        <input type="text" inputmode="numeric" x-money="i.home.price" class="input-field">
                     </div>
                      <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -205,7 +209,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Service Chg (£/yr)<span class="tooltip">Annual Service Charge + Ground Rent (Flat)</span></span></label>
-                                <input type="number" x-model.number="i.home.serviceCharge" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.home.serviceCharge" class="input-field">
                             </div>
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Maint (%/yr)<span class="tooltip">Annual repairs. Usually 1% of property value.</span></span></label>
@@ -215,7 +219,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Buying Fees (£)<span class="tooltip">Solicitor, Surveyor, Moving costs.</span></span></label>
-                                <input type="number" x-model.number="i.home.buyingCost" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.home.buyingCost" class="input-field">
                             </div>
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Selling Fee (%)<span class="tooltip">Estate Agent fee (1% - 2%) + VAT.</span></span></label>
@@ -225,7 +229,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Overpayment (£/mo)<span class="tooltip">Extra monthly payment to reduce mortgage term.</span></span></label>
-                                <input type="number" x-model.number="i.home.overpayment" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.home.overpayment" class="input-field">
                             </div>
                         </div>
                     </div>
@@ -239,11 +243,11 @@
                          <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Reno Cost (£)<span class="tooltip">Increases value to 'Post-Work Value' instantly (Forced Equity).</span></span></label>
-                                <input type="number" x-model.number="i.home.renoCost" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.home.renoCost" class="input-field">
                             </div>
                             <div>
                                 <label class="input-label">Post-Work Value</label>
-                                 <input type="number" x-model.number="i.home.postWorkValue" class="input-field">
+                                 <input type="text" inputmode="numeric" x-money="i.home.postWorkValue" class="input-field">
                             </div>
                         </div>
                         
@@ -254,7 +258,7 @@
                                  <input type="checkbox" x-model="i.home.lodger.active" class="w-4 h-4 text-blue-600">
                             </div>
                             <div x-show="i.home.lodger.active" class="grid grid-cols-2 gap-2">
-                                <div><label class="text-xs">Income (£/mo)</label><input type="number" x-model.number="i.home.lodger.income" class="input-field text-sm"></div>
+                                <div><label class="text-xs">Income (£/mo)</label><input type="text" inputmode="numeric" x-money="i.home.lodger.income" class="input-field text-sm"></div>
                                 <div><label class="text-xs">Years</label><input type="number" x-model.number="i.home.lodger.years" class="input-field text-sm"></div>
                             </div>
                         </div>
@@ -288,7 +292,7 @@
                  <div x-show="i.btl.active" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: false }">
                      <div class="input-group">
                         <label class="input-label">Price (£)</label>
-                        <input type="number" x-model.number="i.btl.price" class="input-field">
+                        <input type="text" inputmode="numeric" x-money="i.btl.price" class="input-field">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -310,7 +314,7 @@
                          <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label">Service Chg (£)</label>
-                                <input type="number" x-model.number="i.btl.serviceCharge" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.btl.serviceCharge" class="input-field">
                             </div>
                             <div>
                                  <label class="input-label">Maint (%)</label>
@@ -320,7 +324,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label">Buying Fees (£)</label>
-                                <input type="number" x-model.number="i.btl.buyingCost" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.btl.buyingCost" class="input-field">
                             </div>
                             <div>
                                  <label class="input-label">Selling Fee (%)</label>
@@ -330,7 +334,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label">Overpayment (£)</label>
-                                <input type="number" x-model.number="i.btl.overpayment" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.btl.overpayment" class="input-field">
                             </div>
                         </div>
                         
@@ -620,6 +624,36 @@
         </main>
     </div>
 
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]"
+         x-show="miniResult && !inputFocused"
+         x-transition:enter="translate-y-full"
+         x-transition:enter-end="translate-y-0"
+         x-transition:leave="translate-y-0"
+         x-transition:leave-end="translate-y-full"
+         :class="miniResult ? miniResult.colorClass : 'bg-slate-800'">
+         
+        <div class="flex justify-between items-center px-6 py-3 cursor-pointer" 
+             @click="scrollToCharts()">
+            
+            <!-- Left: Winner Identity -->
+            <div class="flex flex-col">
+                <span class="text-[10px] uppercase tracking-wider opacity-80 text-white font-bold mb-0.5">Verdict</span>
+                <span class="font-bold text-white text-lg flex items-center gap-2">
+                    <span x-text="miniResult ? miniResult.icon : ''"></span>
+                    <span x-text="miniResult ? miniResult.winnerName : ''"></span>
+                </span>
+            </div>
+    
+            <!-- Right: The Gain -->
+            <div class="text-right">
+                <div class="text-2xl font-black text-white tracking-tight" x-text="miniResult ? '+' + miniResult.diffValue : ''"></div>
+                <span class="text-[10px] opacity-80 text-white block font-medium uppercase tracking-wide">wealthier</span>
+            </div>
+        </div>
+        <!-- Safe Area Spacer for iPhone X+ -->
+        <div class="h-[env(safe-area-inset-bottom)] bg-inherit"></div>
+    </div>
+
     <svg style="display: none;">
         <symbol id="icon-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></symbol>
         <symbol id="icon-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></symbol>
@@ -627,5 +661,6 @@
         <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol>
     </svg>
     <script src="app.js"></script>
+    <script src="report.js"></script>
 </body>
 </html>

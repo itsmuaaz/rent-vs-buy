@@ -41,6 +41,7 @@ function calculatorLogic() {
         results: null,
         matrix: null,
         matrixTimer: null,
+        inputFocused: false, // For mobile sticky bar hiding
         
         applyPreset(type) {
             const defaults = JSON.parse(JSON.stringify(this.i)); // Backup structure
@@ -130,8 +131,61 @@ function calculatorLogic() {
             } else {
                 this.calculate(); this.calculateMatrix(); 
             }
+
+            // Keyboard detection for Mobile Sticky Bar
+            window.addEventListener('focusin', (e) => {
+                if (['INPUT', 'SELECT'].includes(e.target.tagName)) this.inputFocused = true;
+            });
+            window.addEventListener('focusout', () => this.inputFocused = false);
         },
         
+        scrollToCharts() {
+            const chart = document.getElementById('netWorthChart');
+            if (chart) chart.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        },
+
+        get miniResult() {
+            if (!this.results) return null;
+            const idx = this.simYears - 1;
+            const r = this.results;
+            
+            // 1. Gather active strategies
+            const strats = [
+                {name: 'Rent', val: this.getNW(r.stratA, idx), type: 'Rent', color: 'bg-slate-800', icon: '🏖️'},
+                {name: 'Buy Home', val: r.possibleB ? this.getNW(r.stratB, idx) : -Infinity, type: 'Buy', color: 'bg-blue-600', icon: '🏠'},
+                {name: 'Lodger', val: r.possibleB ? this.getNW(r.stratC, idx) : -Infinity, type: 'Buy', color: 'bg-emerald-600', icon: '🏠'}, // Green for Lodger
+                {name: 'BTL (Co)', val: r.possibleD ? this.getNW(r.stratD, idx) : -Infinity, type: 'Buy', color: 'bg-purple-600', icon: '🏗️'},
+                {name: 'BTL (Pers)', val: r.possibleE ? this.getNW(r.stratE, idx) : -Infinity, type: 'Buy', color: 'bg-orange-600', icon: '🏗️'},
+                {name: 'Home+BTL', val: r.possibleF ? this.getNW(r.stratF, idx) : -Infinity, type: 'Buy', color: 'bg-indigo-600', icon: '🚀'}
+            ].filter(s => s.val > -Infinity);
+
+            if (strats.length === 0) return null;
+
+            // 2. Sort by Net Worth
+            strats.sort((a,b) => b.val - a.val);
+            const winner = strats[0];
+            
+            // 3. Find Comparison (Runner Up)
+            // If Rent wins, compare to best Buy. If Buy wins, compare to Rent.
+            let runnerUp;
+            if (winner.type === 'Rent') {
+                runnerUp = strats.find(s => s.type !== 'Rent'); // Best Buy option
+                if (!runnerUp) runnerUp = strats[1]; // Fallback
+            } else {
+                runnerUp = strats.find(s => s.name === 'Rent'); // Compare to Rent Baseline
+            }
+
+            // 4. Calculate Diff
+            const diff = winner.val - (runnerUp ? runnerUp.val : 0);
+            
+            return {
+                winnerName: winner.name,
+                diffValue: `£${Math.round(diff/1000)}k`,
+                colorClass: winner.color,
+                icon: winner.icon
+            };
+        },
+
         calculateMatrixDebounced() {
             if (this.matrixTimer) clearTimeout(this.matrixTimer);
             this.matrixTimer = setTimeout(() => { this.calculateMatrix(); }, 500);
@@ -654,6 +708,36 @@ function calculatorLogic() {
 // Alpine Init
 document.addEventListener('alpine:init', () => {
     Alpine.data('calculator', calculatorLogic);
+
+    Alpine.directive('money', (el, { expression }, { effect, evaluateLater, evaluate }) => {
+        const getVal = evaluateLater(expression);
+        
+        // Update View when Model changes
+        effect(() => {
+            getVal(val => {
+                if (document.activeElement !== el) {
+                    el.value = (val === null || val === undefined) ? '' : Number(val).toLocaleString();
+                }
+            });
+        });
+
+        // Update Model when View changes
+        el.addEventListener('input', (e) => {
+            const raw = e.target.value.replace(/,/g, '');
+            const num = raw === '' ? 0 : parseFloat(raw);
+            if (!isNaN(num)) {
+                 // Safe assignment for simple paths
+                 evaluate(`${expression} = ${num}`);
+            }
+        });
+        
+        // Re-format on blur
+        el.addEventListener('blur', () => {
+            getVal(val => {
+                el.value = (val === null || val === undefined) ? '' : Number(val).toLocaleString();
+            });
+        });
+    });
 });
 
 // Export for Testing

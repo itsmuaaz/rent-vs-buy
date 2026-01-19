@@ -102,6 +102,7 @@ function calculatorLogic() {
         },
 
         init() {
+            console.log('App v2026.1.1 Loaded - 24% CGT Active');
             // Priority 1: Load from URL (Share Link)
             const params = new URLSearchParams(window.location.search);
             if (params.has('data')) {
@@ -534,7 +535,7 @@ function calculatorLogic() {
                 let badge = (s.nw === max) ? 'BEST' : (s.nw === min && list.length>1) ? 'WORST' : '';
                 let badgeClass = (s.nw === max) ? 'text-green-700 bg-green-200' : 'text-red-700 bg-red-200';
                 
-                let equityLabel = (s.type === 'Rent') ? 'Exit Tax' : '🏠 Equity';
+                let equityLabel = (s.type === 'Rent') ? '📉 Exit Tax' : '🏠 Equity';
                 let equityVal = (s.type === 'Rent') ? (s.liq - s.nw) : (s.nw - s.liq);
                 
                 return { ...s, highlightClass, badge, badgeClass, equityLabel, equityVal };

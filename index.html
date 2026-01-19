@@ -90,7 +90,7 @@
                     </div>
                 </div>
                 
-                <div x-show="open" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: false }">
+                <div x-show="open" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: true }">
                      <div class="input-group">
                         <label class="input-label">Current Rent (£/mo)</label>
                         <input type="text" inputmode="numeric" x-money="i.personal.rent.current" class="input-field">
@@ -443,7 +443,7 @@
                         </button>
                         <div class="bg-white border rounded-lg p-1 flex text-sm shadow-sm">
                             <template x-for="y in [5, 10, 15, 25, 40]">
-                                <button @click="simYears = y" :class="simYears === y ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:bg-gray-50'" class="px-3 py-1 rounded transition" x-text="y + 'y'"></button>
+                                <button @click="simYears = y; inspectorYear = y" :class="simYears === y ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:bg-gray-50'" class="px-3 py-1 rounded transition" x-text="y + 'y'"></button>
                             </template>
                         </div>
                     </div>

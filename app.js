@@ -33,7 +33,7 @@ function calculatorLogic() {
         // View State
         activeTab: 'personal', // 'personal', 'home', 'btl'
         simYears: 10,
-        inspectorYear: 5,
+        inspectorYear: 10,
         valuationMode: 'liquid',
         copied: false,
         
@@ -124,7 +124,11 @@ function calculatorLogic() {
                     this.save();
                     this.calculateMatrixDebounced();
                 }, { deep: true });
-                this.$watch('simYears', () => { this.updateCharts(); this.calculateMatrixDebounced(); });
+                this.$watch('simYears', (val) => { 
+                    this.inspectorYear = val; // Sync inspector to new max year
+                    this.updateCharts(); 
+                    this.calculateMatrixDebounced(); 
+                });
                 this.$watch('inspectorYear', () => this.updateCharts());
                 this.$watch('valuationMode', () => { this.updateCharts(); });
             }

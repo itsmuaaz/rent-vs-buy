@@ -533,7 +533,11 @@ function calculatorLogic() {
                 let highlightClass = (s.nw === max) ? "border-green-500 bg-green-50 ring-1 ring-green-500" : (s.nw === min && list.length>1) ? "border-red-300 bg-red-50 opacity-90" : "border-gray-300 bg-gray-50";
                 let badge = (s.nw === max) ? 'BEST' : (s.nw === min && list.length>1) ? 'WORST' : '';
                 let badgeClass = (s.nw === max) ? 'text-green-700 bg-green-200' : 'text-red-700 bg-red-200';
-                return { ...s, highlightClass, badge, badgeClass };
+                
+                let equityLabel = (s.type === 'Rent') ? 'Exit Tax' : '🏠 Equity';
+                let equityVal = (s.type === 'Rent') ? (s.liq - s.nw) : (s.nw - s.liq);
+                
+                return { ...s, highlightClass, badge, badgeClass, equityLabel, equityVal };
             });
         },
 

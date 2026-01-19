@@ -129,6 +129,14 @@ function calculatorLogic() {
                     this.updateCharts(); 
                     this.calculateMatrixDebounced(); 
                 });
+                
+                // Smart Sync: Update Post-Work Value if it hasn't been customized
+                this.$watch('i.home.price', (val, old) => {
+                    if (this.i.home.postWorkValue === old) {
+                        this.i.home.postWorkValue = val;
+                    }
+                });
+
                 this.$watch('inspectorYear', () => this.updateCharts());
                 this.$watch('valuationMode', () => { this.updateCharts(); });
             }

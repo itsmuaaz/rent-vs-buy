@@ -1,101 +1,87 @@
 # Product Improvement Report: Rent vs Buy Calculator
 
-**Date:** January 18, 2026
-**Version Analysis:** v4.0 (Asset Model)
-**Focus:** UX/UI Enhancement, Feature Expansion, Product Appeal
+**Date:** January 19, 2026
+**Status Analysis:** UX & Reports
+**Focus:** Onboarding, Comparative Analysis, and Growth
 
 ## 1. Executive Summary
-The current application (v4.0) is a robust **financial engine** wrapped in a functional but utilitarian interface. It handles complex UK tax logic (SDLT, Section 24, Ltd Co) better than most competitors. However, it suffers from "Spreadsheet Syndrome": it presents too much data too quickly, overwhelming novice users, and lacks the visual "delight" of modern fintech apps (like Monzo or Revolut).
+The application has matured significantly with the recent updates. The addition of the **Sticky Result Bar** (Mobile), **PDF Reports** (Professionalism), and **Smart Input Formatting** (Usability) has transformed it from a basic calculator into a usable decision-support tool.
 
-To evolve from a *calculator* to a *product*, we must focus on **progressive disclosure** (already started), **visual storytelling**, and **guided onboarding**.
-
----
-
-## 2. User Experience (UX) & Onboarding
-
-### A. The "Wizard" Mode (High Priority)
-**Problem:** New users land on a dashboard with ~20 visible inputs. This causes cognitive overload ("Analysis Paralysis").
-**Solution:** Implement a "First Run" Wizard that asks 4-5 key questions before showing the full dashboard.
-*   **Step 1:** "Where do you live?" (Sets regional rent/price defaults).
-*   **Step 2:** "How much cash do you have?" (Savings).
-*   **Step 3:** "What can you afford monthly?" (Budget).
-*   **Action:** Generate the initial report, *then* reveal the full sidebar for tweaking.
-
-### B. Mobile-First Input Design (Medium Priority)
-**Problem:** On mobile, the Sidebar is a long scrollable column *above* the results. Users must scroll past it to see charts, then scroll back up to tweak.
-**Solution:**
-*   **Floating Action Button (FAB):** "Edit Inputs" button on mobile that opens a **Bottom Sheet** or **Off-canvas Sidebar**.
-*   **Result Persistence:** Keep the "Verdict" headline sticky at the top while scrolling charts.
-
-### C. "Real Terms" Toggle (High Priority)
-**Problem:** Users see "Year 40 Net Worth: £2.5m" and think they will be rich. They forget that £2.5m in 40 years is worth much less due to inflation.
-**Solution:** Add a global toggle: **"Show in Today's Money"**.
-*   **Logic:** Discount future values by the Inflation Rate (`1.03^n`).
-*   **Benefit:** Provides a grounded, realistic financial outlook.
+However, the "Day 1" experience remains daunting. New users are greeted by a sidebar with 40+ inputs, leading to "Analysis Paralysis." The primary goal for the next phase is to smooth this entry ramp via a **Wizard** and allow deeper analysis via **Snapshots**.
 
 ---
 
-## 3. Visual Polish & UI (The "Delight" Factor)
+## 2. Completed Improvements
 
-### A. Iconography & Typography
-**Current:** Standard System Fonts and Emojis (🇬🇧, 🏠).
-**Improvement:**
-*   **Font:** Switch to **Inter** or **Lato** for a cleaner, fintech look.
-*   **Icons:** Replace emojis with **Heroicons** (SVG). Emojis look amateurish in professional tools.
-    *   *Example:* Replace 🏠 with a clean house outline SVG.
-
-### B. Chart Interactivity
-**Current:** Static Chart.js with basic tooltips.
-**Improvement:**
-*   **Annotations:** Add markers for key events (e.g., "Mortgage Paid Off" at Year 25).
-*   **Gradient Fills:** Use semi-transparent gradients under the lines to make charts feel "alive".
-*   **Dynamic Legends:** Click a legend item to isolate that line (already supported by Chart.js, ensure it's obvious).
-
-### C. Animation
-**Current:** Instant state changes.
-**Improvement:** Use `x-transition` in Alpine.js for:
-*   Collapsing/Expanding sidebar sections.
-*   The appearance of the "Reality Check" warning (fade in/slide down).
-*   Smooth scrolling to the "Verdict" when a preset is clicked.
-
----
-
-## 4. Feature Expansion (Functional Depth)
-
-### A. Mortgage Overpayments (High Priority)
-**Gap:** The engine calculates standard amortization. Users obsessed with "FIRE" (Financial Independence) love overpayments.
-**Feature:** Add an "Overpayment (£/mo)" input.
-*   **Visual:** Show a new line or marker: "Mortgage-Free 7 Years Early!".
-*   **Engine:** Subtract extra cash from Principal *before* interest calculation each month.
-
-### B. Scenario Comparison (Medium Priority)
-**Gap:** Users can compare "Rent vs Buy". They cannot compare "Buy Flat" vs "Buy House".
-**Feature:** "Snapshot" functionality.
-*   User sets up "Scenario A", clicks "Save Snapshot".
-*   User changes inputs to "Scenario B".
-*   Charts show dotted lines for the saved snapshot alongside the current active scenario.
-
-### C. Backend/Cloud (Low Priority - Future)
-**Gap:** Settings are local-only (`localStorage`).
-**Feature:** "Shareable Scenarios" via URL is implemented (Base64), but long URLs break on some platforms.
-*   **Idea:** Shortlink generator (requires backend).
-*   **Idea:** "Export to CSV" for Excel nerds (Easy, Client-side).
-
----
-
-## 5. Technical Recommendations
-
-*   **Refactor `engine.js`:** The `simulateStrategies` function is monolithic (~200 lines). Break it down into `simulateRent()`, `simulateBuy()`, etc. for maintainability.
-*   **Unit Test Expansion:** Add tests for the new "Reality Check" logic and ensure the "Range Sliders" don't introduce floating-point precision errors.
-*   **Performance:** The sensitivity matrix runs 25 simulations. Ensure this is debounced (it is) and perhaps run in a **Web Worker** if we increase resolution (e.g., 10x10 grid).
-
-## 6. Implementation Roadmap (Proposed)
-
-| Phase | Theme | Key Deliverables |
+| Feature | Status | Impact |
 | :--- | :--- | :--- |
-| **1** | **Realism & Math** | Inflation Toggle ("Today's Money"), Mortgage Overpayments. |
-| **2** | **Visual Overhaul** | SVG Icons, Custom Fonts, `x-transition` animations, Chart gradients. |
-| **3** | **Mobile UX** | Bottom Sheet for inputs, Sticky Header for results. |
-| **4** | **Onboarding** | "Wizard" Mode for first-time visitors. |
+| **Input Formatting** | ✅ Done | Inputs now show commas (`£300,000`), reducing reading errors significantly. |
+| **Sticky Result Bar** | ✅ Done | Mobile users see the "Winner" instantly while scrolling/editing inputs. |
+| **PDF Report** | ✅ Done | Users can export a 3-page professional dossier for offline use. |
+| **Inflation Toggle** | ✅ Done | "Real Terms" view is now available in the UI. |
 
-**Immediate Recommendation:** Start with **Phase 1 (Inflation Toggle)** as it fundamentally changes how users interpret the data, providing immediate value with low UI effort.
+---
+
+## 3. High Priority Initiatives
+
+### A. The "Strategy Scout" Wizard (Onboarding)
+**Priority: Critical**
+*   **Problem:** New users face a "Wall of Inputs."
+*   **Solution:** A 3-step overlay modal that launches on first visit.
+    *   **Step 1 (Identity):** "Are you a First Time Buyer, Mover, or Investor?" (Sets Logic).
+    *   **Step 2 (Fuel):** "How much cash do you have?" (Sets Finances).
+    *   **Step 3 (Target):** "What price property are you looking at?" (Sets Property).
+*   **Magic:** The Wizard *calculates* the deposit % automatically based on cash available, preventing initial errors.
+
+### B. Scenario Snapshots (Comparative Analysis)
+**Priority: High**
+*   **Problem:** Users cannot compare "House A" vs "House B" side-by-side.
+*   **Solution:** A "Snapshot" feature.
+    *   **Action:** Button: "📸 Save Snapshot 1".
+    *   **Visual:** Dotted lines appear on the chart representing the saved run.
+    *   **Value:** Instant A/B testing of financial decisions.
+
+### C. Input Validation & Guardrails
+**Priority: Medium**
+*   **Problem:** Users can enter invalid states (e.g., Deposit > Price).
+*   **Solution:** Reactive validation.
+    *   **UI:** Red borders for invalid fields.
+    *   **Logic:** Disable "Export Report" if critical errors exist.
+
+---
+
+## 4. Backlog & Design Ideas (Future)
+
+### A. Visual Polish (The "Delight" Factor)
+*   **Fonts:** Switch to **Inter** or **Lato** for a cleaner, modern fintech look.
+*   **Icons:** Replace emojis with **Heroicons (SVGs)** to look more professional.
+*   **Charts:** Add **Gradient Fills** under lines to make charts feel "alive" and **Annotations** for key events (e.g., "Mortgage Paid Off").
+
+### B. Mobile Enhancements
+*   **Input Sheet:** A **Floating Action Button (FAB)** that opens a "Bottom Sheet" or "Off-canvas Sidebar" for inputs, solving the scrolling issue on mobile (Sticky Bar solves the result visibility, but editing is still scroll-heavy).
+
+### C. Advanced Features
+*   **CSV Export:** Allow users to download the raw data table for Excel analysis.
+*   **Cloud Saving:** Generate shortlinks (backend required) instead of long Base64 URLs.
+
+---
+
+## 5. Technical Roadmap
+
+1.  **Refactor `engine.js`:** The simulation loop is getting complex. Break strategies into distinct functions (`simulateRent`, `simulateBuy`, `simulateBTL`) before adding more complexity like "Snapshots".
+2.  **Debouncing:** With the addition of "Snapshots" (double rendering), input debouncing will become mandatory for performance.
+3.  **Social Sharing:** Enhance the "Share" button to generate WhatsApp-ready text payloads (e.g., *"I'm £45k better off renting!"*).
+
+---
+
+## 6. Design Document: The Wizard
+
+**Trigger:** `!localStorage.getItem('hasSeenWizard') && !urlParams.has('data')`
+**Architecture:**
+*   **Step 1:** Archetype (FTB / Mover / Landlord) -> Sets flags.
+*   **Step 2:** Financials (Rent, Cash, Savings) -> Sets `personal` object.
+*   **Step 3:** Property (Price, Lodger?) -> Sets `home` object & calculates `depositPct`.
+**Exit:** "Show me the numbers" -> Fades out modal, runs simulation.
+
+---
+*Report updated Jan 19, 2026*

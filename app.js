@@ -149,7 +149,7 @@ function calculatorLogic() {
 
         get miniResult() {
             if (!this.results) return null;
-            const idx = this.simYears - 1;
+            const idx = this.inspectorYear - 1;
             const r = this.results;
             
             // 1. Gather active strategies
@@ -354,7 +354,7 @@ function calculatorLogic() {
         get narrativeHTML() {
             if (!this.results) return '';
             const r = this.results;
-            const idx = this.simYears - 1;
+            const idx = this.inspectorYear - 1;
             
             const strats = [
                 {name: 'Renting', s: r.stratA, type: 'Rent', active: true},
@@ -413,12 +413,12 @@ function calculatorLogic() {
             
             if (baseline) {
                 html += `<div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
-                            After ${this.simYears} years, <strong>${winner.name}</strong> results in a Net Worth of ${fmt(winner.nw)}.
+                            At Year ${this.inspectorYear}, <strong>${winner.name}</strong> results in a Net Worth of ${fmt(winner.nw)}.
                             Compared to <strong>${baseline.name}</strong> (${fmt(baseline.nw)}), you are better off by ${fmt(winner.nw - baseline.nw)}.
                          </div>`;
             } else {
                  html += `<div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
-                            After ${this.simYears} years, <strong>${winner.name}</strong> results in a Net Worth of ${fmt(winner.nw)}.
+                            At Year ${this.inspectorYear}, <strong>${winner.name}</strong> results in a Net Worth of ${fmt(winner.nw)}.
                          </div>`;
             }
 
@@ -455,7 +455,7 @@ function calculatorLogic() {
 
         get headlineHTML() {
             if (!this.results) return '<h2>Calculating...</h2>';
-            const idx = this.simYears - 1;
+            const idx = this.inspectorYear - 1;
             const r = this.results;
             const strats = [
                 {name: 'Rent', val: this.getNW(r.stratA, idx), interest: 0, code: 'A', type: 'Rent', show: true},
@@ -489,7 +489,7 @@ function calculatorLogic() {
                 const runnerUp = strats[1];
                 const diff = winner.val - (runnerUp ? runnerUp.val : 0);
                 title = `Renting is the Wealthier Choice 🏖️ ${badge}`;
-                desc = `Projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${runnerUp ? runnerUp.name : 'buying'}.`;
+                desc = `At Year ${this.inspectorYear}, projected to be <strong>£${Math.round(diff/1000)}k wealthier</strong> than ${runnerUp ? runnerUp.name : 'buying'}.`;
                 subtext = `You avoided mortgage interest and buying costs. Investing the surplus returns more.`;
 
                 // Reality Check Logic
@@ -505,8 +505,8 @@ function calculatorLogic() {
             } else {
                 const diff = winner.val - rentVal;
                 title = `${winner.name} Wins 🏡 ${badge}`;
-                desc = `Projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting.`;
-                subtext = `Although you paid interest, the property equity growth and leverage outweighed it.`;
+                desc = `At Year ${this.inspectorYear}, projected to make you <strong>£${Math.round(diff/1000)}k wealthier</strong> than Renting.`;
+                subtext = `Although you paid interest, the property equity growth and leverage outweighed it. (Assumes ${this.i.personal.propertyGrowth}% growth)`;
             }
             return `<div class="flex flex-col gap-2">
                         <div class="flex flex-col md:flex-row md:items-center gap-4">

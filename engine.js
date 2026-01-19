@@ -2,16 +2,16 @@ const Engine = {};
 
 Engine.getTaxRates = function(band) {
     switch(band) {
-        case 'basic': return { income: 0.20, cgt: 0.10, div: 0.0875, corp: 0.19 };
-        case 'higher': return { income: 0.40, cgt: 0.20, div: 0.3375, corp: 0.25 };
-        case 'additional': return { income: 0.45, cgt: 0.20, div: 0.3935, corp: 0.25 };
-        default: return { income: 0.45, cgt: 0.20, div: 0.3935, corp: 0.25 };
+        case 'basic': return { income: 0.20, cgt: 0.18, div: 0.0875, corp: 0.19 };
+        case 'higher': return { income: 0.40, cgt: 0.24, div: 0.3375, corp: 0.19 }; // Assumes Small Profits Rate (<£50k)
+        case 'additional': return { income: 0.45, cgt: 0.24, div: 0.3935, corp: 0.19 };
+        default: return { income: 0.45, cgt: 0.24, div: 0.3935, corp: 0.19 };
     }
 };
 
 Engine.calculateStampDuty = function(price, type, isFTB) {
     if (type === 'personal' && isFTB && price <= 500000) return (price <= 300000) ? 0 : (price - 300000) * 0.05;
-    const bands = [{limit: 250000, rate: 0.00}, {limit: 925000, rate: 0.05}, {limit: 1500000, rate: 0.10}, {limit: Infinity, rate: 0.12}];
+    const bands = [{limit: 125000, rate: 0.00}, {limit: 250000, rate: 0.02}, {limit: 925000, rate: 0.05}, {limit: 1500000, rate: 0.10}, {limit: Infinity, rate: 0.12}];
     let tax = 0, rem = price, prev = 0;
     for (const b of bands) {
         let r = b.rate; if (type === 'company' || type === 'additional') r += 0.05;

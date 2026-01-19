@@ -38,9 +38,14 @@ describe('Financial Engine Sanity Check', () => {
     });
 
     test('Calculates Stamp Duty Correctly', () => {
-        expect(Engine.calculateStampDuty(400000, 'personal', false)).toBe(7500);
+        // Standard (Mover) £400k: 0 on 125k, 2% on 125k (2500), 5% on 150k (7500) = 10,000
+        expect(Engine.calculateStampDuty(400000, 'personal', false)).toBe(10000);
+        // FTB £400k (Relief applies): 0 on 300k, 5% on 100k = 5,000
         expect(Engine.calculateStampDuty(400000, 'personal', true)).toBe(5000);
-        expect(Engine.calculateStampDuty(400000, 'company', false)).toBe(27500);
+        // FTB £550k (Relief Lost > 500k): Standard Rules = 17,500
+        expect(Engine.calculateStampDuty(550000, 'personal', true)).toBe(17500);
+        // Company £400k (+5% Surcharge): 10,000 (Base) + 5% of 400k (20,000) = 30,000
+        expect(Engine.calculateStampDuty(400000, 'company', false)).toBe(30000);
     });
 });
 
@@ -62,11 +67,11 @@ describe('Simulation Verification (New Asset Model)', () => {
     });
 
     test('Rent Strategy: Matches Historical Baseline', () => {
-        const V = buildState();
-        const data = Engine.simulateStrategies(V);
+        const input = buildState();
+        const data = Engine.simulateStrategies(input);
         
-        // Previous baseline was ~253k for Rent at Year 10
-        expect(data.stratA.netWorthLiquid[9]).toBeCloseTo(253451.45, 1);
+        // Previous baseline was ~253k (20% CGT). Now ~252k (24% CGT).
+        expect(data.stratA.netWorthLiquid[9]).toBeCloseTo(251987.88, 1);
     });
 
     test('Buy Strategy: Liquid < Gross due to Fees', () => {

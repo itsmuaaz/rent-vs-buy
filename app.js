@@ -6,6 +6,29 @@ function calculatorLogic() {
     let nwChart = null;
     let dmChart = null;
 
+    const getDefaults = () => ({
+        personal: {
+            liquidAssets: 45000, isaBalance: 20000, monthlySavings: 1000,
+            stockGrowth: 7.0, propertyGrowth: 3.0, taxBand: 'higher',
+            rent: { current: 1250, inflation: 3 },
+            isFTB: true
+        },
+        home: {
+            active: true, price: 300000, depositPct: 15, term: 30, rate: 4.5,
+            repairRate: 1.0, serviceCharge: 0, buyingCost: 3000, sellingCostPct: 1.5,
+            renoCost: 0, postWorkValue: 300000, overpayment: 0,
+            lodger: { active: false, income: 625, years: 2 }
+        },
+        btl: {
+            active: false, price: 200000, depositPct: 25, term: 30,
+            ratePersonal: 4.5, rateCompany: 5.5,
+            repairRate: 0.5, serviceCharge: 1500, rentYield: 5.0,
+            wrappers: { personal: true, company: true },
+            buyingCost: 3000, sellingCostPct: 1.5, overpayment: 0
+        },
+        settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false, inflationAdjusted: false }
+    });
+
     return {
         // View State
         activeTab: 'personal', // 'personal', 'home', 'btl'
@@ -15,28 +38,7 @@ function calculatorLogic() {
         copied: false,
         
         // Data State (Asset Model)
-        i: {
-            personal: {
-                liquidAssets: 45000, isaBalance: 20000, monthlySavings: 1000,
-                stockGrowth: 7.0, propertyGrowth: 3.0, taxBand: 'higher',
-                rent: { current: 1250, inflation: 3 },
-                isFTB: true
-            },
-            home: {
-                active: true, price: 300000, depositPct: 15, term: 30, rate: 4.5,
-                repairRate: 1.0, serviceCharge: 0, buyingCost: 3000, sellingCostPct: 1.5,
-                renoCost: 0, postWorkValue: 300000, overpayment: 0,
-                lodger: { active: false, income: 625, years: 2 }
-            },
-            btl: {
-                active: false, price: 200000, depositPct: 25, term: 30,
-                ratePersonal: 4.5, rateCompany: 5.5,
-                repairRate: 0.5, serviceCharge: 1500, rentYield: 5.0,
-                wrappers: { personal: true, company: true },
-                buyingCost: 3000, sellingCostPct: 1.5, overpayment: 0
-            },
-            settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false, inflationAdjusted: false }
-        },
+        i: getDefaults(),
         
         results: null,
         matrix: null,
@@ -44,7 +46,7 @@ function calculatorLogic() {
         inputFocused: false, // For mobile sticky bar hiding
         
         applyPreset(type) {
-            const defaults = JSON.parse(JSON.stringify(this.i)); // Backup structure
+            const defaults = getDefaults(); 
             // Reset common fields
             defaults.home.active = true;
             defaults.btl.active = false;

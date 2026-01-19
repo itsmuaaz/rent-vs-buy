@@ -97,7 +97,7 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="input-label"><span class="has-tooltip">Total Cash Savings (£)<span class="tooltip">Total money available for deposit and investing.</span></span></label>
+                            <label class="input-label"><span class="has-tooltip">Total Liquid Assets (£)<span class="tooltip">The sum of all your available money: Cash Savings + ISAs + General Investments.</span></span></label>
                             <input type="text" inputmode="numeric" x-money="i.personal.liquidAssets" class="input-field">
                         </div>
                         <div>
@@ -137,8 +137,11 @@
                         
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="input-label">In ISA (£)</label>
-                                <input type="text" inputmode="numeric" x-money="i.personal.isaBalance" class="input-field">
+                                <label class="input-label"><span class="has-tooltip">Of which, held in ISA (£)<span class="tooltip">The portion of your liquid assets currently wrapped in an ISA (Tax-free).</span></span></label>
+                                <input type="text" inputmode="numeric" x-money="i.personal.isaBalance" class="input-field" :class="{'border-red-500 ring-1 ring-red-500': i.personal.isaBalance > i.personal.liquidAssets}">
+                                <div class="text-[10px] mt-1 font-medium" 
+                                     :class="i.personal.isaBalance > i.personal.liquidAssets ? 'text-red-600' : 'text-gray-500'"
+                                     x-text="i.personal.isaBalance > i.personal.liquidAssets ? '⚠️ Error: Exceeds Total Assets' : 'ℹ️ Non-ISA Cash: £' + (i.personal.liquidAssets - i.personal.isaBalance).toLocaleString()"></div>
                             </div>
                             <div class="input-group">
                                 <label class="input-label">Tax Band</label>
@@ -192,11 +195,16 @@
                             <input type="number" x-model.number="i.home.depositPct" class="input-field">
                         </div>
                         <div>
-                            <label class="input-label">Mortgage Rate (%)</label>
-                            <div class="flex flex-col gap-1">
-                                <input type="number" x-model.number="i.home.rate" class="input-field" step="0.1">
-                                <input type="range" x-model.number="i.home.rate" min="0" max="10" step="0.1" class="accent-indigo-600 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
+                            <label class="input-label"><span class="has-tooltip">Term (Years)<span class="tooltip">The duration of the mortgage. Longer terms lower monthly payments but increase total interest paid.</span></span></label>
+                            <input type="number" x-model.number="i.home.term" class="input-field" min="5" max="40">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Mortgage Rate (%)</label>
+                        <div class="flex flex-col gap-1">
+                            <input type="number" x-model.number="i.home.rate" class="input-field" step="0.1">
+                            <input type="range" x-model.number="i.home.rate" min="0" max="10" step="0.1" class="accent-indigo-600 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                         </div>
                     </div>
 
@@ -313,21 +321,21 @@
                     <div x-show="showAdv" x-collapse class="space-y-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
                          <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="input-label">Service Chg (£)</label>
+                                <label class="input-label"><span class="has-tooltip">Service Chg (£)<span class="tooltip">Annual costs (Ground Rent + Service Charge).</span></span></label>
                                 <input type="text" inputmode="numeric" x-money="i.btl.serviceCharge" class="input-field">
                             </div>
                             <div>
-                                 <label class="input-label">Maint (%)</label>
+                                 <label class="input-label"><span class="has-tooltip">Maint (%)<span class="tooltip">Annual repairs (1% rule of thumb).</span></span></label>
                                  <input type="number" x-model.number="i.btl.repairRate" class="input-field" step="0.1">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="input-label">Buying Fees (£)</label>
+                                <label class="input-label"><span class="has-tooltip">Buying Fees (£)<span class="tooltip">Solicitor, Surveyor, Mortgage Fees.</span></span></label>
                                 <input type="text" inputmode="numeric" x-money="i.btl.buyingCost" class="input-field">
                             </div>
                             <div>
-                                 <label class="input-label">Selling Fee (%)</label>
+                                 <label class="input-label"><span class="has-tooltip">Selling Fee (%)<span class="tooltip">Estate Agent fee + VAT.</span></span></label>
                                  <input type="number" x-model.number="i.btl.sellingCostPct" class="input-field" step="0.1">
                             </div>
                         </div>

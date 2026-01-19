@@ -10,7 +10,7 @@ Engine.getTaxRates = function(band) {
 };
 
 Engine.calculateStampDuty = function(price, type, isFTB) {
-    if (type === 'personal' && isFTB && price <= 625000) return (price <= 425000) ? 0 : (price - 425000) * 0.05;
+    if (type === 'personal' && isFTB && price <= 500000) return (price <= 300000) ? 0 : (price - 300000) * 0.05;
     const bands = [{limit: 250000, rate: 0.00}, {limit: 925000, rate: 0.05}, {limit: 1500000, rate: 0.10}, {limit: Infinity, rate: 0.12}];
     let tax = 0, rem = price, prev = 0;
     for (const b of bands) {

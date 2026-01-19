@@ -39,7 +39,7 @@ describe('Financial Engine Sanity Check', () => {
 
     test('Calculates Stamp Duty Correctly', () => {
         expect(Engine.calculateStampDuty(400000, 'personal', false)).toBe(7500);
-        expect(Engine.calculateStampDuty(400000, 'personal', true)).toBe(0);
+        expect(Engine.calculateStampDuty(400000, 'personal', true)).toBe(5000);
         expect(Engine.calculateStampDuty(400000, 'company', false)).toBe(27500);
     });
 });

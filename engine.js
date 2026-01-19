@@ -59,7 +59,13 @@ Engine.simulateStrategies = function(V) {
         const gross = stockGross + propGross + coGross;
 
         const stockGain = Math.max(0, gia - giaBasis);
-        const stockLiquid = isa + (gia - stockGain * rates.cgt);
+        // 2025/26 CGT Allowance: £3,000 (Applied to Stock first, then Property)
+        let remAllowance = 3000;
+        
+        const taxableStock = Math.max(0, stockGain - remAllowance);
+        remAllowance = Math.max(0, remAllowance - stockGain);
+        
+        const stockLiquid = isa + (gia - taxableStock * rates.cgt);
 
         let propLiquid = 0;
         let coLiquid = 0;
@@ -80,7 +86,10 @@ Engine.simulateStrategies = function(V) {
                 let proceeds = Math.max(0, houseV - sellFee - debt);
                 if (type === 'btl') {
                     const gain = (houseV - sellFee) - propBasis;
-                    if (gain > 0) proceeds -= (gain * rates.cgt);
+                    if (gain > 0) {
+                        const taxableProp = Math.max(0, gain - remAllowance);
+                        proceeds -= (taxableProp * rates.cgt);
+                    }
                 }
                 propLiquid = proceeds;
             }

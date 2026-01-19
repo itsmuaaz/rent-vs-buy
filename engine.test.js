@@ -70,8 +70,8 @@ describe('Simulation Verification (New Asset Model)', () => {
         const input = buildState();
         const data = Engine.simulateStrategies(input);
         
-        // Previous baseline was ~253k (20% CGT). Now ~252k (24% CGT).
-        expect(data.stratA.netWorthLiquid[9]).toBeCloseTo(251987.88, 1);
+        // Baseline ~252k (24% CGT) + £720 relief from £3k Allowance
+        expect(data.stratA.netWorthLiquid[9]).toBeCloseTo(252707.88, 1);
     });
 
     test('Buy Strategy: Liquid < Gross due to Fees', () => {
@@ -197,7 +197,7 @@ describe('Simulation Verification (New Asset Model)', () => {
 
     test('ISA Limit: Excess savings spill to GIA', () => {
         const V = buildState({
-            personal: { monthlySavings: 4000, isaBalance: 0, liquidAssets: 0 } // Start fresh
+            personal: { monthlySavings: 4000, isaBalance: 0, liquidAssets: 50000 } // Start with cash to generate taxable gain > £3k
         });
         
         // Year 1: Save 4000 * 12 = 48000.

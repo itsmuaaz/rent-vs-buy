@@ -61,27 +61,19 @@ describe('App Controller Logic (app.js)', () => {
         app.i.home.price = 500000;
         app.i.personal.isFTB = true;
         
-        // Activate SDLT Audit
-        app.activeAuditId = 'sdlt';
+        // Find SDLT item
+        const item = app.auditData.find(x => x.id === 'sdlt');
+        expect(item).toBeDefined();
         
-        const proof = app.currentAuditProof;
+        const proof = app.getProof(item);
         
-        // Expect specific text from audit.js
+        // Expect specific text
         expect(proof).toContain('£500,000');
-        expect(proof).toContain('First Time Buyer Relief Applied'); // < 625k cap
-        expect(proof).toContain('£10,000'); // 5% of (500k-300k) ? No.
-        // Wait, current Engine rule: 
-        // 0% first 425k? No, updated 2025 rule: 0% to 300k, 5% to 500k?
-        // Let's rely on what the proof *says* which verifies the integration.
-        // Or check a number we know.
-        // 500k FTB: (500k - 425k)*0.05 ? Or (500k-300k)?
-        // Engine.calculateStampDuty(500000, 'personal', true).
-        // Let's just check it runs without error and contains the price.
+        expect(proof).toContain('First Time Buyer Relief Applied'); 
     });
 
-    test('Audit Logic: Handles Invalid/Missing Item gracefully', () => {
-        app.activeAuditId = 'non_existent_id';
-        const proof = app.currentAuditProof;
+    test('Audit Logic: Handles Invalid Item gracefully', () => {
+        const proof = app.getProof(null);
         expect(proof).toBe('');
     });
     

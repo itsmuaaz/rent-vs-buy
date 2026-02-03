@@ -112,6 +112,100 @@ AuditLogic.dictionary = [
             );
         }
     },
+    {
+        id: 'strat_btl',
+        category: 'Strategies',
+        title: 'Strategy D/E: Buy-to-Let Logic',
+        formula: 'Profit = Rent - Mortgage - Maint - Tax',
+        description: 'Investment property mathematics. The key difference is taxation: Limited Companies pay Corporation Tax, while Personal owners face Section 24 restrictions.',
+        explain: (state) => {
+            const B = state.btl;
+            if (!B.active) return "Buy-to-Let is disabled in your current settings.";
+            
+            const P = state.personal;
+            const rates = Engine.getTaxRates(P.taxBand);
+            
+            // Logic Branching: Company vs Personal
+            // We explain the one that is active (or prefer Company if both active for brevity, or list both?)
+            // Let's assume we audit the "Active" one. If both active, show Company (Strat D) as it's often the comparison point.
+            // Or better: Show a tab? No, keep it simple. Show "Limited Company" if selected, else "Personal".
+            
+            const isCompany = B.wrappers.company;
+            const mode = isCompany ? 'Limited Company' : 'Personal Name';
+            const rate = isCompany ? B.rateCompany : B.ratePersonal;
+            
+            const debt = B.price * (1 - B.depositPct/100);
+            const monthlyRate = rate / 100 / 12;
+            
+            // Mortgage (Interest Only usually for BTL? No, Engine uses Repayment currently)
+            // Let's check Engine. Engine uses calculateMortgage (Repayment).
+            const r = monthlyRate;
+            const n = B.term * 12;
+            const mortgagePayment = (debt * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+            const interest = debt * monthlyRate;
+            
+            const rentIncome = (B.price * B.rentYield/100) / 12;
+            const maint = (B.price * B.repairRate/100 / 12) + (B.serviceCharge / 12);
+            
+            // Tax Calculation
+            let tax = 0;
+            let taxExplainer = '';
+            
+            if (isCompany) {
+                // Corp Tax
+                // Profit = Rent - Interest - Maint (Interest IS deductible)
+                const profit = rentIncome - interest - maint;
+                tax = Math.max(0, profit * rates.corp);
+                taxExplainer = `
+                    <div class="text-xs bg-slate-50 p-2 rounded border border-slate-200 mt-1">
+                        <strong>Corporation Tax (${rates.corp*100}%):</strong><br>
+                        Rent (${fmt.money(rentIncome)}) - Interest (${fmt.money(interest)}) - Maint (${fmt.money(maint)}) = Profit (${fmt.money(profit)})<br>
+                        Tax = ${fmt.money(tax)}
+                    </div>`;
+            } else {
+                // Section 24 (Personal)
+                // Profit = Rent - Maint (Interest NOT deductible)
+                const taxableProfit = rentIncome - maint;
+                const taxLiability = taxableProfit * rates.income;
+                const relief = interest * 0.20;
+                tax = Math.max(0, taxLiability - relief);
+                
+                taxExplainer = `
+                    <div class="text-xs bg-slate-50 p-2 rounded border border-slate-200 mt-1">
+                        <strong>Section 24 Calculation:</strong><br>
+                        1. Tax on Revenue: (${fmt.money(rentIncome)} - ${fmt.money(maint)}) × ${rates.income*100}% = ${fmt.money(taxLiability)}<br>
+                        2. Finance Credit: Interest (${fmt.money(interest)}) × 20% = ${fmt.money(relief)}<br>
+                        3. Net Tax = ${fmt.money(tax)}
+                    </div>`;
+            }
+            
+            const cashFlow = rentIncome - mortgagePayment - maint - tax;
+
+            return (
+                `<div class="space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xs font-bold text-white bg-purple-600 px-2 py-1 rounded uppercase tracking-wide">${mode}</span>
+                        <span class="text-xs text-gray-500">Tax Band: ${P.taxBand}</span>
+                    </div>
+
+                    <div>
+                        <div class="text-xs font-bold text-slate-500 uppercase">Month 1 P&L</div>
+                        <ul class="mt-1 space-y-1 text-sm">
+                            <li class="font-bold text-green-700">Gross Rent: +${fmt.moneyPrecise(rentIncome)}</li>
+                            <li>Mortgage: -${fmt.moneyPrecise(mortgagePayment)} <span class="text-xs text-gray-400">(Int: ${fmt.money(interest)})</span></li>
+                            <li>Maintenance: -${fmt.moneyPrecise(maint)}</li>
+                            <li>Tax: <span class="text-red-600">-${fmt.moneyPrecise(tax)}</span></li>
+                            <li class="pt-1 border-t border-gray-200 font-bold ${cashFlow >= 0 ? 'text-blue-700' : 'text-red-600'}">
+                                = Net Cash Flow: ${fmt.moneyPrecise(cashFlow)}
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    ${taxExplainer}
+                </div>`
+            );
+        }
+    },
     
     // --- CATEGORY: CALCULATIONS ---
     {

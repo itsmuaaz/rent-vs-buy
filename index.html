@@ -12,7 +12,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="engine.js"></script>
+    <script src="engine.js?v=cachebust1"></script>
+    <script src="audit.js?v=cachebust1"></script>
+    <script src="app.js?v=cachebust1"></script>
+    <script src="report.js?v=cachebust1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,9 +57,6 @@
                 🇬🇧 UK Property Strategy Simulator
             </h1>
             <div class="flex items-center gap-3 no-print" data-html2canvas-ignore="true">
-                <button @click="showAuditModal = true" class="text-sm bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-50 transition shadow-sm font-medium flex items-center gap-2">
-                    <span>🔍</span> <span class="hidden sm:inline">Audit</span>
-                </button>
                 <button @click="window.generatePDF($data)" class="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition shadow-sm font-medium flex items-center gap-2">
                     <span>📄</span> Export Report
                 </button>
@@ -638,43 +638,46 @@
             </div>
             
             <!-- 8. Transparency Report (Audit) -->
-            <section class="mb-16 no-print">
-                <div class="flex items-center gap-3 mb-6 border-b border-gray-200 pb-4">
-                    <span class="text-2xl">🎓</span>
+            <section class="mt-24 pt-12 border-t border-gray-200 no-print">
+                <div class="bg-slate-900 text-white p-8 rounded-t-2xl shadow-xl flex flex-col md:flex-row md:items-center gap-6">
+                    <div class="bg-white/10 p-4 rounded-full w-16 h-16 flex items-center justify-center shrink-0">
+                        <span class="text-3xl">🎓</span>
+                    </div>
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">Transparency Report</h2>
-                        <p class="text-sm text-gray-500">A step-by-step audit of how your numbers were generated.</p>
+                        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Transparency Report</h2>
+                        <p class="text-slate-300 mt-2 max-w-2xl leading-relaxed">
+                            We believe in "Show, Don't Tell." Below is a verifiable, step-by-step breakdown of exactly how your numbers were calculated for Month 1.
+                        </p>
                     </div>
                 </div>
 
-                <div class="space-y-6">
+                <div class="bg-white border border-t-0 border-gray-200 rounded-b-2xl shadow-sm overflow-hidden p-6 md:p-8 space-y-8">
                     <template x-for="(item, idx) in auditData" :key="item.id">
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <div class="border border-gray-100 rounded-xl overflow-hidden bg-gray-50/50">
+                            <div class="bg-white px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                                 <div class="flex items-center gap-3">
-                                    <span class="bg-indigo-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full" x-text="idx + 1"></span>
-                                    <h3 class="font-bold text-slate-800" x-text="item.title"></h3>
+                                    <span class="bg-slate-900 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full" x-text="idx + 1"></span>
+                                    <h3 class="font-bold text-slate-900" x-text="item.title"></h3>
                                 </div>
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider" x-text="item.category"></span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-gray-100 px-2 py-1 rounded" x-text="item.category"></span>
                             </div>
                             
-                            <div class="p-6">
-                                <p class="text-sm text-gray-600 mb-4" x-text="item.description"></p>
+                            <div class="p-6 md:p-8 grid md:grid-cols-2 gap-8">
+                                <!-- Left: The Context -->
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-4 leading-relaxed" x-text="item.description"></p>
+                                    <div class="bg-slate-100 rounded-lg p-4 font-mono text-xs text-slate-600 border border-slate-200">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Standard Formula</div>
+                                        <div x-text="item.formula" class="break-words"></div>
+                                    </div>
+                                </div>
                                 
-                                <div class="grid md:grid-cols-2 gap-6">
-                                    <!-- Left: The Rule -->
-                                    <div>
-                                        <div class="text-[10px] font-bold text-gray-400 uppercase mb-2">The Formula</div>
-                                        <div class="bg-gray-100 rounded p-3 font-mono text-xs text-slate-600 border border-gray-200" x-text="item.formula"></div>
+                                <!-- Right: The Proof -->
+                                <div class="bg-indigo-50/30 rounded-xl p-5 border border-indigo-100/50">
+                                    <div class="text-[10px] font-bold text-indigo-600 uppercase mb-3 flex items-center gap-2">
+                                        <span class="bg-indigo-100 p-1 rounded">⚡</span> Live Calculation (Your Data)
                                     </div>
-                                    
-                                    <!-- Right: The Proof -->
-                                    <div>
-                                        <div class="text-[10px] font-bold text-indigo-500 uppercase mb-2 flex items-center gap-1">
-                                            <span>⚡</span> Live Calculation
-                                        </div>
-                                        <div class="text-sm text-slate-700 leading-relaxed" x-html="getProof(item)"></div>
-                                    </div>
+                                    <div class="text-sm text-slate-700 leading-relaxed" x-html="getProof(item)"></div>
                                 </div>
                             </div>
                         </div>

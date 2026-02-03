@@ -137,12 +137,18 @@ AuditLogic.dictionary = [
             const debt = B.price * (1 - B.depositPct/100);
             const monthlyRate = rate / 100 / 12;
             
-            // Mortgage (Interest Only usually for BTL? No, Engine uses Repayment currently)
-            // Let's check Engine. Engine uses calculateMortgage (Repayment).
+            // Mortgage Calculation (Interest Only support)
+            const isInterestOnly = B.mortgageType === 'interestOnly';
             const r = monthlyRate;
             const n = B.term * 12;
-            const mortgagePayment = (debt * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
             const interest = debt * monthlyRate;
+            
+            let mortgagePayment;
+            if (isInterestOnly) {
+                mortgagePayment = interest;
+            } else {
+                mortgagePayment = (debt * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+            }
             
             const rentIncome = (B.price * B.rentYield/100) / 12;
             const maint = (B.price * B.repairRate/100 / 12) + (B.serviceCharge / 12);
@@ -154,6 +160,8 @@ AuditLogic.dictionary = [
             if (isCompany) {
                 // Corp Tax
                 // Profit = Rent - Interest - Maint (Interest IS deductible)
+                // Note: For Corp Tax, we deduct INTEREST, not capital repayment.
+                // If Repayment mortgage, profit is still Rent - Interest - Maint.
                 const profit = rentIncome - interest - maint;
                 tax = Math.max(0, profit * rates.corp);
                 taxExplainer = `
@@ -185,14 +193,14 @@ AuditLogic.dictionary = [
                 `<div class="space-y-4">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="text-xs font-bold text-white bg-purple-600 px-2 py-1 rounded uppercase tracking-wide">${mode}</span>
-                        <span class="text-xs text-gray-500">Tax Band: ${P.taxBand}</span>
+                        <span class="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded border border-purple-200">${isInterestOnly ? 'Interest Only' : 'Repayment'}</span>
                     </div>
 
                     <div>
                         <div class="text-xs font-bold text-slate-500 uppercase">Month 1 P&L</div>
                         <ul class="mt-1 space-y-1 text-sm">
                             <li class="font-bold text-green-700">Gross Rent: +${fmt.moneyPrecise(rentIncome)}</li>
-                            <li>Mortgage: -${fmt.moneyPrecise(mortgagePayment)} <span class="text-xs text-gray-400">(Int: ${fmt.money(interest)})</span></li>
+                            <li>Mortgage: -${fmt.moneyPrecise(mortgagePayment)} <span class="text-xs text-gray-400">(${isInterestOnly ? 'Int Only' : 'Inc. Capital'})</span></li>
                             <li>Maintenance: -${fmt.moneyPrecise(maint)}</li>
                             <li>Tax: <span class="text-red-600">-${fmt.moneyPrecise(tax)}</span></li>
                             <li class="pt-1 border-t border-gray-200 font-bold ${cashFlow >= 0 ? 'text-blue-700' : 'text-red-600'}">

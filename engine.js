@@ -190,7 +190,11 @@ Engine.simulateStrategies = function(V) {
             debtD = B.price - deposit;
             houseD = B.price;
             propBasisD = B.price + (B.buyingCost||2000);
-            pD = Engine.calculateMortgage(debtD, B.rateCompany, B.term);
+            if (B.mortgageType === 'interestOnly') {
+                pD = debtD * (B.rateCompany / 1200);
+            } else {
+                pD = Engine.calculateMortgage(debtD, B.rateCompany, B.term);
+            }
             cFeesD += (acq.stamp + (B.buyingCost||2000));
             deadD += (acq.stamp + (B.buyingCost||2000));
         }
@@ -211,7 +215,11 @@ Engine.simulateStrategies = function(V) {
             debtE = B.price - deposit;
             houseE = B.price;
             propBasisE = B.price + (B.buyingCost||2000);
-            pE = Engine.calculateMortgage(debtE, B.ratePersonal, B.term);
+            if (B.mortgageType === 'interestOnly') {
+                pE = debtE * (B.ratePersonal / 1200);
+            } else {
+                pE = Engine.calculateMortgage(debtE, B.ratePersonal, B.term);
+            }
             cFeesE += (acq.stamp + (B.buyingCost||2000));
             deadE += (acq.stamp + (B.buyingCost||2000));
         }
@@ -246,7 +254,11 @@ Engine.simulateStrategies = function(V) {
             dF2 = B.price - depB;
             hF2 = B.price;
             pbF2 = B.price + (B.buyingCost||2000);
-            pF2 = Engine.calculateMortgage(dF2, B.rateCompany, B.term);
+            if (B.mortgageType === 'interestOnly') {
+                pF2 = dF2 * (B.rateCompany / 1200);
+            } else {
+                pF2 = Engine.calculateMortgage(dF2, B.rateCompany, B.term);
+            }
             
             cFeesF += (acqH.stamp + H.buyingCost + acqB.stamp + (B.buyingCost||2000));
             deadF += (acqH.stamp + H.buyingCost + acqB.stamp + (B.buyingCost||2000));

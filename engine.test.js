@@ -421,3 +421,38 @@ describe('Lifecycle & Edge Cases', () => {
         expect(res.netWorthLiquid[10]).toBeGreaterThan(0);
     });
 });
+
+describe('BTL Mortgage Types', () => {
+    test('Interest Only pays less monthly but builds no equity via principal', () => {
+        const base = {
+            personal: { liquidAssets: 100000, monthlySavings: 1000, rent: {current:1000, inflation:3}, propertyGrowth:0, stockGrowth:0, isaBalance:0 },
+            btl: { active: true, price: 200000, depositPct: 25, term: 25, rateCompany: 5.0, wrappers: { company: true } }
+        };
+
+        // Case A: Repayment
+        const V_Repay = buildState(base);
+        V_Repay.btl.mortgageType = 'repayment';
+        const resA = Engine.simulateStrategies(V_Repay).stratD;
+
+        // Case B: Interest Only
+        const V_IntOnly = buildState(base);
+        V_IntOnly.btl.mortgageType = 'interestOnly';
+        const resB = Engine.simulateStrategies(V_IntOnly).stratD;
+
+        // 1. Check Total Interest Paid over 25 years
+        // Repayment pays less total interest because debt reduces
+        const intA_Total = resA.breakdown.interest[24]; // Cumulative at Y25
+        const intB_Total = resB.breakdown.interest[24];
+        
+        expect(intA_Total).toBeLessThan(intB_Total);
+
+        // 2. Net Worth Check (0% Growth Environment)
+        // Repayment pays down 5% debt. Interest Only keeps cash (0% return).
+        // So Repayment Net Worth > Interest Only Net Worth.
+        
+        const nwA = resA.netWorth[24];
+        const nwB = resB.netWorth[24];
+        
+        expect(nwA).toBeGreaterThan(nwB);
+    });
+});

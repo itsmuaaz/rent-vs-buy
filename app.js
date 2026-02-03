@@ -24,7 +24,8 @@ function calculatorLogic() {
             ratePersonal: 4.5, rateCompany: 5.5,
             repairRate: 0.5, serviceCharge: 1500, rentYield: 5.0,
             wrappers: { personal: true, company: true },
-            buyingCost: 3000, sellingCostPct: 1.5, overpayment: 0
+            buyingCost: 3000, sellingCostPct: 1.5, overpayment: 0,
+            mortgageType: 'interestOnly'
         },
         settings: { valuationMode: 'liquid', stockCrash: false, propCrash: false, inflationAdjusted: false }
     });
@@ -266,7 +267,14 @@ function calculatorLogic() {
             const upfront = deposit + stamp + (B.buyingCost||2000);
             const debt = B.price - deposit;
             const rate = B.wrappers.company ? B.rateCompany : B.ratePersonal; 
-            const mortgage = Engine.calculateMortgage(debt, rate, B.term);
+            
+            let mortgage;
+            if (B.mortgageType === 'interestOnly') {
+                mortgage = debt * (rate / 1200);
+            } else {
+                mortgage = Engine.calculateMortgage(debt, rate, B.term);
+            }
+
             const rent = (B.price * (B.rentYield/100)) / 12;
             return { stamp, upfront, mortgage, rent };
         },
@@ -535,7 +543,12 @@ function calculatorLogic() {
             }
             return `<div class="flex flex-col gap-2">
                         <div class="flex flex-col md:flex-row md:items-center gap-4">
-                            <div class="flex-1"><h2 class="text-2xl font-bold leading-tight">${title}</h2><p class="text-lg mt-1">${desc}</p><p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p></div>
+                            <div class="flex-1">
+                                <h2 class="text-2xl font-bold leading-tight">${title}</h2>
+                                <p class="text-lg mt-1">${desc}</p>
+                                <p class="text-sm mt-2 opacity-80 border-l-2 border-white/30 pl-3">${subtext}</p>
+                                <a href="#transparency-report" class="inline-block mt-3 text-xs font-bold text-indigo-200 hover:text-white border-b border-indigo-300/30 hover:border-white transition-colors">🔍 See the math (Transparency Report)</a>
+                            </div>
                         </div>
                         ${realityCheck}
                     </div>`;

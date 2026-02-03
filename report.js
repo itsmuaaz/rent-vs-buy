@@ -8,7 +8,8 @@ async function generatePDF(data) {
     // We want to expand the scrollable areas to capture full content.
     const originalBodyStyle = document.body.getAttribute('style');
     const originalHTMLStyle = document.documentElement.getAttribute('style');
-    const scrollContainers = document.querySelectorAll('.overflow-auto, .md\:overflow-hidden, .md\:h-screen');
+    // Use attribute selector for Tailwind classes with colons to avoid JS escaping hell
+    const scrollContainers = document.querySelectorAll('.overflow-auto, [class~="md:overflow-hidden"], [class~="md:h-screen"]');
     const originalStyles = [];
 
     // Force expansion

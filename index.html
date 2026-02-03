@@ -137,6 +137,14 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="input-group">
+                            <label class="input-label"><span class="has-tooltip">Rent Inflation (%)<span class="tooltip">Annual increase in rent price. Historically matches wage growth (~3%).</span></span></label>
+                            <div class="flex flex-col gap-1">
+                                <input type="number" x-model.number="i.personal.rent.inflation" class="input-field" step="0.1">
+                                <input type="range" x-model.number="i.personal.rent.inflation" min="0" max="10" step="0.1" class="accent-indigo-600 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
                         
                         <div class="grid grid-cols-2 gap-2">
                             <div>

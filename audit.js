@@ -299,18 +299,18 @@ AuditLogic.dictionary = [
             let html = `<div>Property Price: ${fmt.bold(fmt.money(price))}</div>`;
             
             if (isFTB) {
-                if (price > 625000) {
-                     html += `<div class="text-red-600 mt-2 font-bold text-sm">⚠️ First Time Buyer Relief Invalid</div>
-                              <div class="text-xs text-red-800">Price exceeds the £625k strict cap. Standard rates apply.</div>`;
-                } else if (price > 425000) {
+                if (price > 500000) {
+                     html += `<div class="text-red-600 mt-2 font-bold text-sm">⚠️ First Time Buyer Relief Disqualified</div>
+                              <div class="text-xs text-red-800">Price exceeds the £500k strict cap. You pay Standard Rates (0% on first £125k).</div>`;
+                } else if (price > 300000) {
                     html += `<div class="text-green-700 mt-2 font-bold text-sm">✅ First Time Buyer Relief Applied</div>
-                             <div class="text-xs text-green-800">0% on first £425k. 5% on remainder.</div>`;
+                             <div class="text-xs text-green-800">0% on first £300k. 5% on remainder (up to £500k).</div>`;
                 } else {
                     html += `<div class="text-green-700 mt-2 font-bold text-sm">✅ First Time Buyer Relief Applied</div>
-                             <div class="text-xs text-green-800">0% tax (Price is under £425k threshold).</div>`;
+                             <div class="text-xs text-green-800">0% tax (Price is under £300k threshold).</div>`;
                 }
             } else {
-                html += `<div class="mt-2 text-xs text-slate-500">Standard Home Mover rates apply (April 2025 Rules).</div>`;
+                html += `<div class="mt-2 text-xs text-slate-500">Standard Home Mover rates apply (0% on first £125k).</div>`;
             }
             
             html += `<div class="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">

@@ -610,9 +610,9 @@ function calculatorLogic() {
             const tips = [];
             if (!this.i.home.active) return tips;
             
-            const yield = (this.i.personal.rent.current * 12 / this.i.home.price) * 100;
-            if (yield < 3.5) tips.push({icon: '📉', title: 'Low Yield', text: `Rent is only ${yield.toFixed(1)}% of price. Renting is likely superior.`});
-            else if (yield > 6) tips.push({icon: '📈', title: 'High Yield', text: `Rent is ${yield.toFixed(1)}% of price. Buying saves significant cost.`});
+            const grossYield = (this.i.personal.rent.current * 12 / this.i.home.price) * 100;
+            if (grossYield < 3.5) tips.push({icon: '📉', title: 'Low Yield', text: `Rent is only ${grossYield.toFixed(1)}% of price. Renting is likely superior.`});
+            else if (grossYield > 6) tips.push({icon: '📈', title: 'High Yield', text: `Rent is ${grossYield.toFixed(1)}% of price. Buying saves significant cost.`});
             
             if (this.i.personal.stockGrowth > 10) tips.push({icon: '🚀', title: 'Aggressive Stocks', text: '10%+ growth is historically optimistic.'});
             if (this.i.home.depositPct < 15) tips.push({icon: '⚖️', title: 'High Leverage', text: 'Low deposit amplifies both gains and negative equity risks.'});

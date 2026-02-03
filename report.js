@@ -18,10 +18,6 @@ async function generatePDF(data) {
     document.body.style.height = 'auto';
     document.body.style.overflow = 'visible';
     
-    // Hide UI controls that shouldn't be in the report
-    const noPrint = document.querySelectorAll('.no-print');
-    noPrint.forEach(el => el.style.display = 'none');
-
     // Expand internal scroll containers (like Main and Sidebar)
     scrollContainers.forEach(el => {
         originalStyles.push({ el, style: el.getAttribute('style'), class: el.className });
@@ -71,8 +67,6 @@ async function generatePDF(data) {
         // 4. Cleanup / Restore UI
         document.documentElement.setAttribute('style', originalHTMLStyle || '');
         document.body.setAttribute('style', originalBodyStyle || '');
-        
-        noPrint.forEach(el => el.style.display = '');
         
         scrollContainers.forEach((item, i) => {
             if (originalStyles[i].style) {

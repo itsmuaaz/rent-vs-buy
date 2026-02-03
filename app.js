@@ -37,6 +37,26 @@ function calculatorLogic() {
         valuationMode: 'liquid',
         copied: false,
         
+        // Audit State
+        auditData: window.AuditLogic ? window.AuditLogic.dictionary : [],
+        activeAuditId: 'sdlt',
+        showAuditModal: false,
+
+        get activeAuditItem() {
+            return this.auditData.find(x => x.id === this.activeAuditId);
+        },
+
+        get currentAuditProof() {
+            const item = this.activeAuditItem;
+            if (!item || !item.explain) return '';
+            try {
+                return item.explain(this.i);
+            } catch (e) {
+                console.error("Audit Proof Error", e);
+                return `<div class="text-red-600">Error generating proof: ${e.message}</div>`;
+            }
+        },
+        
         // Data State (Asset Model)
         i: getDefaults(),
         

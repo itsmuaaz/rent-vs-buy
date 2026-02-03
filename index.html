@@ -54,6 +54,9 @@
                 🇬🇧 UK Property Strategy Simulator
             </h1>
             <div class="flex items-center gap-3 no-print">
+                <button @click="showAuditModal = true" class="text-sm bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-50 transition shadow-sm font-medium flex items-center gap-2">
+                    <span>🔍</span> <span class="hidden sm:inline">Audit</span>
+                </button>
                 <button @click="window.generatePDF($data)" class="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition shadow-sm font-medium flex items-center gap-2">
                     <span>📄</span> Export Report
                 </button>
@@ -673,7 +676,75 @@
         <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></symbol>
         <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol>
     </svg>
+    <script src="engine.js"></script>
+    <script src="audit.js"></script>
     <script src="app.js"></script>
     <script src="report.js"></script>
+    <!-- Audit Modal -->
+    <div x-show="showAuditModal" style="display: none;" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" x-cloak>
+        <div class="bg-white w-full max-w-4xl h-[80vh] rounded-xl shadow-2xl flex flex-col overflow-hidden" @click.away="showAuditModal = false">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🔍</span>
+                    <h3 class="font-bold text-lg text-slate-800">Logic Audit & Transparency</h3>
+                </div>
+                <button @click="showAuditModal = false" class="text-gray-400 hover:text-gray-600 p-2">✕</button>
+            </div>
+
+            <!-- Modal Body (Split View) -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Sidebar (List) -->
+                <div class="w-1/3 border-r border-gray-100 overflow-y-auto bg-gray-50/50 hidden md:block">
+                    <template x-for="item in auditData" :key="item.id">
+                        <button @click="activeAuditId = item.id" 
+                                :class="activeAuditId === item.id ? 'bg-indigo-50 border-l-4 border-indigo-500 text-indigo-700' : 'hover:bg-gray-100 border-l-4 border-transparent text-gray-600'"
+                                class="w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-gray-100">
+                            <div x-text="item.title"></div>
+                            <div class="text-[10px] uppercase tracking-wide opacity-60 mt-0.5" x-text="item.category"></div>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Main Content (Detail) -->
+                <div class="flex-1 overflow-y-auto p-6 md:p-8">
+                    <template x-if="activeAuditItem">
+                        <div class="space-y-6 max-w-2xl mx-auto">
+                            <!-- Mobile Dropdown (Visible only on small screens) -->
+                            <div class="md:hidden mb-4">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Select Topic</label>
+                                <select x-model="activeAuditId" class="w-full mt-1 p-2 border rounded bg-white">
+                                    <template x-for="item in auditData" :key="item.id">
+                                        <option :value="item.id" x-text="item.title"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- Header -->
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-900" x-text="activeAuditItem.title"></h2>
+                                <p class="text-slate-500 mt-2" x-text="activeAuditItem.description"></p>
+                            </div>
+
+                            <!-- Formula Box -->
+                            <div class="bg-slate-100 rounded-lg p-4 border border-slate-200 font-mono text-sm text-slate-700 overflow-x-auto">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase mb-1">Standard Formula</div>
+                                <div x-text="activeAuditItem.formula"></div>
+                            </div>
+
+                            <!-- Live Proof Box -->
+                            <div class="bg-white rounded-xl border-2 border-indigo-100 p-5 shadow-sm ring-4 ring-indigo-50/50">
+                                <div class="flex items-center gap-2 mb-3 pb-3 border-b border-indigo-50">
+                                    <span class="text-indigo-600">⚡</span>
+                                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-widest">Live Proof (Your Numbers)</span>
+                                </div>
+                                <div class="prose prose-sm prose-indigo text-slate-700 leading-relaxed" x-html="currentAuditProof"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

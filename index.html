@@ -10,12 +10,9 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <!-- Alpine.js Core -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="engine.js?v=cachebust1"></script>
     <script src="audit.js?v=cachebust1"></script>
     <script src="app.js?v=cachebust1"></script>
-    <script src="report.js?v=cachebust1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -56,10 +53,7 @@
             <h1 class="text-xl font-bold text-slate-800 tracking-tight">
                 🇬🇧 UK Property Strategy Simulator
             </h1>
-            <div class="flex items-center gap-3 no-print" data-html2canvas-ignore="true">
-                <button @click="window.generatePDF($data)" class="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition shadow-sm font-medium flex items-center gap-2">
-                    <span>📄</span> Export Report
-                </button>
+            <div class="flex items-center gap-3 no-print">
                 <button @click="copyLink" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition" x-text="copied ? 'Copied! ✅' : 'Share 🔗'"></button>
             </div>
         </div>

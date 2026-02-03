@@ -99,7 +99,15 @@ function calculatorLogic() {
         },
 
         async copyLink() {
-            const json = JSON.stringify(this.i);
+            const shareData = {
+                i: this.i,
+                view: {
+                    simYears: this.simYears,
+                    inspectorYear: this.inspectorYear,
+                    valuationMode: this.valuationMode
+                }
+            };
+            const json = JSON.stringify(shareData);
             const b64 = btoa(json);
             const url = new URL(window.location);
             url.searchParams.set('data', b64);
@@ -123,7 +131,20 @@ function calculatorLogic() {
                 try {
                     const json = atob(params.get('data'));
                     const parsed = JSON.parse(json);
-                    if (parsed.personal) this.i = parsed;
+                    
+                    // Backward Compatibility: Old links just stored 'i' directly
+                    if (parsed.personal) {
+                        this.i = parsed;
+                    } 
+                    // New Format: Includes view state
+                    else if (parsed.i) {
+                        this.i = parsed.i;
+                        if (parsed.view) {
+                            if (parsed.view.simYears) this.simYears = parsed.view.simYears;
+                            if (parsed.view.inspectorYear) this.inspectorYear = parsed.view.inspectorYear;
+                            if (parsed.view.valuationMode) this.valuationMode = parsed.view.valuationMode;
+                        }
+                    }
                 } catch(e) { console.error("URL Load Error", e); }
             } 
             // Priority 2: Load from LocalStorage

@@ -103,7 +103,7 @@ Engine.simulateStrategies = function(V) {
 
     // Helper: Mortgage Step with Overpayment
     const calculateMortgageStep = (debt, rate, scheduledPayment, overpayment = 0) => {
-        if (debt <= 0) return { interest: 0, principal: 0, totalPaid: 0, newDebt: 0 };
+        if (debt <= 0) return { interest: 0, principal: 0, totalPaid: 0, newDebt: 0, extra: 0 };
         
         const monthlyRate = rate / 1200;
         let interest = debt * monthlyRate;

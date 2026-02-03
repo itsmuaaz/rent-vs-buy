@@ -383,3 +383,41 @@ describe('Mortgage Overpayments', () => {
         expect(intB).toBeLessThan(intA);
     });
 });
+
+describe('Lifecycle & Edge Cases', () => {
+    test('Mortgage Payoff: Wealth continues to grow after term ends', () => {
+        const V = buildState({
+            personal: { liquidAssets: 200000 },
+            home: { active: true, price: 400000, depositPct: 25, term: 20, rate: 4.0, renoCost: 0, lodger:{active:false} } // 20 Year Term
+        });
+        
+        const res = Engine.simulateStrategies(V).stratB;
+        const years = res.netWorth.length; // 40
+        
+        // 1. Check Payoff
+        // Interest paid in Year 25 should be 0 (Cumulative interest should stop growing)
+        expect(res.breakdown.interest[24] - res.breakdown.interest[23]).toBeCloseTo(0, 1);
+        
+        // 2. Check Stability (No NaNs)
+        expect(res.netWorthLiquid[30]).not.toBeNaN();
+        
+        // 3. Check Growth
+        // Year 30 wealth > Year 20 wealth
+        expect(res.netWorthLiquid[29]).toBeGreaterThan(res.netWorthLiquid[19]);
+    });
+
+    test('Zero Debt / Cash Purchase: Handles 0 term gracefully', () => {
+        // Simulating a cash buy via 100% deposit or 0 term (if supported, currently calcMortgage handles 0 rate, but term 0 might need check)
+        // Let's test 100% deposit
+        const V = buildState({
+            personal: { liquidAssets: 500000 },
+            home: { active: true, price: 400000, depositPct: 100, term: 30, renoCost: 0, lodger:{active:false} }
+        });
+        
+        const res = Engine.simulateStrategies(V).stratB;
+        
+        expect(res.breakdown.interest[0]).toBe(0);
+        expect(res.netWorthLiquid[10]).not.toBeNaN();
+        expect(res.netWorthLiquid[10]).toBeGreaterThan(0);
+    });
+});

@@ -17,6 +17,7 @@ Most calculators just compare "Mortgage vs Rent". This tool goes deeper, modelin
     *   Buy-to-Let (Personal Name)
     *   Buy-to-Let (Limited Company)
     *   Home + Buy-to-Let Combo
+*   **Transparency Mode (Audit):** Click the "Audit" button to see exactly how your numbers were calculated (Stamp Duty, Amortization, Tax) with step-by-step proofs.
 *   **True Valuation Modes:** Toggle between **Gross Equity** (Paper Wealth) and **Liquid Cash** (What you'd actually have if you sold everything today, after paying all taxes and fees).
 *   **Advanced UK Tax Engine:** Accurately models:
     *   Stamp Duty Land Tax (SDLT) including Additional Dwelling Supplement.
@@ -31,6 +32,7 @@ Most calculators just compare "Mortgage vs Rent". This tool goes deeper, modelin
 
 ### Tech Stack
 *   **Core Logic:** Pure JavaScript (`engine.js`). No DOM dependencies. 100% unit-tested.
+*   **Audit Layer:** `audit.js` provides the Logic Dictionary for transparency.
 *   **UI Framework:** [Alpine.js](https://alpinejs.dev/) for reactive state management.
 *   **Styling:** [TailwindCSS](https://tailwindcss.com/) (CDN for zero-build setup).
 *   **Visualization:** [Chart.js](https://www.chartjs.org/).

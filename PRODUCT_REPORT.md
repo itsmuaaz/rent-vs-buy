@@ -1,24 +1,21 @@
 # Product Improvement Report: Rent vs Buy Calculator
 
-**Date:** January 19, 2026
-**Status Analysis:** UX & Reports
-**Focus:** Onboarding, Comparative Analysis, and Growth
+**Date:** February 3, 2026
+**Status Analysis:** Transparency, Stability & Testing
+**Focus:** Trust, Verification, and Edge Case Stability
 
 ## 1. Executive Summary
-The application has matured significantly with the recent updates. The addition of the **Sticky Result Bar** (Mobile), **PDF Reports** (Professionalism), and **Smart Input Formatting** (Usability) has transformed it from a basic calculator into a usable decision-support tool.
-
-However, the "Day 1" experience remains daunting. New users are greeted by a sidebar with 40+ inputs, leading to "Analysis Paralysis." The primary goal for the next phase is to smooth this entry ramp via a **Wizard** and allow deeper analysis via **Snapshots**.
-
----
+The application has taken a major leap in professional credibility. The addition of the **Transparency Modal (Audit Mode)** allows users to verify calculations against their own numbers, addressing the "Black Box" trust issue. We also eliminated a critical **Simulation Bug** where wealth projections failed after the mortgage term ended (Year 30+).
 
 ## 2. Completed Improvements
 
 | Feature | Status | Impact |
 | :--- | :--- | :--- |
-| **Input Formatting** | ✅ Done | Inputs now show commas (`£300,000`), reducing reading errors significantly. |
-| **Sticky Result Bar** | ✅ Done | Mobile users see the "Winner" instantly while scrolling/editing inputs. |
-| **PDF Report** | ✅ Done | Users can export a 3-page professional dossier for offline use. |
-| **Inflation Toggle** | ✅ Done | "Real Terms" view is now available in the UI. |
+| **Transparency Modal** | ✅ Done | Users can now audit Stamp Duty, Mortgage, and Tax math step-by-step. |
+| **BTL Stability Fix** | ✅ Done | Fixed a NaN bug that occurred when mortgage terms ended before the simulation horizon. |
+| **Controller Tests** | ✅ Done | Added `app.test.js` to verify UI logic, Presets, and Audit generation. |
+| **Lifecycle Tests** | ✅ Done | Expanded `engine.test.js` to cover full 40-year mortgage lifecycles and cash purchases. |
+| **Renovation Logic** | ✅ Done | "Post-Work Value" now smartly syncs with Property Price unless manually customized. |
 
 ---
 
@@ -40,13 +37,6 @@ However, the "Day 1" experience remains daunting. New users are greeted by a sid
     *   **Action:** Button: "📸 Save Snapshot 1".
     *   **Visual:** Dotted lines appear on the chart representing the saved run.
     *   **Value:** Instant A/B testing of financial decisions.
-
-### C. Input Validation & Guardrails
-**Priority: Medium**
-*   **Problem:** Users can enter invalid states (e.g., Deposit > Price).
-*   **Solution:** Reactive validation.
-    *   **UI:** Red borders for invalid fields.
-    *   **Logic:** Disable "Export Report" if critical errors exist.
 
 ---
 
@@ -73,15 +63,4 @@ However, the "Day 1" experience remains daunting. New users are greeted by a sid
 3.  **Social Sharing:** Enhance the "Share" button to generate WhatsApp-ready text payloads (e.g., *"I'm £45k better off renting!"*).
 
 ---
-
-## 6. Design Document: The Wizard
-
-**Trigger:** `!localStorage.getItem('hasSeenWizard') && !urlParams.has('data')`
-**Architecture:**
-*   **Step 1:** Archetype (FTB / Mover / Landlord) -> Sets flags.
-*   **Step 2:** Financials (Rent, Cash, Savings) -> Sets `personal` object.
-*   **Step 3:** Property (Price, Lodger?) -> Sets `home` object & calculates `depositPct`.
-**Exit:** "Show me the numbers" -> Fades out modal, runs simulation.
-
----
-*Report updated Jan 19, 2026*
+*Report updated Feb 3, 2026*

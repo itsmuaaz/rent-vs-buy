@@ -5,7 +5,7 @@
     - [ ] Create a new section "Phase Completion Verification and Checkpointing Protocol" or update existing "Phase Completion" section.
     - [ ] Add explicit step: "Check and Update Project Documentation (GEMINI.md, README.md)".
     - [ ] Add explicit step: "Verify Conductor Track Status".
-- [ ] Task: Create `conductor/context_sync_guide.md`.
+- [x] Task: Create `conductor/context_sync_guide.md`. 14230d0
     - [ ] Define the specific template/structure for how `GEMINI.md` and `README.md` should be updated (e.g., standard phrases, where to link).
 
 ## Phase 2: Refactor Agent Context (GEMINI.md)

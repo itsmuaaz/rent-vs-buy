@@ -183,6 +183,104 @@ Engine.Strategy = class Strategy {
         this.breakdown.tax.push(breakdown.tax || 0);
         this.breakdown.fees.push(breakdown.fees || 0);
     }
+    
+    /**
+     * Generic investment helper
+     * @param {number} surplus - Monthly surplus (or deficit if negative)
+     * @param {number} stockM - Stock market multiplier for the month
+     */
+    invest(surplus, stockM) {
+        if (surplus > 0) {
+            let toISA = Math.min(surplus, 20000 / 12);
+            let toGIA = Math.max(0, surplus - toISA);
+            this.isa = (this.isa + toISA) * stockM;
+            this.gia = (this.gia + toGIA) * stockM;
+            this.giaBasis = this.giaBasis + toGIA;
+        } else {
+            let n = -surplus;
+            if (this.gia >= n) {
+                this.isa = this.isa * stockM;
+                this.gia = (this.gia - n) * stockM;
+                this.giaBasis = this.giaBasis - n;
+            } else {
+                this.isa = Math.max(0, this.isa - (n - this.gia)) * stockM;
+                this.gia = 0;
+                this.giaBasis = 0; // Basis wiped out? Logic says basis-n, but if gia=0, basis should probably be 0 or track loss? 
+                // Original logic: return [ Math.max(0, isa-(n-gia))*stockM, 0, 0 ];
+                // So yes, basis becomes 0.
+            }
+        }
+    }
+};
+
+/**
+ * Strategy A: Rent & Invest
+ */
+Engine.RentStrategy = class RentStrategy extends Engine.Strategy {
+    /**
+     * @param {string} name
+     * @param {PersonalConfig} personal
+     */
+    constructor(name, personal) {
+        super(name);
+        this.isa = personal.isaBalance;
+        this.gia = personal.liquidAssets - personal.isaBalance;
+        this.giaBasis = this.gia;
+        this.cumulativeRent = 0;
+        this.cumulativeDead = 0;
+    }
+
+    /**
+     * @param {number} monthIndex
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    simulateMonth(monthIndex, input, rates) {
+        const P = input.personal;
+        const year = Math.floor(monthIndex / 12) + 1;
+        
+        const rentInf = P.rent.inflation / 100;
+        const rentY = P.rent.current * Math.pow(1 + rentInf, year - 1);
+        
+        const totalMonthlyBudget = P.monthlySavings + P.rent.current;
+        
+        const stockGrowth = P.stockGrowth / 100;
+        const isStockCrash = input.settings.stockCrash || false;
+        let stockM = (1 + stockGrowth / 12);
+        if (year === 1 && isStockCrash) stockM = Math.pow(0.7, 1/12);
+
+        // Deduct rent
+        this.cumulativeRent += rentY;
+        this.cumulativeDead += rentY;
+        
+        const surplus = totalMonthlyBudget - rentY;
+        this.invest(surplus, stockM);
+    }
+    
+    /**
+     * @param {number} year
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    calculateExit(year, input, rates) {
+        const stockGross = this.isa + this.gia;
+        const stockGain = Math.max(0, this.gia - this.giaBasis);
+        
+        // CGT Allowance (Simplified 3k logic from engine.js)
+        let remAllowance = 3000;
+        const taxableStock = Math.max(0, stockGain - remAllowance);
+        const stockLiquid = this.isa + (this.gia - taxableStock * rates.cgt);
+        
+        const liqHist = this.isa + this.gia; // Simple liq hist for rent
+
+        this.recordYear(
+            stockGross, 
+            stockLiquid, 
+            liqHist, 
+            this.cumulativeDead, 
+            { rent: this.cumulativeRent }
+        );
+    }
 };
 
 Engine.getTaxRates = function(band) {

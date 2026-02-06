@@ -9,7 +9,7 @@
 - [x] Task: Implement the `Strategy` base class in `engine.js`. [5440261]
     - [ ] Define constructor and common properties (`netWorth`, `liquid`, `deadMoney`).
     - [ ] Implement skeleton methods (`simulateMonth`, `getExitVal`).
-- [ ] Task: Implement `RentStrategy` subclass.
+- [x] Task: Implement `RentStrategy` subclass. [fce13c3]
     - [ ] Migrate logic from "Strategy A" block in `simulateStrategies`.
     - [ ] Write unit test to verify `RentStrategy` matches old logic.
 

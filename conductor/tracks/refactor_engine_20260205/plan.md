@@ -24,7 +24,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) [checkpoint: 2def12a]
 
 ## Phase 4: Integration & Regression
-- [ ] Task: Create `StrategyFactory` or `Engine` wrapper.
+- [x] Task: Create `StrategyFactory` or `Engine` wrapper. [e37c292]
     - [ ] Re-implement `simulateStrategies` to use the new Classes.
 - [ ] Task: Verify Regression.
     - [ ] Run `npm test` to ensure all existing snapshots match.

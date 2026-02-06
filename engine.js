@@ -414,6 +414,172 @@ Engine.BuyStrategy = class BuyStrategy extends Engine.Strategy {
     }
 };
 
+/**
+ * Strategy D/E: Buy-to-Let
+ */
+Engine.BTLStrategy = class BTLStrategy extends Engine.Strategy {
+    /**
+     * @param {string} name
+     * @param {SimulationInput} input
+     * @param {string} wrapperType - 'company' or 'personal'
+     */
+    constructor(name, input, wrapperType) {
+        super(name);
+        this.wrapperType = wrapperType;
+        const P = input.personal;
+        const B = input.btl;
+        
+        // 1. Calculate Upfront Costs
+        const stampType = wrapperType === 'company' ? 'company' : 'additional';
+        const deposit = B.price * (B.depositPct / 100);
+        const acq = Engine.getAcquisitionCost(B.price, stampType, false, B.buyingCost || 2000, 0);
+        
+        const totalUpfront = deposit + acq.total;
+        
+        // 2. Adjust Cash
+        let gia = P.liquidAssets - P.isaBalance;
+        let isa = P.isaBalance;
+        
+        if (gia >= totalUpfront) {
+            gia -= totalUpfront;
+        } else {
+            const rem = totalUpfront - gia;
+            gia = 0;
+            isa = Math.max(0, isa - rem);
+        }
+        
+        this.isa = isa;
+        this.gia = gia;
+        this.giaBasis = gia;
+        
+        // 3. Setup Mortgage
+        this.debt = B.price - deposit;
+        this.houseValue = B.price;
+        this.propBasis = B.price + (B.buyingCost || 2000);
+        
+        const rate = (wrapperType === 'company') ? B.rateCompany : B.ratePersonal;
+        
+        if (B.mortgageType === 'interestOnly') {
+            this.monthlyPayment = this.debt * (rate / 1200);
+            this.isInterestOnly = true;
+        } else {
+            this.monthlyPayment = Engine.calculateMortgage(this.debt, rate, B.term);
+            this.isInterestOnly = false;
+        }
+        this.rate = rate;
+        
+        // 4. State
+        this.coCash = 0; // Cash inside company
+        this.cumulativeDead = acq.stamp + (B.buyingCost || 2000);
+        this.cumulativeInterest = 0;
+        this.cumulativeMaint = 0;
+        this.cumulativeFees = acq.stamp + (B.buyingCost || 2000);
+        this.cumulativeRent = 0;
+        this.cumulativeTax = 0;
+    }
+
+    /**
+     * @param {number} monthIndex
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    simulateMonth(monthIndex, input, rates) {
+        const P = input.personal;
+        const B = input.btl;
+        const year = Math.floor(monthIndex / 12) + 1;
+        
+        const rentInf = P.rent.inflation / 100;
+        const stockGrowth = P.stockGrowth / 100;
+        
+        const step = Engine.calculateMortgageStep(this.debt, this.rate, this.monthlyPayment, B.overpayment || 0);
+        this.debt = step.newDebt;
+        this.cumulativeInterest += step.interest;
+        
+        let scB = B.serviceCharge * Math.pow(1 + rentInf, year - 1);
+        let maint = (this.houseValue * (B.repairRate / 100) / 12) + (scB / 12);
+        
+        const rentY = P.rent.current * Math.pow(1 + rentInf, year - 1); 
+        
+        this.cumulativeMaint += maint;
+        this.cumulativeRent += rentY; 
+        
+        let btlIncome = this.houseValue * (B.rentYield / 100) / 12;
+        let profit = btlIncome - (step.interest + maint);
+        let tax = 0;
+        
+        if (this.wrapperType === 'company') {
+            tax = Math.max(0, profit * rates.corp);
+            this.coCash += (profit - tax);
+        } else {
+            let taxableProfit = btlIncome - maint;
+            let taxLiability = taxableProfit * rates.income;
+            let relief = step.interest * 0.20;
+            tax = Math.max(0, taxLiability - relief);
+        }
+        
+        this.cumulativeTax += tax;
+        this.cumulativeDead += (rentY + step.interest + maint + tax - btlIncome);
+        
+        const totalMonthlyBudget = P.monthlySavings + P.rent.current;
+        const isStockCrash = input.settings.stockCrash || false;
+        let stockM = (1 + stockGrowth / 12);
+        if (year === 1 && isStockCrash) stockM = Math.pow(0.7, 1/12);
+        
+        let surplus = totalMonthlyBudget - rentY;
+        
+        if (this.wrapperType === 'company') {
+            surplus -= step.extra; 
+        } else {
+            let cashFlow = btlIncome - step.interest - maint - tax - step.extra;
+            surplus += cashFlow;
+        }
+        
+        this.invest(surplus, stockM);
+    }
+    
+    /**
+     * @param {number} year
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    calculateExit(year, input, rates) {
+        const P = input.personal;
+        const B = input.btl;
+        
+        const propGrowth = (P.propertyGrowth !== undefined ? P.propertyGrowth : 3.0) / 100;
+        let propG = 1 + propGrowth;
+        if (year === 1 && input.settings.propCrash) propG = propG * 0.85;
+        
+        this.houseValue *= propG;
+        
+        const type = this.wrapperType === 'company' ? 'company' : 'btl';
+        
+        const res = Engine.getExitVal(
+            this.isa, this.gia, this.giaBasis, 
+            this.houseValue, this.debt, 
+            type, rates, this.coCash, 
+            (B.sellingCostPct || 1.5) / 100, 
+            this.propBasis
+        );
+        
+        const liqHist = this.isa + this.gia + this.coCash * (1 - rates.div);
+        
+        this.recordYear(
+            res.gross, 
+            res.liquid, 
+            liqHist, 
+            this.cumulativeDead, 
+            { 
+                interest: this.cumulativeInterest, 
+                maintenance: this.cumulativeMaint,
+                fees: this.cumulativeFees,
+                rent: this.cumulativeRent, 
+                tax: this.cumulativeTax 
+            }
+        );
+    }
+};
+
 Engine.getTaxRates = function(band) {
     switch(band) {
         case 'basic': return { income: 0.20, cgt: 0.18, div: 0.0875, corp: 0.19 };

@@ -360,6 +360,19 @@ Engine.BuyStrategy = class BuyStrategy extends Engine.Strategy {
         // 3. Dead Money
         this.cumulativeDead += (step.interest + maint);
         
+        // 3b. Lodger Income
+        let netL = 0;
+        if (H.lodger && H.lodger.active && year <= H.lodger.years) {
+            let l = H.lodger.income;
+            let taxable = 0;
+            if (l * 12 > 7500) {
+                taxable = (l - 7500/12);
+            }
+            let tax = Math.max(0, taxable * rates.income);
+            netL = l - tax;
+            this.cumulativeDead -= netL;
+        }
+        
         // 4. Invest Surplus
         const totalMonthlyBudget = P.monthlySavings + P.rent.current;
         
@@ -367,7 +380,7 @@ Engine.BuyStrategy = class BuyStrategy extends Engine.Strategy {
         let stockM = (1 + stockGrowth / 12);
         if (year === 1 && isStockCrash) stockM = Math.pow(0.7, 1/12);
         
-        const surplus = totalMonthlyBudget - (step.totalPaid + maint);
+        const surplus = totalMonthlyBudget - (step.totalPaid + maint - netL);
         this.invest(surplus, stockM);
     }
     
@@ -580,6 +593,186 @@ Engine.BTLStrategy = class BTLStrategy extends Engine.Strategy {
     }
 };
 
+/**
+ * Strategy F: Home + BTL (Ltd Co)
+ */
+Engine.HybridStrategy = class HybridStrategy extends Engine.Strategy {
+    /**
+     * @param {string} name
+     * @param {SimulationInput} input
+     */
+    constructor(name, input) {
+        super(name);
+        const P = input.personal;
+        const H = input.home;
+        const B = input.btl;
+        
+        // 1. Calculate Costs (Combined)
+        const isFTB = P.isFTB !== undefined ? P.isFTB : false;
+        const acqH = Engine.getAcquisitionCost(H.price, 'personal', isFTB, H.buyingCost, H.renoCost);
+        const depH = H.price * (H.depositPct / 100);
+        
+        const acqB = Engine.getAcquisitionCost(B.price, 'company', false, B.buyingCost || 2000, 0);
+        const depB = B.price * (B.depositPct / 100);
+        
+        const totalUpfront = depH + acqH.total + depB + acqB.total;
+        
+        // 2. Adjust Cash
+        let gia = P.liquidAssets - P.isaBalance;
+        let isa = P.isaBalance;
+        
+        if (gia >= totalUpfront) {
+            gia -= totalUpfront;
+        } else {
+            const rem = totalUpfront - gia;
+            gia = 0;
+            isa = Math.max(0, isa - rem);
+        }
+        
+        this.isa = isa;
+        this.gia = gia;
+        this.giaBasis = gia;
+        
+        // 3. Setup Mortgages
+        // Home
+        this.debtHome = H.price - depH;
+        this.houseValueHome = H.renoCost > 0 ? (H.postWorkValue || H.price + H.renoCost) : H.price;
+        this.propBasisBTL = B.price + (B.buyingCost||2000);
+        this.propBasisHome = H.price + H.buyingCost + H.renoCost;
+        
+        this.pmtHome = Engine.calculateMortgage(this.debtHome, H.rate, H.term);
+        
+        // BTL
+        this.debtBTL = B.price - depB;
+        this.houseValueBTL = B.price;
+        if (B.mortgageType === 'interestOnly') {
+            this.pmtBTL = this.debtBTL * (B.rateCompany / 1200);
+        } else {
+            this.pmtBTL = Engine.calculateMortgage(this.debtBTL, B.rateCompany, B.term);
+        }
+        
+        // 4. State
+        this.coCash = 0;
+        this.cumulativeDead = acqH.stamp + H.buyingCost + acqB.stamp + (B.buyingCost||2000);
+        this.cumulativeInterest = 0;
+        this.cumulativeMaint = 0;
+        this.cumulativeFees = this.cumulativeDead; 
+        this.cumulativeRent = 0; 
+        this.cumulativeTax = 0;
+    }
+
+    /**
+     * @param {number} monthIndex
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    simulateMonth(monthIndex, input, rates) {
+        const P = input.personal;
+        const H = input.home;
+        const B = input.btl;
+        const year = Math.floor(monthIndex / 12) + 1;
+        
+        const rentInf = P.rent.inflation / 100;
+        const stockGrowth = P.stockGrowth / 100;
+        
+        // 1. Home Loop
+        const step1 = Engine.calculateMortgageStep(this.debtHome, H.rate, this.pmtHome, H.overpayment || 0);
+        this.debtHome = step1.newDebt;
+        let scH = H.serviceCharge * Math.pow(1 + rentInf, year - 1);
+        let m1 = (this.houseValueHome * (H.repairRate / 100) / 12) + (scH / 12);
+        
+        // 2. BTL Loop
+        const step2 = Engine.calculateMortgageStep(this.debtBTL, B.rateCompany, this.pmtBTL, B.overpayment || 0); 
+        this.debtBTL = step2.newDebt;
+        let scB = B.serviceCharge * Math.pow(1 + rentInf, year - 1);
+        let m2 = (this.houseValueBTL * (B.repairRate / 100) / 12) + (scB / 12);
+        
+        this.cumulativeInterest += (step1.interest + step2.interest);
+        this.cumulativeMaint += (m1 + m2);
+        
+        let btlIncome = this.houseValueBTL * (B.rentYield / 100) / 12;
+        let profit = btlIncome - (step2.interest + m2);
+        let tax = Math.max(0, profit * rates.corp);
+        
+        this.cumulativeTax += tax;
+        this.coCash += (profit - tax);
+        
+        this.cumulativeDead += (step1.interest + m1 + step2.interest + m2 + tax - btlIncome);
+        
+        let netL = 0;
+        if (H.lodger && H.lodger.active && year <= H.lodger.years) {
+             let l = H.lodger.income;
+             let taxable = Math.max(0, l*12 > 7500 ? (l - 7500/12) : 0);
+             let t = taxable * rates.income;
+             netL = l - t;
+             this.cumulativeDead -= netL;
+        }
+
+        const totalMonthlyBudget = P.monthlySavings + P.rent.current;
+        const isStockCrash = input.settings.stockCrash || false;
+        let stockM = (1 + stockGrowth / 12);
+        if (year === 1 && isStockCrash) stockM = Math.pow(0.7, 1/12);
+        
+        const surplus = totalMonthlyBudget - (step1.totalPaid + m1) - step2.extra + netL;
+        
+        this.invest(surplus, stockM);
+    }
+    
+    /**
+     * @param {number} year
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    calculateExit(year, input, rates) {
+        const H = input.home;
+        const B = input.btl;
+        const P = input.personal;
+        
+        const propGrowth = (P.propertyGrowth !== undefined ? P.propertyGrowth : 3.0) / 100;
+        let propG = 1 + propGrowth;
+        if (year === 1 && input.settings.propCrash) propG = propG * 0.85;
+        
+        this.houseValueHome *= propG;
+        this.houseValueBTL *= propG;
+        
+        const stockGross = this.isa + this.gia;
+        const stockGain = Math.max(0, this.gia - this.giaBasis);
+        let remAllowance = 3000;
+        const taxableStock = Math.max(0, stockGain - remAllowance);
+        remAllowance = Math.max(0, remAllowance - stockGain);
+        const stockLiquid = this.isa + (this.gia - taxableStock * rates.cgt);
+        
+        const hSellFee = this.houseValueHome * (H.sellingCostPct / 100);
+        const hGross = Math.max(0, this.houseValueHome - this.debtHome);
+        const hLiquid = Math.max(0, this.houseValueHome - hSellFee - this.debtHome);
+        
+        const bSellFee = this.houseValueBTL * ((B.sellingCostPct || 1.5) / 100);
+        const bGross = Math.max(0, this.houseValueBTL - this.debtBTL) + this.coCash;
+        let bProceeds = Math.max(0, this.houseValueBTL - bSellFee - this.debtBTL);
+        const bGain = (this.houseValueBTL - bSellFee) - this.propBasisBTL;
+        if (bGain > 0) {
+            bProceeds -= (bGain * rates.corp);
+        }
+        const bLiquid = Math.max(0, (bProceeds + this.coCash) * (1 - rates.div));
+        
+        const liqHist = this.isa + this.gia + this.coCash * (1 - rates.div); 
+        
+        this.recordYear(
+            stockGross + hGross + bGross,
+            stockLiquid + hLiquid + bLiquid,
+            liqHist,
+            this.cumulativeDead,
+            {
+                interest: this.cumulativeInterest,
+                maintenance: this.cumulativeMaint,
+                fees: this.cumulativeFees,
+                rent: 0,
+                tax: this.cumulativeTax
+            }
+        );
+    }
+};
+
 Engine.getTaxRates = function(band) {
     switch(band) {
         case 'basic': return { income: 0.20, cgt: 0.18, div: 0.0875, corp: 0.19 };
@@ -689,344 +882,113 @@ Engine.getExitVal = function(isa, gia, giaBasis, houseV, debt, type, rates, cash
 };
 
 Engine.simulateStrategies = function(V) {
-    // Destructure Input Model
     const P = V.personal;
     const H = V.home;
     const B = V.btl;
-    const S = V.settings;
-
-    const isStockCrash = S.stockCrash || false;
-    const isPropCrash = S.propCrash || false;
     const rates = Engine.getTaxRates(P.taxBand);
     const years = 40;
-    
-    // Rent Baseline
-    const totalMonthlyBudget = P.monthlySavings + P.rent.current;
-    const rentInf = P.rent.inflation / 100;
-    const stockGrowth = P.stockGrowth / 100;
 
-    // Helper: Asset cost logic
-    const getAcquisitionCost = Engine.getAcquisitionCost;
-
-    // Helper: Exit logic
-    const getExitVal = (isa, gia, giaBasis, houseV, debt, type, cashCo=0, sellCostPct=0.015, propBasis=0) => {
-        return Engine.getExitVal(isa, gia, giaBasis, houseV, debt, type, rates, cashCo, sellCostPct, propBasis);
-    };
-    
-    const getLiqHist = (isa, gia, cashCo=0) => isa + gia + cashCo * (1 - rates.div);
-
-    // Helper: Mortgage Step with Overpayment
-    const calculateMortgageStep = Engine.calculateMortgageStep;
-
-    const initStrat = (name) => ({ 
-        name, 
-        netWorth: [], netWorthLiquid: [], deadMoney: [], liquidHistory: [], 
-        breakdown: { interest: [], maintenance: [], tax: [], rent: [], fees: [] }
+    // Helper to create dummy result
+    const getDummy = (name) => ({
+        name,
+        netWorth: Array(years).fill(0),
+        netWorthLiquid: Array(years).fill(0),
+        liquidHistory: Array(years).fill(0),
+        deadMoney: Array(years).fill(0),
+        breakdown: { interest: [], maintenance: [], tax: [], rent: [], fees: [] },
+        totalInterest: []
     });
 
-    // --- Strategy A: Rent & Invest ---
-    let sA = initStrat("Rent");
-    let isaA = P.isaBalance, giaA = P.liquidAssets - P.isaBalance, basisA = giaA, deadA = 0;
-    let cRentA = 0;
+    // Strategy A: Rent
+    const sA = new Engine.RentStrategy("Rent", V.personal);
 
-    // --- Strategy B: Buy Home ---
-    let sB = initStrat("Buy Home");
-    let possibleB = false, isaB = P.isaBalance, giaB = P.liquidAssets - P.isaBalance, basisB = giaB, deadB = 0;
-    let debtB = 0, houseB = 0, cIntB = 0, cMaintB = 0, cFeesB = 0, pB = 0, propBasisB = 0;
+    // Strategy B: Buy Home
+    let sB = null, possibleB = false;
+    let inputB = V; // Default
     if (H.active) {
-        const deposit = H.price * (H.depositPct / 100);
-        const acq = getAcquisitionCost(H.price, 'personal', true, H.buyingCost, H.renoCost); // Assume FTB logic applies to Home if set? Need isFTB flag in P or H? 
-        // NOTE: FTB flag is usually global. Let's assume P.isFTB exists or pass it in P.
-        // Correction: The new model put FTB implicit? No, it should be in P. 
-        // Let's check the plan. Plan didn't explicitly list isFTB in Personal. 
-        // I will assume it's in P for now: P.isFTB
         const isFTB = P.isFTB !== undefined ? P.isFTB : false;
-        const acqReal = getAcquisitionCost(H.price, 'personal', isFTB, H.buyingCost, H.renoCost);
-        
-        if (P.liquidAssets >= (deposit + acqReal.total)) {
+        const deposit = H.price * (H.depositPct / 100);
+        const acq = Engine.getAcquisitionCost(H.price, 'personal', isFTB, H.buyingCost, H.renoCost);
+        if (P.liquidAssets >= deposit + acq.total) {
             possibleB = true;
-            let cost = deposit + acqReal.total;
-            if (giaB >= cost) giaB -= cost; else { cost -= giaB; giaB = 0; isaB -= cost; }
-            basisB = giaB;
-            debtB = H.price - deposit;
-            houseB = H.renoCost > 0 ? (H.postWorkValue || H.price + H.renoCost) : H.price; // Use explicit post value if exists
-            propBasisB = H.price + H.buyingCost + H.renoCost;
-            pB = Engine.calculateMortgage(debtB, H.rate, H.term);
-            cFeesB += (acqReal.stamp + H.buyingCost);
-            deadB += (acqReal.stamp + H.buyingCost);
+            // Clone input to disable lodger for pure Buy Strategy
+            inputB = JSON.parse(JSON.stringify(V));
+            inputB.home.lodger.active = false;
+            sB = new Engine.BuyStrategy("Buy Home", inputB);
         }
     }
+    if (!possibleB) sB = getDummy("Buy Home");
 
-    // --- Strategy C: Buy + Lodger ---
-    let sC = initStrat("Buy Home + Lodger");
-    let possibleC = possibleB && H.lodger.active; 
-    let isaC = isaB, giaC = giaB, basisC = basisB, debtC = debtB, houseC = houseB, deadC = deadB;
-    let cIntC = 0, cMaintC = 0, cFeesC = cFeesB;
+    // Strategy C: Buy + Lodger
+    let sC = null, possibleC = false;
+    if (possibleB && H.lodger.active) {
+        sC = new Engine.BuyStrategy("Buy Home + Lodger", V);
+        possibleC = true;
+    }
+    if (!possibleC) sC = getDummy("Buy Home + Lodger");
 
-    // --- Strategy D: Company BTL ---
-    let sD = initStrat("BTL (Ltd Co)");
-    let possibleD = false, isaD = P.isaBalance, giaD = P.liquidAssets - P.isaBalance, basisD = giaD, deadD = 0;
-    let debtD = 0, houseD = 0, coCashD = 0, cIntD = 0, cMaintD = 0, cRentD = 0, cTaxD = 0, cFeesD = 0, pD = 0, propBasisD = 0;
+    // Strategy D: BTL (Co)
+    let sD = null, possibleD = false;
     if (B.active && B.wrappers.company) {
         const deposit = B.price * (B.depositPct / 100);
-        const acq = getAcquisitionCost(B.price, 'company', false, B.buyingCost || 2000, 0); // No reno for BTL in this simple model? Or add B.reno? Let's assume 0 for now or add to B object later.
-        if (P.liquidAssets >= (deposit + acq.total)) {
+        const acq = Engine.getAcquisitionCost(B.price, 'company', false, B.buyingCost || 2000, 0);
+        if (P.liquidAssets >= deposit + acq.total) {
+            sD = new Engine.BTLStrategy("BTL (Ltd Co)", V, 'company');
             possibleD = true;
-            let cost = deposit + acq.total;
-            if (giaD >= cost) giaD -= cost; else { cost -= giaD; giaD = 0; isaD -= cost; }
-            basisD = giaD;
-            debtD = B.price - deposit;
-            houseD = B.price;
-            propBasisD = B.price + (B.buyingCost||2000);
-            if (B.mortgageType === 'interestOnly') {
-                pD = debtD * (B.rateCompany / 1200);
-            } else {
-                pD = Engine.calculateMortgage(debtD, B.rateCompany, B.term);
-            }
-            cFeesD += (acq.stamp + (B.buyingCost||2000));
-            deadD += (acq.stamp + (B.buyingCost||2000));
         }
     }
+    if (!possibleD) sD = getDummy("BTL (Ltd Co)");
 
-    // --- Strategy E: Personal BTL ---
-    let sE = initStrat("BTL (Personal)");
-    let possibleE = false, isaE = P.isaBalance, giaE = P.liquidAssets - P.isaBalance, basisE = giaE, deadE = 0;
-    let debtE = 0, houseE = 0, cIntE = 0, cMaintE = 0, cRentE = 0, cTaxE = 0, cFeesE = 0, pE = 0, propBasisE = 0;
+    // Strategy E: BTL (Personal)
+    let sE = null, possibleE = false;
     if (B.active && B.wrappers.personal) {
         const deposit = B.price * (B.depositPct / 100);
-        const acq = getAcquisitionCost(B.price, 'additional', false, B.buyingCost || 2000, 0);
-        if (P.liquidAssets >= (deposit + acq.total)) {
+        const acq = Engine.getAcquisitionCost(B.price, 'additional', false, B.buyingCost || 2000, 0);
+        if (P.liquidAssets >= deposit + acq.total) {
+            sE = new Engine.BTLStrategy("BTL (Personal)", V, 'personal');
             possibleE = true;
-            let cost = deposit + acq.total;
-            if (giaE >= cost) giaE -= cost; else { cost -= giaE; giaE = 0; isaE -= cost; }
-            basisE = giaE;
-            debtE = B.price - deposit;
-            houseE = B.price;
-            propBasisE = B.price + (B.buyingCost||2000);
-            if (B.mortgageType === 'interestOnly') {
-                pE = debtE * (B.ratePersonal / 1200);
-            } else {
-                pE = Engine.calculateMortgage(debtE, B.ratePersonal, B.term);
-            }
-            cFeesE += (acq.stamp + (B.buyingCost||2000));
-            deadE += (acq.stamp + (B.buyingCost||2000));
         }
     }
+    if (!possibleE) sE = getDummy("BTL (Personal)");
 
-    // --- Strategy F: Home + Co. BTL ---
-    let sF = initStrat("Home + BTL");
-    let possibleF = false, isaF = P.isaBalance, giaF = P.liquidAssets - P.isaBalance, basisF = giaF, deadF = 0;
-    let dF1 = 0, hF1 = 0, dF2 = 0, hF2 = 0, coCashF = 0, cIntF = 0, cMaintF = 0, cTaxF = 0, cFeesF = 0, pF1 = 0, pF2 = 0, pbF2 = 0;
-    
+    // Strategy F: Home + BTL
+    let sF = null, possibleF = false;
+    let inputF = V;
     if (H.active && B.active && B.wrappers.company) {
-        // Calculate costs for BOTH
         const isFTB = P.isFTB !== undefined ? P.isFTB : false;
-        const acqH = getAcquisitionCost(H.price, 'personal', isFTB, H.buyingCost, H.renoCost);
+        const acqH = Engine.getAcquisitionCost(H.price, 'personal', isFTB, H.buyingCost, H.renoCost);
         const depH = H.price * (H.depositPct / 100);
         
-        const acqB = getAcquisitionCost(B.price, 'company', false, B.buyingCost || 2000, 0);
+        const acqB = Engine.getAcquisitionCost(B.price, 'company', false, B.buyingCost || 2000, 0);
         const depB = B.price * (B.depositPct / 100);
         
-        const totalCost = depH + acqH.total + depB + acqB.total;
-        
-        if (P.liquidAssets >= totalCost) {
+        if (P.liquidAssets >= depH + acqH.total + depB + acqB.total) {
             possibleF = true;
-            let cost = totalCost;
-            if (giaF >= cost) giaF -= cost; else { cost -= giaF; giaF = 0; isaF -= cost; }
-            basisF = giaF;
-            
-            dF1 = H.price - depH;
-            hF1 = H.renoCost > 0 ? (H.postWorkValue || H.price + H.renoCost) : H.price;
-            pF1 = Engine.calculateMortgage(dF1, H.rate, H.term);
-            
-            dF2 = B.price - depB;
-            hF2 = B.price;
-            pbF2 = B.price + (B.buyingCost||2000);
-            if (B.mortgageType === 'interestOnly') {
-                pF2 = dF2 * (B.rateCompany / 1200);
-            } else {
-                pF2 = Engine.calculateMortgage(dF2, B.rateCompany, B.term);
-            }
-            
-            cFeesF += (acqH.stamp + H.buyingCost + acqB.stamp + (B.buyingCost||2000));
-            deadF += (acqH.stamp + H.buyingCost + acqB.stamp + (B.buyingCost||2000));
+            inputF = JSON.parse(JSON.stringify(V));
+            inputF.home.lodger.active = false; // Disable lodger for F (as per original logic)
+            sF = new Engine.HybridStrategy("Home + BTL", inputF);
         }
     }
+    if (!possibleF) sF = getDummy("Home + BTL");
 
-
-    const propGrowth = (P.propertyGrowth !== undefined ? P.propertyGrowth : 3.0) / 100;
-
-    // --- Simulation Loop ---
+    // Simulation Loop
     for (let y = 1; y <= years; y++) {
-        let stockM = (1 + stockGrowth / 12), propG = 1 + propGrowth;
-        if (y === 1) { if (isStockCrash) stockM = Math.pow(0.7, 1/12); if (isPropCrash) propG = propG * 0.85; }
-        let rentY = P.rent.current * Math.pow(1 + rentInf, y - 1);
-        
-        // Annual Service Charge Inflation
-        // We use rentInf as a proxy for generic inflation for SC
-        let scH = H.active ? (H.serviceCharge * Math.pow(1 + rentInf, y - 1)) : 0;
-        let scB = B.active ? (B.serviceCharge * Math.pow(1 + rentInf, y - 1)) : 0;
-
-        for (let m = 1; m <= 12; m++) {
-            const invest = (sur, isa, gia, basis) => {
-                if (sur > 0) { let toISA = Math.min(sur, 20000/12); let toGIA = Math.max(0, sur - toISA); return [ (isa + toISA)*stockM, (gia + toGIA)*stockM, basis + toGIA ]; }
-                else { let n = -sur; if (gia >= n) return [ isa*stockM, (gia-n)*stockM, basis-n ]; else return [ Math.max(0, isa-(n-gia))*stockM, 0, 0 ]; }
-            };
-            
-            // Strat A: Rent
-            [isaA, giaA, basisA] = invest(totalMonthlyBudget - rentY, isaA, giaA, basisA);
-            cRentA += rentY; deadA += rentY;
-            
-            // Strat B: Buy Home
-            if (possibleB) {
-                const step = calculateMortgageStep(debtB, H.rate, pB, H.overpayment || 0);
-                cIntB += step.interest;
-                debtB = step.newDebt;
-
-                let maint = (houseB * (H.repairRate / 100) / 12) + (scH / 12);
-                cMaintB += maint; deadB += (step.interest + maint);
-                [isaB, giaB, basisB] = invest(totalMonthlyBudget - (step.totalPaid + maint), isaB, giaB, basisB);
-            }
-            
-            // Strat C: Buy + Lodger
-            if (possibleC) {
-                const step = calculateMortgageStep(debtC, H.rate, pB, H.overpayment || 0);
-                cIntC += step.interest;
-                debtC = step.newDebt;
-
-                let maint = (houseC * (H.repairRate / 100) / 12) + (scH / 12);
-                cMaintC += maint;
-                let l = (y <= H.lodger.years) ? H.lodger.income : 0;
-                // Lodger Tax Relief (Rent a Room Scheme: £7500 tax free)
-                let netL = l - Math.max(0, (l * 12 > 7500 ? (l - 7500 / 12) * rates.income : 0));
-                deadC += (step.interest + maint - netL);
-                [isaC, giaC, basisC] = invest(totalMonthlyBudget - (step.totalPaid + maint - netL), isaC, giaC, basisC);
-            }
-
-            // Strat D: Co BTL
-            if (possibleD) {
-                const step = calculateMortgageStep(debtD, B.rateCompany, pD, B.overpayment || 0);
-                cIntD += step.interest;
-                debtD = step.newDebt;
-                
-                let maint = (houseD * (B.repairRate / 100) / 12) + (scB / 12);
-                cMaintD += maint; cRentD += rentY;
-                
-                let btlIncome = houseD * (B.rentYield / 100) / 12;
-                let profit = btlIncome - (step.interest + maint);
-                let tax = Math.max(0, profit * rates.corp); 
-                
-                cTaxD += tax; coCashD += (profit - tax);
-                deadD += (rentY + step.interest + maint + tax - btlIncome);
-                [isaD, giaD, basisD] = invest(totalMonthlyBudget - rentY - step.extra, isaD, giaD, basisD);
-            }
-
-            // Strat E: Personal BTL
-            if (possibleE) {
-                const step = calculateMortgageStep(debtE, B.ratePersonal, pE, B.overpayment || 0);
-                cIntE += step.interest;
-                debtE = step.newDebt;
-                
-                let maint = (houseE * (B.repairRate / 100) / 12) + (scB / 12);
-                cMaintE += maint; cRentE += rentY;
-                
-                let btlIncome = houseE * (B.rentYield / 100) / 12;
-                let profit = btlIncome - maint; 
-                
-                let taxLiability = profit * rates.income;
-                let relief = step.interest * 0.20;
-                let tax = Math.max(0, taxLiability - relief);
-                
-                cTaxE += tax;
-                deadE += (rentY + step.interest + maint + tax - btlIncome);
-                let cashFlow = btlIncome - step.interest - maint - tax - step.extra;
-                [isaE, giaE, basisE] = invest(totalMonthlyBudget - rentY + cashFlow, isaE, giaE, basisE);
-            }
-
-            // Strat F: Home + Co BTL
-            if (possibleF) {
-                // Home Loop
-                const step1 = calculateMortgageStep(dF1, H.rate, pF1, H.overpayment || 0);
-                dF1 = step1.newDebt;
-                let m1 = (hF1 * (H.repairRate / 100) / 12) + (scH / 12);
-                
-                // BTL Loop
-                const step2 = calculateMortgageStep(dF2, B.rateCompany, pF2, B.overpayment || 0);
-                dF2 = step2.newDebt;
-                let m2 = (hF2 * (B.repairRate / 100) / 12) + (scB / 12);
-                
-                cIntF += (step1.interest + step2.interest); cMaintF += (m1 + m2);
-                
-                // BTL Profit
-                let btlIncome = hF2 * (B.rentYield / 100) / 12;
-                let profit = btlIncome - (step2.interest + m2);
-                let tax = Math.max(0, profit * rates.corp);
-                cTaxF += tax; coCashF += (profit - tax);
-                
-                deadF += (step1.interest + m1 + step2.interest + m2 + tax - btlIncome);
-                [isaF, giaF, basisF] = invest(totalMonthlyBudget - (step1.totalPaid + m1) - step2.extra, isaF, giaF, basisF);
-            }
+        for (let m = 0; m < 12; m++) {
+            const mi = (y - 1) * 12 + m;
+            sA.simulateMonth(mi, V, rates);
+            if (possibleB) sB.simulateMonth(mi, inputB, rates);
+            if (possibleC) sC.simulateMonth(mi, V, rates);
+            if (possibleD) sD.simulateMonth(mi, V, rates);
+            if (possibleE) sE.simulateMonth(mi, V, rates);
+            if (possibleF) sF.simulateMonth(mi, inputF, rates);
         }
         
-        // Annual Appreciation
-        if (possibleB) houseB *= propG;
-        if (possibleC) houseC *= propG;
-        if (possibleD) houseD *= propG;
-        if (possibleE) houseE *= propG;
-        if (possibleF) { hF1 *= propG; hF2 *= propG; }
-        
-        // Record History
-        const rec = (s, possible, isa, gia, basis, h, d, type, co, dead, br) => {
-            if (!possible) {
-                 s.netWorth.push(0); s.netWorthLiquid.push(0); s.liquidHistory.push(0); s.deadMoney.push(0);
-                 return;
-            }
-            const res = getExitVal(isa, gia, basis, h, d, type, co, (type==='home'?H.sellingCostPct:B.sellingCostPct || 0.015)/100, (type==='home'?propBasisB:(type==='company'?propBasisD:propBasisE)));
-            s.netWorth.push(res.gross); s.netWorthLiquid.push(res.liquid); s.liquidHistory.push(getLiqHist(isa, gia, co));
-            s.deadMoney.push(dead);
-            s.breakdown.interest.push(br.int); s.breakdown.maintenance.push(br.maint); 
-            s.breakdown.rent.push(br.rent); s.breakdown.tax.push(br.tax); s.breakdown.fees.push(br.fees);
-        };
-        
-        // A
-        const resA = getExitVal(isaA, giaA, basisA, 0, 0, 'none');
-        sA.netWorth.push(resA.gross); sA.netWorthLiquid.push(resA.liquid); sA.liquidHistory.push(getLiqHist(isaA, giaA)); sA.deadMoney.push(deadA);
-        sA.breakdown.rent.push(cRentA); sA.breakdown.interest.push(0); sA.breakdown.maintenance.push(0); sA.breakdown.tax.push(0); sA.breakdown.fees.push(0);
-
-        // Others
-        rec(sB, possibleB, isaB, giaB, basisB, houseB, debtB, 'home', 0, deadB, {int:cIntB, maint:cMaintB, rent:0, tax:0, fees:cFeesB});
-        rec(sC, possibleC, isaC, giaC, basisC, houseC, debtC, 'home', 0, deadC, {int:cIntC, maint:cMaintC, rent:0, tax:0, fees:cFeesC});
-        rec(sD, possibleD, isaD, giaD, basisD, houseD, debtD, 'company', coCashD, deadD, {int:cIntD, maint:cMaintD, rent:cRentD, tax:cTaxD, fees:cFeesD});
-        rec(sE, possibleE, isaE, giaE, basisE, houseE, debtE, 'btl', 0, deadE, {int:cIntE, maint:cMaintE, rent:cRentE, tax:cTaxE, fees:cFeesE});
-        
-        // F Special Case (Complex Exit)
-        if (possibleF) {
-            const stockGross = isaF + giaF;
-            const stockGain = Math.max(0, giaF - basisF);
-            const stockLiquid = isaF + (giaF - stockGain * rates.cgt);
-            
-            // Asset 1: Home
-            const hSellFee = hF1 * (H.sellingCostPct/100);
-            const hGross = Math.max(0, hF1 - dF1);
-            const hLiquid = Math.max(0, hF1 - hSellFee - dF1);
-            
-            // Asset 2: Co BTL
-            const bSellFee = hF2 * (B.sellingCostPct || 0.015); // Default BTL sell cost? Not in schema yet, assume 1.5%
-            const bGross = Math.max(0, hF2 - dF2) + coCashF;
-            let bProceeds = Math.max(0, hF2 - bSellFee - dF2);
-            const bGain = (hF2 - bSellFee) - pbF2; // Use F's basis
-            if (bGain > 0) bProceeds -= (bGain * rates.corp);
-            const bLiquid = Math.max(0, (bProceeds + coCashF) * (1 - rates.div));
-            
-            sF.netWorth.push(stockGross + hGross + bGross);
-            sF.netWorthLiquid.push(stockLiquid + hLiquid + bLiquid);
-            sF.liquidHistory.push(getLiqHist(isaF, giaF, coCashF));
-            sF.deadMoney.push(deadF);
-            sF.breakdown.interest.push(cIntF); sF.breakdown.maintenance.push(cMaintF); sF.breakdown.rent.push(0); sF.breakdown.tax.push(cTaxF); sF.breakdown.fees.push(cFeesF);
-        } else {
-             sF.netWorth.push(0); sF.netWorthLiquid.push(0); sF.liquidHistory.push(0); sF.deadMoney.push(0);
-             sF.breakdown.interest.push(0); sF.breakdown.maintenance.push(0); sF.breakdown.rent.push(0); sF.breakdown.tax.push(0); sF.breakdown.fees.push(0);
-        }
+        sA.calculateExit(y, V, rates);
+        if (possibleB) sB.calculateExit(y, inputB, rates);
+        if (possibleC) sC.calculateExit(y, V, rates);
+        if (possibleD) sD.calculateExit(y, V, rates);
+        if (possibleE) sE.calculateExit(y, V, rates);
+        if (possibleF) sF.calculateExit(y, inputF, rates);
     }
 
     // Compat aliases

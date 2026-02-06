@@ -15,7 +15,7 @@
 - [x] Task: Conductor - User Manual Verification 'Base Strategy Architecture' (Protocol in workflow.md) [checkpoint: da6d670]
 
 ## Phase 3: Property Strategies
-- [ ] Task: Implement `BuyStrategy` subclass.
+- [x] Task: Implement `BuyStrategy` subclass. [95b8b05]
     - [ ] Migrate logic from "Strategy B/C" (Home & Lodger).
     - [ ] Handle Mortgage, Stamp Duty, and Maintenance logic.
 - [ ] Task: Implement `BTLStrategy` subclass.

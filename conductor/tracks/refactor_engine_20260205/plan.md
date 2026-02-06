@@ -26,6 +26,6 @@
 ## Phase 4: Integration & Regression
 - [x] Task: Create `StrategyFactory` or `Engine` wrapper. [e37c292]
     - [ ] Re-implement `simulateStrategies` to use the new Classes.
-- [ ] Task: Verify Regression.
+- [x] Task: Verify Regression.
     - [ ] Run `npm test` to ensure all existing snapshots match.
-- [ ] Task: Conductor - User Manual Verification 'Integration & Regression' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Integration & Regression' (Protocol in workflow.md) [checkpoint: 40cc223]

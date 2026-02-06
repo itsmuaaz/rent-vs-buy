@@ -6,7 +6,7 @@
     - [ ] Define `SimulationResult` interface.
 
 ## Phase 2: Base Strategy Architecture
-- [ ] Task: Implement the `Strategy` base class in `engine.js`.
+- [x] Task: Implement the `Strategy` base class in `engine.js`. [5440261]
     - [ ] Define constructor and common properties (`netWorth`, `liquid`, `deadMoney`).
     - [ ] Implement skeleton methods (`simulateMonth`, `getExitVal`).
 - [ ] Task: Implement `RentStrategy` subclass.

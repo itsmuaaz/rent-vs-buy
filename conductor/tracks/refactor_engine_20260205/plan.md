@@ -21,6 +21,7 @@
 - [x] Task: Implement `BTLStrategy` subclass. [941480c]
     - [ ] Migrate logic from "Strategy D/E" (Personal & Ltd Co).
     - [ ] Handle Section 24 and Corporation Tax logic.
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) [checkpoint: 2def12a]
 
 ## Phase 4: Integration & Regression
 - [ ] Task: Create `StrategyFactory` or `Engine` wrapper.

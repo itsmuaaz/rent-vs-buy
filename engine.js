@@ -109,6 +109,82 @@
 
 const Engine = {};
 
+/**
+ * Base class for all financial strategies.
+ * Defines the common interface and state management.
+ * @abstract
+ */
+Engine.Strategy = class Strategy {
+    /**
+     * @param {string} name - Name of the strategy
+     */
+    constructor(name) {
+        if (new.target === Engine.Strategy) {
+            throw new Error("Cannot instantiate abstract class Strategy directly.");
+        }
+        this.name = name;
+        /** @type {number[]} */
+        this.netWorth = [];
+        /** @type {number[]} */
+        this.netWorthLiquid = [];
+        /** @type {number[]} */
+        this.liquidHistory = [];
+        /** @type {number[]} */
+        this.deadMoney = [];
+        /** @type {Object} */
+        this.breakdown = {
+            interest: [],
+            maintenance: [],
+            tax: [],
+            rent: [],
+            fees: []
+        };
+    }
+
+    /**
+     * Simulate a single month.
+     * @abstract
+     * @param {number} monthIndex - 0-based month index
+     * @param {SimulationInput} input - Global input configuration
+     * @param {TaxRates} rates - Current tax rates
+     */
+    simulateMonth(monthIndex, input, rates) {
+        throw new Error("Method 'simulateMonth()' must be implemented.");
+    }
+
+    /**
+     * Calculate exit value at the end of a year.
+     * @abstract
+     * @param {number} year - 1-based year
+     * @param {SimulationInput} input - Global input configuration
+     * @param {TaxRates} rates - Current tax rates
+     */
+    calculateExit(year, input, rates) {
+        throw new Error("Method 'calculateExit()' must be implemented.");
+    }
+
+    /**
+     * Helper to record results for a year.
+     * @param {number} gross - Gross Net Worth
+     * @param {number} liquid - Liquid Net Worth
+     * @param {number} liquidity - Liquid Assets available
+     * @param {number} dead - Cumulative Dead Money
+     * @param {Object} breakdown - Annual breakdown of costs
+     */
+    recordYear(gross, liquid, liquidity, dead, breakdown) {
+        this.netWorth.push(gross);
+        this.netWorthLiquid.push(liquid);
+        this.liquidHistory.push(liquidity);
+        this.deadMoney.push(dead);
+        
+        this.breakdown.interest.push(breakdown.interest || 0);
+        this.breakdown.maintenance.push(breakdown.maintenance || 0);
+        this.breakdown.rent.push(breakdown.rent || 0);
+        this.breakdown.tax.push(breakdown.tax || 0);
+        this.breakdown.fees.push(breakdown.fees || 0);
+    }
+};
+
 Engine.getTaxRates = function(band) {
     switch(band) {
         case 'basic': return { income: 0.20, cgt: 0.18, div: 0.0875, corp: 0.19 };

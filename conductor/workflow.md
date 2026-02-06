@@ -132,7 +132,21 @@ All tasks follow a strict lifecycle:
     - **Action:** Stage the modified `plan.md` file.
     - **Action:** Commit this change with a descriptive message following the format `conductor(plan): Mark phase '<PHASE NAME>' as complete`.
 
-10.  **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report attached as a git note.
+10. **Synchronize Project Documentation (GEMINI.md, README.md):**
+    - **Trigger:** Check if the completed phase introduced new features, architectural changes, or completed a major track.
+    - **Action (GEMINI.md):** Ensure the "Active Development Context" section (if present) points to the current active track. Remove any completed items from legacy roadmap sections.
+    - **Action (README.md):** If a user-facing feature was completed, update the "Key Features" or "Status" section.
+    - **Commit:** If changes are made, stage and commit with message `docs: Synchronize project context for phase '<PHASE NAME>'`.
+
+11. **Verify Conductor Track Status:**
+    - **Action:** Check `plan.md`. Are all phases and tasks complete?
+    - **If Complete:**
+        - Open `conductor/tracks.md`.
+        - Mark the track as `[x]`.
+        - Commit with message `conductor: Mark track '<TRACK_NAME>' as complete`.
+        - **Archive (Optional):** Offer to archive the track folder.
+
+12. **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report attached as a git note. Confirm that project documentation has been synchronized.
 
 ### Quality Gates
 

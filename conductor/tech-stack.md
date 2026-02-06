@@ -12,7 +12,7 @@
 
 ## Logic Layer
 - **Financial Engine:** `engine.js` - Pure JavaScript module containing all financial formulas, tax logic, and simulation loops.
-    - **Architecture Goal:** Refactor towards **Object-Oriented Design** (Classes & Polymorphism) to handle strategies (Rent, Buy, BTL) uniformly, replacing brittle if/else chains.
+    - **Architecture:** **Object-Oriented Design** (Strategy Pattern). Uses `RentStrategy`, `BuyStrategy`, `BTLStrategy`, and `HybridStrategy` classes to encapsulate logic.
     - **Type Safety:** Enforced via **JSDoc** annotations to catch regressions and missing properties during development (checked via VS Code or similar tools).
 - **Audit Logic:** `audit.js` - Dictionary of logic explanations and proof generation functions for the "Transparency Report".
 

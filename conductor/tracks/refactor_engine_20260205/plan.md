@@ -1,7 +1,7 @@
 # Implementation Plan: Engine Refactor
 
 ## Phase 1: Preparation & Typing
-- [ ] Task: Create `engine.d.js` (or JSDoc definitions in `engine.js`) to define the data structures (Input Model, Results).
+- [x] Task: Create `engine.d.js` (or JSDoc definitions in `engine.js`) to define the data structures (Input Model, Results). [9f9547c]
     - [ ] Define `TaxRates`, `PersonalConfig`, `HomeConfig`, `BTLConfig`.
     - [ ] Define `SimulationResult` interface.
 

@@ -18,7 +18,7 @@
 - [x] Task: Implement `BuyStrategy` subclass. [95b8b05]
     - [ ] Migrate logic from "Strategy B/C" (Home & Lodger).
     - [ ] Handle Mortgage, Stamp Duty, and Maintenance logic.
-- [ ] Task: Implement `BTLStrategy` subclass.
+- [x] Task: Implement `BTLStrategy` subclass. [941480c]
     - [ ] Migrate logic from "Strategy D/E" (Personal & Ltd Co).
     - [ ] Handle Section 24 and Corporation Tax logic.
 

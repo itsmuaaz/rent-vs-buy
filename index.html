@@ -547,7 +547,8 @@
             </div>
 
             <!-- 5.5. Sensitivity Heatmap -->
-            <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 mb-12 no-print" x-show="matrix">
+            <template x-if="matrix">
+            <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 mb-12 no-print">
                 <div class="mb-6">
                     <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         🛡️ Strategy Stress Test <span class="text-indigo-600" x-text="`(Year ${simYears})`"></span>
@@ -617,6 +618,7 @@
                     </div>
                 </div>
             </div>
+            </template>
 
             <!-- 7. Detailed Data Table -->
             <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden mb-16">

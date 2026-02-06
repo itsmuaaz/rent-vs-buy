@@ -283,6 +283,137 @@ Engine.RentStrategy = class RentStrategy extends Engine.Strategy {
     }
 };
 
+/**
+ * Strategy B: Buy Home
+ */
+Engine.BuyStrategy = class BuyStrategy extends Engine.Strategy {
+    /**
+     * @param {string} name
+     * @param {SimulationInput} input
+     */
+    constructor(name, input) {
+        super(name);
+        const P = input.personal;
+        const H = input.home;
+        
+        // 1. Calculate Upfront Costs
+        const isFTB = P.isFTB !== undefined ? P.isFTB : false;
+        const deposit = H.price * (H.depositPct / 100);
+        const acq = Engine.getAcquisitionCost(H.price, 'personal', isFTB, H.buyingCost, H.renoCost);
+        
+        const totalUpfront = deposit + acq.total;
+        
+        // 2. Adjust Cash
+        let gia = P.liquidAssets - P.isaBalance;
+        let isa = P.isaBalance;
+        
+        if (gia >= totalUpfront) {
+            gia -= totalUpfront;
+        } else {
+            const rem = totalUpfront - gia;
+            gia = 0;
+            isa = Math.max(0, isa - rem);
+        }
+        
+        this.isa = isa;
+        this.gia = gia;
+        this.giaBasis = gia; 
+        
+        // 3. Setup Mortgage
+        this.debt = H.price - deposit;
+        this.houseValue = H.renoCost > 0 ? (H.postWorkValue || H.price + H.renoCost) : H.price;
+        this.propBasis = H.price + H.buyingCost + H.renoCost;
+        
+        this.monthlyPayment = Engine.calculateMortgage(this.debt, H.rate, H.term);
+        
+        // 4. Initial Dead Money
+        this.cumulativeDead = acq.stamp + H.buyingCost;
+        this.cumulativeInterest = 0;
+        this.cumulativeMaint = 0;
+        this.cumulativeFees = acq.stamp + H.buyingCost;
+    }
+
+    /**
+     * @param {number} monthIndex
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    simulateMonth(monthIndex, input, rates) {
+        const P = input.personal;
+        const H = input.home;
+        const year = Math.floor(monthIndex / 12) + 1;
+        
+        // Inflation checks
+        const rentInf = P.rent.inflation / 100;
+        const stockGrowth = P.stockGrowth / 100;
+        
+        // 1. Mortgage Step
+        const step = Engine.calculateMortgageStep(this.debt, H.rate, this.monthlyPayment, H.overpayment || 0);
+        this.debt = step.newDebt;
+        this.cumulativeInterest += step.interest;
+        
+        // 2. Maintenance
+        let scH = H.serviceCharge * Math.pow(1 + rentInf, year - 1);
+        let maint = (this.houseValue * (H.repairRate / 100) / 12) + (scH / 12);
+        this.cumulativeMaint += maint;
+        
+        // 3. Dead Money
+        this.cumulativeDead += (step.interest + maint);
+        
+        // 4. Invest Surplus
+        const totalMonthlyBudget = P.monthlySavings + P.rent.current;
+        
+        const isStockCrash = input.settings.stockCrash || false;
+        let stockM = (1 + stockGrowth / 12);
+        if (year === 1 && isStockCrash) stockM = Math.pow(0.7, 1/12);
+        
+        const surplus = totalMonthlyBudget - (step.totalPaid + maint);
+        this.invest(surplus, stockM);
+    }
+    
+    /**
+     * @param {number} year
+     * @param {SimulationInput} input
+     * @param {TaxRates} rates
+     */
+    calculateExit(year, input, rates) {
+        const H = input.home;
+        const P = input.personal;
+        
+        // Annual Appreciation
+        const propGrowth = (P.propertyGrowth !== undefined ? P.propertyGrowth : 3.0) / 100;
+        let propG = 1 + propGrowth;
+        if (year === 1 && input.settings.propCrash) propG = propG * 0.85;
+        
+        this.houseValue *= propG;
+        
+        // Exit Val
+        const res = Engine.getExitVal(
+            this.isa, this.gia, this.giaBasis, 
+            this.houseValue, this.debt, 
+            'home', rates, 0, 
+            H.sellingCostPct / 100, 
+            this.propBasis
+        );
+        
+        const liqHist = this.isa + this.gia;
+        
+        this.recordYear(
+            res.gross, 
+            res.liquid, 
+            liqHist, 
+            this.cumulativeDead, 
+            { 
+                interest: this.cumulativeInterest, 
+                maintenance: this.cumulativeMaint,
+                fees: this.cumulativeFees,
+                rent: 0, 
+                tax: 0 
+            }
+        );
+    }
+};
+
 Engine.getTaxRates = function(band) {
     switch(band) {
         case 'basic': return { income: 0.20, cgt: 0.18, div: 0.0875, corp: 0.19 };
@@ -311,6 +442,86 @@ Engine.calculateMortgage = function(principal, rate, years) {
     return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 };
 
+Engine.getAcquisitionCost = function(price, stampType, isFTB, buyingCost, reno) {
+    const stamp = Engine.calculateStampDuty(price, stampType, isFTB);
+    return { stamp, total: stamp + buyingCost + reno };
+};
+
+Engine.calculateMortgageStep = function(debt, rate, scheduledPayment, overpayment = 0) {
+    if (debt <= 0) return { interest: 0, principal: 0, totalPaid: 0, newDebt: 0, extra: 0 };
+    
+    const monthlyRate = rate / 1200;
+    let interest = debt * monthlyRate;
+    
+    // Handle final payment (if scheduled payment > remaining balance + interest)
+    // scheduledPayment is fixed.
+    // If (debt + interest) < scheduledPayment, we just pay off everything.
+    let actualPayment = scheduledPayment;
+    if ((debt + interest) < scheduledPayment) actualPayment = debt + interest;
+    
+    let principal = actualPayment - interest;
+    let extra = 0;
+    
+    if (overpayment > 0) {
+        // Can we afford overpayment? Assumed yes (check caller).
+        // Cap at remaining debt
+        extra = Math.min(overpayment, debt - principal);
+    }
+    
+    let totalPaid = actualPayment + extra;
+    let newDebt = debt - (principal + extra);
+    if (newDebt < 0.01) newDebt = 0; // Floating point hygiene
+    
+    return { interest, principal: principal + extra, totalPaid, newDebt, extra };
+};
+
+Engine.getExitVal = function(isa, gia, giaBasis, houseV, debt, type, rates, cashCo=0, sellCostPct=0.015, propBasis=0) {
+    const stockGross = isa + gia;
+    const propGross = Math.max(0, houseV - debt);
+    const coGross = cashCo;
+    const gross = stockGross + propGross + coGross;
+
+    const stockGain = Math.max(0, gia - giaBasis);
+    // 2025/26 CGT Allowance: £3,000 (Applied to Stock first, then Property)
+    let remAllowance = 3000;
+    
+    const taxableStock = Math.max(0, stockGain - remAllowance);
+    remAllowance = Math.max(0, remAllowance - stockGain);
+    
+    const stockLiquid = isa + (gia - taxableStock * rates.cgt);
+
+    let propLiquid = 0;
+    let coLiquid = 0;
+
+    if (type === 'company') {
+        const sellFee = houseV * sellCostPct;
+        let proceeds = Math.max(0, houseV - sellFee - debt);
+        const gain = (houseV - sellFee) - propBasis; 
+        if (gain > 0) {
+            const corpTax = gain * rates.corp;
+            proceeds -= corpTax;
+        }
+        const totalCoCash = proceeds + cashCo;
+        coLiquid = Math.max(0, totalCoCash * (1 - rates.div));
+    } else if (type !== 'none') {
+        if (houseV > 0) {
+            const sellFee = houseV * sellCostPct;
+            let proceeds = Math.max(0, houseV - sellFee - debt);
+            if (type === 'btl') {
+                const gain = (houseV - sellFee) - propBasis;
+                if (gain > 0) {
+                    const taxableProp = Math.max(0, gain - remAllowance);
+                    proceeds -= (taxableProp * rates.cgt);
+                }
+            }
+            propLiquid = proceeds;
+        }
+    }
+
+    const liquid = stockLiquid + propLiquid + coLiquid;
+    return { gross, liquid };
+};
+
 Engine.simulateStrategies = function(V) {
     // Destructure Input Model
     const P = V.personal;
@@ -329,89 +540,17 @@ Engine.simulateStrategies = function(V) {
     const stockGrowth = P.stockGrowth / 100;
 
     // Helper: Asset cost logic
-    const getAcquisitionCost = (price, stampType, isFTB, buyingCost, reno) => {
-        const stamp = Engine.calculateStampDuty(price, stampType, isFTB);
-        return { stamp, total: stamp + buyingCost + reno };
-    };
+    const getAcquisitionCost = Engine.getAcquisitionCost;
 
     // Helper: Exit logic
     const getExitVal = (isa, gia, giaBasis, houseV, debt, type, cashCo=0, sellCostPct=0.015, propBasis=0) => {
-        const stockGross = isa + gia;
-        const propGross = Math.max(0, houseV - debt);
-        const coGross = cashCo;
-        const gross = stockGross + propGross + coGross;
-
-        const stockGain = Math.max(0, gia - giaBasis);
-        // 2025/26 CGT Allowance: £3,000 (Applied to Stock first, then Property)
-        let remAllowance = 3000;
-        
-        const taxableStock = Math.max(0, stockGain - remAllowance);
-        remAllowance = Math.max(0, remAllowance - stockGain);
-        
-        const stockLiquid = isa + (gia - taxableStock * rates.cgt);
-
-        let propLiquid = 0;
-        let coLiquid = 0;
-
-        if (type === 'company') {
-            const sellFee = houseV * sellCostPct;
-            let proceeds = Math.max(0, houseV - sellFee - debt);
-            const gain = (houseV - sellFee) - propBasis; 
-            if (gain > 0) {
-                const corpTax = gain * rates.corp;
-                proceeds -= corpTax;
-            }
-            const totalCoCash = proceeds + cashCo;
-            coLiquid = Math.max(0, totalCoCash * (1 - rates.div));
-        } else if (type !== 'none') {
-            if (houseV > 0) {
-                const sellFee = houseV * sellCostPct;
-                let proceeds = Math.max(0, houseV - sellFee - debt);
-                if (type === 'btl') {
-                    const gain = (houseV - sellFee) - propBasis;
-                    if (gain > 0) {
-                        const taxableProp = Math.max(0, gain - remAllowance);
-                        proceeds -= (taxableProp * rates.cgt);
-                    }
-                }
-                propLiquid = proceeds;
-            }
-        }
-
-        const liquid = stockLiquid + propLiquid + coLiquid;
-        return { gross, liquid };
+        return Engine.getExitVal(isa, gia, giaBasis, houseV, debt, type, rates, cashCo, sellCostPct, propBasis);
     };
     
     const getLiqHist = (isa, gia, cashCo=0) => isa + gia + cashCo * (1 - rates.div);
 
     // Helper: Mortgage Step with Overpayment
-    const calculateMortgageStep = (debt, rate, scheduledPayment, overpayment = 0) => {
-        if (debt <= 0) return { interest: 0, principal: 0, totalPaid: 0, newDebt: 0, extra: 0 };
-        
-        const monthlyRate = rate / 1200;
-        let interest = debt * monthlyRate;
-        
-        // Handle final payment (if scheduled payment > remaining balance + interest)
-        // scheduledPayment is fixed.
-        // If (debt + interest) < scheduledPayment, we just pay off everything.
-        let actualPayment = scheduledPayment;
-        if ((debt + interest) < scheduledPayment) actualPayment = debt + interest;
-        
-        let principal = actualPayment - interest;
-        let extra = 0;
-        
-        if (overpayment > 0) {
-            // Can we afford overpayment? Assumed yes (check caller).
-            // Cap at remaining debt
-            extra = Math.min(overpayment, debt - principal);
-        }
-        
-        let totalPaid = actualPayment + extra;
-        let newDebt = debt - (principal + extra);
-        if (newDebt < 0.01) newDebt = 0; // Floating point hygiene
-        
-        return { interest, principal: principal + extra, totalPaid, newDebt, extra };
-    };
+    const calculateMortgageStep = Engine.calculateMortgageStep;
 
     const initStrat = (name) => ({ 
         name, 

@@ -1,3 +1,112 @@
+/**
+ * @typedef {Object} TaxRates
+ * @property {number} income - Income Tax Rate
+ * @property {number} cgt - Capital Gains Tax Rate
+ * @property {number} div - Dividend Tax Rate
+ * @property {number} corp - Corporation Tax Rate
+ */
+
+/**
+ * @typedef {Object} PersonalConfig
+ * @property {number} taxBand - Tax band ('basic', 'higher', 'additional')
+ * @property {number} liquidAssets - Total liquid assets (£)
+ * @property {number} isaBalance - Amount held in ISA (£)
+ * @property {number} monthlySavings - Monthly savings contribution (£)
+ * @property {number} stockGrowth - Annual stock market growth (%)
+ * @property {number} propertyGrowth - Annual property market growth (%)
+ * @property {boolean} [isFTB] - First Time Buyer status
+ * @property {Object} rent
+ * @property {number} rent.current - Current monthly rent (£)
+ * @property {number} rent.inflation - Annual rent inflation (%)
+ */
+
+/**
+ * @typedef {Object} LodgerConfig
+ * @property {boolean} active - Is lodger active?
+ * @property {number} income - Monthly lodger income (£)
+ * @property {number} years - Duration of lodger stay (years)
+ */
+
+/**
+ * @typedef {Object} HomeConfig
+ * @property {boolean} active - Is buying a home active?
+ * @property {number} price - Property price (£)
+ * @property {number} depositPct - Deposit percentage (%)
+ * @property {number} rate - Mortgage interest rate (%)
+ * @property {number} term - Mortgage term (years)
+ * @property {number} serviceCharge - Annual service charge (£)
+ * @property {number} repairRate - Annual maintenance rate (%)
+ * @property {number} buyingCost - Buying fees (£)
+ * @property {number} sellingCostPct - Selling fees (%)
+ * @property {number} renoCost - Renovation cost (£)
+ * @property {number} [postWorkValue] - Value after renovation (£)
+ * @property {number} [overpayment] - Monthly overpayment (£)
+ * @property {LodgerConfig} lodger - Lodger settings
+ */
+
+/**
+ * @typedef {Object} WrapperConfig
+ * @property {boolean} personal - Personal ownership
+ * @property {boolean} company - Ltd Company ownership
+ */
+
+/**
+ * @typedef {Object} BTLConfig
+ * @property {boolean} active - Is BTL active?
+ * @property {number} price - Property price (£)
+ * @property {number} depositPct - Deposit percentage (%)
+ * @property {number} rentYield - Annual rent yield (%)
+ * @property {number} serviceCharge - Annual service charge (£)
+ * @property {number} repairRate - Annual maintenance rate (%)
+ * @property {number} buyingCost - Buying fees (£)
+ * @property {number} sellingCostPct - Selling fees (%)
+ * @property {string} mortgageType - 'interestOnly' or 'repayment'
+ * @property {number} term - Mortgage term (years)
+ * @property {number} ratePersonal - Interest rate for personal (%)
+ * @property {number} rateCompany - Interest rate for company (%)
+ * @property {WrapperConfig} wrappers - Ownership types enabled
+ * @property {number} [overpayment] - Monthly overpayment (£)
+ */
+
+/**
+ * @typedef {Object} SimulationInput
+ * @property {PersonalConfig} personal
+ * @property {HomeConfig} home
+ * @property {BTLConfig} btl
+ * @property {Object} settings
+ * @property {boolean} [settings.stockCrash]
+ * @property {boolean} [settings.propCrash]
+ */
+
+/**
+ * @typedef {Object} StrategyResult
+ * @property {string} name
+ * @property {number[]} netWorth - Array of annual Net Worth (Gross)
+ * @property {number[]} netWorthLiquid - Array of annual Net Worth (Liquid)
+ * @property {number[]} liquidHistory - Array of liquid assets over time
+ * @property {number[]} deadMoney - Array of cumulative sunk costs
+ * @property {Object} breakdown
+ * @property {number[]} breakdown.interest
+ * @property {number[]} breakdown.maintenance
+ * @property {number[]} breakdown.tax
+ * @property {number[]} breakdown.rent
+ * @property {number[]} breakdown.fees
+ */
+
+/**
+ * @typedef {Object} SimulationResult
+ * @property {StrategyResult} stratA - Rent & Invest
+ * @property {StrategyResult} stratB - Buy Home
+ * @property {StrategyResult} stratC - Buy + Lodger
+ * @property {StrategyResult} stratD - BTL (Ltd)
+ * @property {StrategyResult} stratE - BTL (Personal)
+ * @property {StrategyResult} stratF - Home + BTL
+ * @property {boolean} possibleB
+ * @property {boolean} possibleD
+ * @property {boolean} possibleE
+ * @property {boolean} possibleF
+ */
+
 const Engine = {};
 
 Engine.getTaxRates = function(band) {

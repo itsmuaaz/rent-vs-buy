@@ -12,6 +12,7 @@
 - [x] Task: Implement `RentStrategy` subclass. [fce13c3]
     - [ ] Migrate logic from "Strategy A" block in `simulateStrategies`.
     - [ ] Write unit test to verify `RentStrategy` matches old logic.
+- [x] Task: Conductor - User Manual Verification 'Base Strategy Architecture' (Protocol in workflow.md) [checkpoint: da6d670]
 
 ## Phase 3: Property Strategies
 - [ ] Task: Implement `BuyStrategy` subclass.

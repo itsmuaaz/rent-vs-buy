@@ -29,9 +29,9 @@
 - [x] Task: Verify Rounding & Precision. ef13a4a
     - [x] Ensure no floating point jitters.
 
-## Phase 4: Smart Estimates (Buying Costs)
-- [~] Task: Implement "Dirty State" tracking.
-    - [ ] Track if `home.buyingCost` has been manually touched.
-- [ ] Task: Implement Auto-Update Logic.
-    - [ ] When `home.price` changes, if !dirty, set `buyingCost = price * 0.015`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+## Phase 4: Smart Estimates (Buying Costs) [checkpoint: 93173f4]
+- [x] Task: Implement "Dirty State" tracking. 93173f4
+    - [x] Track if `home.buyingCost` has been manually touched.
+- [x] Task: Implement Auto-Update Logic. 93173f4
+    - [x] When `home.price` changes, if !dirty, set `buyingCost = price * 0.015`.
+- [x] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md) 93173f4

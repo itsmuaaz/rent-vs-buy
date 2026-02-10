@@ -28,3 +28,7 @@ To provide UK residents and investors with a professional-grade financial simula
 - **Detailed Analytics:**
     - **Dead Money Analysis:** Visualizes unrecoverable costs (Interest, Tax, Maintenance, Fees) vs. Equity growth.
     - **Time Travel Inspector:** Interactive scrubber to inspect financial state at any year in the simulation.
+- **Smart Inputs & Tools:**
+    - **Budget Lock:** Automatically balances Rent and Savings to maintain a fixed Total Monthly Budget.
+    - **Dual-Mode Sync:** Seamlessly switch between Percentage and Amount inputs for Deposits and Yields.
+    - **Smart Estimates:** Auto-calculates buying costs based on property price.

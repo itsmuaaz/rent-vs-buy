@@ -1,7 +1,7 @@
 # Implementation Plan: Dynamic Financial Auto-Adjustments
 
 ## Phase 1: State Management & Event Logic
-- [ ] Task: Extend `app.js` data model.
+- [x] Task: Extend `app.js` data model. e85c380
     - [ ] Add `lockedBudget` (boolean, default true).
     - [ ] Add `totalBudget` (computed property).
     - [ ] Add `homeDepositAmount` and `btlRentAmount` to the model.

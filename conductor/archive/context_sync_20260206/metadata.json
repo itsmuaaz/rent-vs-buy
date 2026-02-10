@@ -1,0 +1,7 @@
+{
+  "id": "context_sync_20260206",
+  "name": "Conductor Context Synchronization",
+  "status": "pending",
+  "created_at": "2026-02-06",
+  "description": "Establish protocols to synchronize GEMINI.md and README.md with Conductor tracks."
+}

@@ -4,9 +4,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [x] **Track: Establish protocols to synchronize GEMINI.md and README.md with Conductor tracks.**
-  *Link: [./tracks/context_sync_20260206/](./tracks/context_sync_20260206/)*
-
 - [ ] **Track: Interactive 'Wizard Mode' to guide new users through setting up their financial profile.**
   *Link: [./tracks/strategy_scout_wizard_20260205/](./tracks/strategy_scout_wizard_20260205/)*
 

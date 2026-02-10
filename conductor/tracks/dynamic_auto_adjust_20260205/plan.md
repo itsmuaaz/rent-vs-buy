@@ -1,6 +1,6 @@
 # Implementation Plan: Dynamic Financial Auto-Adjustments
 
-## Phase 1: State Management & Event Logic
+## Phase 1: State Management & Event Logic [checkpoint: 0e05a8f]
 - [x] Task: Extend `app.js` data model. e85c380
     - [ ] Add `lockedBudget` (boolean, default true).
     - [ ] Add `totalBudget` (computed property).

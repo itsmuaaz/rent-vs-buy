@@ -8,7 +8,7 @@
 - [x] Task: Create a generic "Sync" helper. 75c7dcd
     - [ ] Function `syncInputs(source, target, formula)` to handle the bidirectional updates without infinite loops.
 
-## Phase 2: Budget Lock Implementation
+## Phase 2: Budget Lock Implementation [checkpoint: e523c41]
 - [x] Task: Update `index.html` UI for Personal Section. deb7652
     - [x] Add "Lock Total Budget" checkbox.
     - [x] Add tooltips explaining the behavior.

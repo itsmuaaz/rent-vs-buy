@@ -12,14 +12,14 @@
     - [x] Add `npm run typecheck` before `npm test`.
 
 ## Phase 2: Engine Type Hardening (The Fix)
-- [ ] Task: Run `npm run typecheck` to identify initial errors.
-    - [ ] Expect errors in `engine.js` (e.g., "Property 'isa' does not exist on type 'Strategy'").
-- [ ] Task: Fix JSDoc errors in `engine.js`.
-    - [ ] Explicitly declare class properties in constructors or with JSDoc fields.
-    - [ ] Fix any type mismatches found by the compiler.
-    - [ ] Ensure `Engine` global variable is properly typed or declared to avoid conflicts.
-- [ ] Task: Verify Clean Run.
-    - [ ] Ensure `npm run typecheck` exits with code 0.
+- [x] Task: Run `npm run typecheck` to identify initial errors. 30693ce
+    - [x] Expect errors in `engine.js` (e.g., "Property 'isa' does not exist on type 'Strategy'").
+- [x] Task: Fix JSDoc errors in `engine.js`. 30693ce
+    - [x] Explicitly declare class properties in constructors or with JSDoc fields.
+    - [x] Fix any type mismatches found by the compiler.
+    - [x] Ensure `Engine` global variable is properly typed or declared to avoid conflicts.
+- [x] Task: Verify Clean Run. 30693ce
+    - [x] Ensure `npm run typecheck` exits with code 0.
 
 ## Phase 3: Integration Verification
 - [ ] Task: Validate Workflow.

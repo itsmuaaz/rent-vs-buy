@@ -9,15 +9,15 @@
     - [ ] Function `syncInputs(source, target, formula)` to handle the bidirectional updates without infinite loops.
 
 ## Phase 2: Budget Lock Implementation
-- [ ] Task: Update `index.html` UI for Personal Section.
-    - [ ] Add "Lock Total Budget" checkbox.
-    - [ ] Add tooltips explaining the behavior.
-- [ ] Task: Implement `watch` logic in `app.js`.
-    - [ ] Watch `rent.current`: If locked, update `monthlySavings`.
-    - [ ] Watch `monthlySavings`: If locked, update `rent.current`.
-- [ ] Task: Write Unit Tests.
-    - [ ] Verify locking logic maintains the sum.
-    - [ ] Verify unlocking allows independent changes.
+- [x] Task: Update `index.html` UI for Personal Section. deb7652
+    - [x] Add "Lock Total Budget" checkbox.
+    - [x] Add tooltips explaining the behavior.
+- [x] Task: Implement `watch` logic in `app.js`. 85fe23c
+    - [x] Watch `rent.current`: If locked, update `monthlySavings`.
+    - [x] Watch `monthlySavings`: If locked, update `rent.current`.
+- [x] Task: Write Unit Tests. 85fe23c
+    - [x] Verify locking logic maintains the sum.
+    - [x] Verify unlocking allows independent changes.
 
 ## Phase 3: Dual-Mode Inputs Implementation
 - [ ] Task: Update `index.html` for Home Section.

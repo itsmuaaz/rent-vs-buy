@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest && npm run validate:html && npm run validate:js",
+    "typecheck": "tsc --noEmit",
     "validate:html": "htmlhint index.html",
     "validate:js": "node scripts/check-js-syntax.js"
   },

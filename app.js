@@ -38,6 +38,7 @@ function calculatorLogic() {
         valuationMode: 'liquid',
         copied: false,
         lockedBudget: true,
+        isSyncing: false,
         
         get totalBudget() {
             return (this.i.personal.rent.current || 0) + (this.i.personal.monthlySavings || 0);
@@ -49,6 +50,20 @@ function calculatorLogic() {
 
         get btlRentAmount() {
             return ((this.i.btl.price || 0) * ((this.i.btl.rentYield || 0) / 100)) / 12;
+        },
+
+        syncInputs(val, callback) {
+            if (this.isSyncing) return;
+            this.isSyncing = true;
+            try {
+                callback(val);
+            } finally {
+                // If using Alpine $watch, the change propagates async usually?
+                // But setting isSyncing = false immediately might allow immediate re-entry if the callback triggers sync watchers.
+                // However, the watchers usually run after the current stack.
+                // Let's keep it simple for now.
+                this.isSyncing = false;
+            }
         },
         
         // Audit State

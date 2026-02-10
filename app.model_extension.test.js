@@ -57,4 +57,23 @@ describe('App Data Model Extensions', () => {
         
         expect(Math.round(app.btlRentAmount)).toBe(833);
     });
+
+    test('syncInputs performs update and respects isSyncing flag', () => {
+        // Setup
+        app.isSyncing = false;
+        let targetVal = 0;
+        const updateFn = (val) => { targetVal = val * 2; };
+        
+        // Execute
+        app.syncInputs(10, updateFn);
+        
+        // Assert
+        expect(targetVal).toBe(20);
+        expect(app.isSyncing).toBe(false);
+
+        // Test Loop Prevention
+        app.isSyncing = true;
+        app.syncInputs(50, updateFn);
+        expect(targetVal).toBe(20); // Should not have changed
+    });
 });

@@ -15,8 +15,8 @@
     - [ ] Explicit instruction: "Do NOT rely on this file for project status; use Conductor tools."
 
 ## Phase 3: README Alignment
-- [ ] Task: Review `README.md` "Key Features" section.
-- [ ] Task: Add "Development Status" badge/link to `README.md`.
+- [x] Task: Review `README.md` "Key Features" section. b47e7d8
+- [x] Task: Add "Development Status" badge/link to `README.md`. b47e7d8
     - [ ] Link to the repository's `conductor/tracks.md` if public, or a generic status badge.
     - [ ] Ensure `README.md` reflects *shipped* features only.
 

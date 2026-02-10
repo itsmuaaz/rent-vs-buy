@@ -1,5 +1,7 @@
 # UK Property Strategy Simulator 🇬🇧
 
+> **Current Status:** Active Development. See [Roadmap & Tracks](./conductor/tracks.md).
+
 A professional-grade **Rent vs. Buy calculator** designed for the UK market. Unlike simple mortgage calculators, this tool simulates **40-year wealth projections** considering complex tax rules, inflation, and opportunity costs.
 
 ## 🌍 For Users

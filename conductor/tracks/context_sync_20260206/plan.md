@@ -21,6 +21,6 @@
     - [ ] Ensure `README.md` reflects *shipped* features only.
 
 ## Phase 4: Verification
-- [ ] Task: Simulate a track completion.
+- [~] Task: Simulate a track completion.
     - [ ] Verify the new protocol instructions appear when checking `workflow.md`.
     - [ ] Verify `GEMINI.md` no longer contains conflicting roadmap info.

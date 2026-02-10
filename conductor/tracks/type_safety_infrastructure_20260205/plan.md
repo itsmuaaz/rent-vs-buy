@@ -8,8 +8,8 @@
     - [x] Include `src` (or root) and exclude `node_modules`.
 - [x] Task: Add `typecheck` script to `package.json`. 67c7242
     - [x] Script: `tsc --noEmit`.
-- [ ] Task: Update Husky pre-commit hook.
-    - [ ] Add `npm run typecheck` before `npm test`.
+- [x] Task: Update Husky pre-commit hook. 08b79f5
+    - [x] Add `npm run typecheck` before `npm test`.
 
 ## Phase 2: Engine Type Hardening (The Fix)
 - [ ] Task: Run `npm run typecheck` to identify initial errors.

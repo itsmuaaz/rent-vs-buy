@@ -9,8 +9,8 @@
     - [ ] Define the specific template/structure for how `GEMINI.md` and `README.md` should be updated (e.g., standard phrases, where to link).
 
 ## Phase 2: Refactor Agent Context (GEMINI.md)
-- [ ] Task: Remove outdated "Future Roadmap" section from `GEMINI.md`.
-- [ ] Task: Add "Active Development Context" section to `GEMINI.md`.
+- [x] Task: Remove outdated "Future Roadmap" section from `GEMINI.md`. 4eb5277
+- [x] Task: Add "Active Development Context" section to `GEMINI.md`. 4eb5277
     - [ ] Explicit instruction: "For active development tasks and roadmap, refer strictly to `conductor/tracks.md` and `conductor/plan.md`."
     - [ ] Explicit instruction: "Do NOT rely on this file for project status; use Conductor tools."
 

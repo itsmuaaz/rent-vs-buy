@@ -70,4 +70,55 @@ describe('BuyStrategy', () => {
         
         expect(strategy.breakdown.interest[0]).toBeCloseTo(750, 0);
     });
+
+    test('should handle lodger income', () => {
+        const input = {
+            personal: {
+                taxBand: 'basic',
+                liquidAssets: 50000,
+                isaBalance: 0,
+                monthlySavings: 1000,
+                rent: { current: 0, inflation: 0 },
+                stockGrowth: 0,
+                propertyGrowth: 0,
+                isFTB: true
+            },
+            home: { 
+                active: true,
+                price: 200000,
+                depositPct: 10,
+                rate: 5.0,
+                term: 25,
+                repairRate: 0,
+                serviceCharge: 0,
+                buyingCost: 0,
+                sellingCostPct: 0,
+                renoCost: 0,
+                lodger: { active: true, income: 500, years: 2 }
+            },
+            btl: { active: false },
+            settings: {}
+        };
+        const rates = Engine.getTaxRates('basic');
+        const strategy = new Engine.BuyStrategy('Buy + Lodger', input);
+        
+        strategy.simulateMonth(0, input, rates);
+        
+        // Lodger income 500. Tax free (<= 625).
+        // It should reduce dead money or increase surplus.
+        // Dead Money = Interest + Maint - NetLodgerIncome.
+        // Interest ~ 750.
+        // Maint 0.
+        // NetLodger 500.
+        // Dead Money = 750 - 500 = 250.
+        
+        // To verify, we need to check cumulativeDead.
+        // But simulateMonth updates it.
+        
+        // strategy.cumulativeDead is internal state.
+        
+        // Let's assume we can access it for testing or check via calculateExit breakdown?
+        // Let's check internal property for unit test.
+        expect(strategy.cumulativeDead).toBeCloseTo(250, 0);
+    });
 });

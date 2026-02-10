@@ -3,9 +3,9 @@
 ## Phase 1: Configuration & Plumbing
 - [x] Task: Install TypeScript as a dev dependency. eb9fd83
     - [x] `npm install --save-dev typescript`
-- [ ] Task: Create `jsconfig.json`.
-    - [ ] Configure `compilerOptions` with `allowJs: true`, `checkJs: true`, `noEmit: true`, `strict: true`, `target: "ES2020"`.
-    - [ ] Include `src` (or root) and exclude `node_modules`.
+- [x] Task: Create `jsconfig.json`. 175b8a0
+    - [x] Configure `compilerOptions` with `allowJs: true`, `checkJs: true`, `noEmit: true`, `strict: true`, `target: "ES2020"`.
+    - [x] Include `src` (or root) and exclude `node_modules`.
 - [ ] Task: Add `typecheck` script to `package.json`.
     - [ ] Script: `tsc --noEmit`.
 - [ ] Task: Update Husky pre-commit hook.

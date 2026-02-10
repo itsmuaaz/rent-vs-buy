@@ -75,12 +75,11 @@ This is a financial tool. A math error is worse than a crash.
 *   `index.html`: Main UI. Imports `engine.js`, `audit.js`.
 *   `.husky/pre-commit`: Ensures tests pass before commit.
 
-## 🚀 Future Roadmap
+## 🚧 Active Development Context
 
-*   **Phase 1 (Complete):** Core Engine & Basic UI.
-*   **Phase 2 (Complete):** Alpine.js Refactor (Reactivity).
-*   **Phase 3 (Complete):** Transparency & Audit Mode.
-*   **Phase 4 (Active):** Strategy Scout (Onboarding Wizard) & Scenarios.
+*   **Current Track:** Establish protocols to synchronize GEMINI.md and README.md with Conductor tracks.
+*   **Source of Truth:** For active development tasks and roadmap, refer strictly to `conductor/tracks.md` and `conductor/plan.md`.
+*   **Note:** Do NOT rely on this file for project status; use Conductor tools.
 
 ---
 *Created by Gemini for Gemini. adhere strictly to these protocols.*

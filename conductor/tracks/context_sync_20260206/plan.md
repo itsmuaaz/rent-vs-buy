@@ -14,7 +14,7 @@
     - [ ] Explicit instruction: "For active development tasks and roadmap, refer strictly to `conductor/tracks.md` and `conductor/plan.md`."
     - [ ] Explicit instruction: "Do NOT rely on this file for project status; use Conductor tools."
 
-## Phase 3: README Alignment
+## Phase 3: README Alignment [checkpoint: 469d5fa]
 - [x] Task: Review `README.md` "Key Features" section. b47e7d8
 - [x] Task: Add "Development Status" badge/link to `README.md`. b47e7d8
     - [ ] Link to the repository's `conductor/tracks.md` if public, or a generic status badge.

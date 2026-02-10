@@ -21,9 +21,9 @@
 - [x] Task: Verify Clean Run. 30693ce
     - [x] Ensure `npm run typecheck` exits with code 0.
 
-## Phase 3: Integration Verification
+## Phase 3: Integration Verification [checkpoint: 1862cef]
 - [x] Task: Validate Workflow.
     - [x] Intentional sabotage: Introduce a type error (e.g., `this.isa = "string"`).
     - [x] Try to commit.
     - [x] Confirm Husky blocks the commit.
-- [ ] Task: Conductor - User Manual Verification 'Integration Verification' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Integration Verification' (Protocol in workflow.md)

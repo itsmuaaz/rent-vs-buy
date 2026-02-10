@@ -30,7 +30,7 @@
     - [x] Ensure no floating point jitters.
 
 ## Phase 4: Smart Estimates (Buying Costs)
-- [ ] Task: Implement "Dirty State" tracking.
+- [~] Task: Implement "Dirty State" tracking.
     - [ ] Track if `home.buyingCost` has been manually touched.
 - [ ] Task: Implement Auto-Update Logic.
     - [ ] When `home.price` changes, if !dirty, set `buyingCost = price * 0.015`.

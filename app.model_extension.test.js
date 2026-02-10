@@ -187,4 +187,47 @@ describe('App Data Model Extensions', () => {
             // Rent should stay 2000 (Total budget expands)
         });
     });
+
+    describe('Smart Estimates (Buying Costs)', () => {
+        let watchers = {};
+        
+        beforeEach(() => {
+            watchers = {};
+            app.$watch = jest.fn((prop, callback) => {
+                watchers[prop] = callback;
+            });
+            app.updateCharts = jest.fn();
+            app.calculateMatrixDebounced = jest.fn();
+            app.init();
+        });
+
+        test('Default dirty state is false', () => {
+            expect(app.i.home.buyingCostDirty).toBe(false);
+        });
+
+        test('Price change updates BuyingCost when NOT dirty', () => {
+            app.i.home.price = 200000;
+            app.i.home.buyingCostDirty = false;
+            
+            const priceWatcher = watchers['i.home.price'];
+            // Trigger with new price 300,000
+            // 1.5% of 300,000 = 4,500
+            app.i.home.price = 300000;
+            priceWatcher(300000, 200000);
+
+            expect(app.i.home.buyingCost).toBe(4500);
+        });
+
+        test('Price change does NOT update BuyingCost when dirty', () => {
+            app.i.home.price = 200000;
+            app.i.home.buyingCost = 100; // Custom
+            app.i.home.buyingCostDirty = true;
+            
+            const priceWatcher = watchers['i.home.price'];
+            app.i.home.price = 300000;
+            priceWatcher(300000, 200000);
+            
+            expect(app.i.home.buyingCost).toBe(100); // Should stay custom
+        });
+    });
 });

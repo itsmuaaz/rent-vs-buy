@@ -253,7 +253,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Buying Fees (£)<span class="tooltip">Solicitor, Surveyor, Moving costs.</span></span></label>
-                                <input type="text" inputmode="numeric" x-money="i.home.buyingCost" class="input-field">
+                                <input type="text" inputmode="numeric" x-money="i.home.buyingCost" class="input-field" @input="i.home.buyingCostDirty = true">
                             </div>
                             <div>
                                 <label class="input-label"><span class="has-tooltip">Selling Fee (%)<span class="tooltip">Estate Agent fee (1% - 2%) + VAT.</span></span></label>

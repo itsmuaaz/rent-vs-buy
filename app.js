@@ -17,7 +17,8 @@ function calculatorLogic() {
             active: true, price: 300000, depositPct: 15, term: 30, rate: 4.5,
             repairRate: 1.0, serviceCharge: 0, buyingCost: 3000, sellingCostPct: 1.5,
             renoCost: 0, postWorkValue: 300000, overpayment: 0,
-            lodger: { active: false, income: 625, years: 2 }
+            lodger: { active: false, income: 625, years: 2 },
+            buyingCostDirty: false
         },
         btl: {
             active: false, price: 200000, depositPct: 25, term: 30,
@@ -211,6 +212,9 @@ function calculatorLogic() {
                 this.$watch('i.home.price', (val, old) => {
                     if (this.i.home.postWorkValue === old) {
                         this.i.home.postWorkValue = val;
+                    }
+                    if (!this.i.home.buyingCostDirty) {
+                        this.i.home.buyingCost = val * 0.015;
                     }
                 });
 

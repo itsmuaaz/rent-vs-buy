@@ -5,7 +5,7 @@
     - [ ] Add `lockedBudget` (boolean, default true).
     - [ ] Add `totalBudget` (computed property).
     - [ ] Add `homeDepositAmount` and `btlRentAmount` to the model.
-- [ ] Task: Create a generic "Sync" helper.
+- [x] Task: Create a generic "Sync" helper. 75c7dcd
     - [ ] Function `syncInputs(source, target, formula)` to handle the bidirectional updates without infinite loops.
 
 ## Phase 2: Budget Lock Implementation

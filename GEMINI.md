@@ -24,9 +24,9 @@ This project follows a strict **"Engine vs. Dashboard"** separation of concerns.
     *   **Responsibility:** Collects inputs, calls `Engine`, renders Charts/Tables/Modals.
     *   **Constraint:** NEVER calculate financial logic here. Only formatting and display.
 
-4.  **The Safety Net (Jest + Husky)**
+4.  **The Safety Net (Jest + TypeScript + Husky)**
     *   **Role:** Regression Protection.
-    *   **Mechanism:** `npm test` runs automatically on `git commit`.
+    *   **Mechanism:** `npm test` and `npm run typecheck` run automatically on `git commit`.
     *   **Rule:** If `npm test` fails, the codebase is broken. Do not proceed until fixed.
 
 ---
@@ -52,6 +52,7 @@ This is a financial tool. A math error is worse than a crash.
 ### 3. Testing is Mandatory & Systematic
 *   **Regression:** A `pre-commit` hook (Husky) prevents committing broken code. Never bypass it.
 *   **New Features:** Any new logic added to `engine.js` **MUST** have a corresponding test case in `engine.test.js`.
+*   **Type Safety:** Ensure JSDoc types in `engine.js` are valid by running `npm run typecheck`.
 *   **UI Logic:** Any complex UI logic (presets, audit integration) should be tested in `app.test.js`.
 *   **Coverage:** Ensure tests cover edge cases (e.g., 0% interest, mortgage payoff, tax thresholds).
 
@@ -61,7 +62,7 @@ This is a financial tool. A math error is worse than a crash.
 
 1.  **Start:** Run `npm test` to confirm baseline health.
 2.  **Edit:** Make your changes.
-    *   *Logic:* Edit `engine.js` -> Add/Update Test in `engine.test.js` -> Run `npm test`.
+    *   *Logic:* Edit `engine.js` -> Add/Update Test in `engine.test.js` -> Run `npm test` & `npm run typecheck`.
     *   *UI:* Edit `index.html` / `app.js` -> Verify in browser (manual) or `app.test.js`.
 3.  **Commit:** `git commit` will auto-run tests.
 
@@ -74,10 +75,11 @@ This is a financial tool. A math error is worse than a crash.
 *   `app.test.js`: Jest test suite for UI controller logic.
 *   `index.html`: Main UI. Imports `engine.js`, `audit.js`.
 *   `.husky/pre-commit`: Ensures tests pass before commit.
+*   `jsconfig.json`: Configuration for TypeScript checkJs.
 
 ## 🚧 Active Development Context
 
-*   **Current Track:** Establish protocols to synchronize GEMINI.md and README.md with Conductor tracks.
+*   **Current Track:** Concluded: Type Safety Infrastructure
 *   **Source of Truth:** For active development tasks and roadmap, refer strictly to `conductor/tracks.md` and `conductor/plan.md`.
 *   **Note:** Do NOT rely on this file for project status; use Conductor tools.
 

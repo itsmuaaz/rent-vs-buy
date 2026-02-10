@@ -39,6 +39,7 @@ Most calculators just compare "Mortgage vs Rent". This tool goes deeper, modelin
 *   **Styling:** [TailwindCSS](https://tailwindcss.com/) (CDN for zero-build setup).
 *   **Visualization:** [Chart.js](https://www.chartjs.org/).
 *   **Testing:** [Jest](https://jestjs.io/) for logic verification + [Husky](https://typicode.github.io/husky/) for pre-commit hooks.
+*   **Type Safety:** TypeScript (JSDoc) + `npm run typecheck`.
 
 ### Architecture
 The project follows a strict **"Engine vs. Dashboard"** separation of concerns:
@@ -51,6 +52,7 @@ The project follows a strict **"Engine vs. Dashboard"** separation of concerns:
 2.  Run `npm install` to setup testing tools.
 3.  Open `index.html` in your browser (no build step required).
 4.  Run `npm test` before committing to ensure calculation integrity.
+5.  Run `npm run typecheck` to verify JSDoc types.
 
 ---
 

@@ -6,8 +6,8 @@
 - [x] Task: Create `jsconfig.json`. 175b8a0
     - [x] Configure `compilerOptions` with `allowJs: true`, `checkJs: true`, `noEmit: true`, `strict: true`, `target: "ES2020"`.
     - [x] Include `src` (or root) and exclude `node_modules`.
-- [ ] Task: Add `typecheck` script to `package.json`.
-    - [ ] Script: `tsc --noEmit`.
+- [x] Task: Add `typecheck` script to `package.json`. 67c7242
+    - [x] Script: `tsc --noEmit`.
 - [ ] Task: Update Husky pre-commit hook.
     - [ ] Add `npm run typecheck` before `npm test`.
 

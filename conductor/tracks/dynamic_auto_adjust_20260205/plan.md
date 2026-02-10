@@ -19,15 +19,15 @@
     - [x] Verify locking logic maintains the sum.
     - [x] Verify unlocking allows independent changes.
 
-## Phase 3: Dual-Mode Inputs Implementation
-- [~] Task: Update `index.html` for Home Section.
-    - [ ] Add `Deposit (£)` input next to `%`.
-    - [ ] Implement sync logic (Price * % = £).
-- [ ] Task: Update `index.html` for BTL Section.
-    - [ ] Add `Monthly Rent (£)` input next to `Yield %`.
-    - [ ] Implement sync logic.
-- [ ] Task: Verify Rounding & Precision.
-    - [ ] Ensure no floating point jitters.
+## Phase 3: Dual-Mode Inputs Implementation [checkpoint: ef13a4a]
+- [x] Task: Update `index.html` for Home Section. ef13a4a
+    - [x] Add `Deposit (£)` input next to `%`.
+    - [x] Implement sync logic (Price * % = £).
+- [x] Task: Update `index.html` for BTL Section. ef13a4a
+    - [x] Add `Monthly Rent (£)` input next to `Yield %`.
+    - [x] Implement sync logic.
+- [x] Task: Verify Rounding & Precision. ef13a4a
+    - [x] Ensure no floating point jitters.
 
 ## Phase 4: Smart Estimates (Buying Costs)
 - [ ] Task: Implement "Dirty State" tracking.

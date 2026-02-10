@@ -200,6 +200,29 @@ function calculatorLogic() {
                     }
                 });
 
+                // Budget Lock Logic
+                this.$watch('i.personal.rent.current', (val, old) => {
+                    if (this.lockedBudget && old !== undefined) {
+                        this.syncInputs(val, (v) => {
+                            const delta = v - old;
+                            let newSavings = this.i.personal.monthlySavings - delta;
+                            if (newSavings < 0) newSavings = 0;
+                            this.i.personal.monthlySavings = newSavings;
+                        });
+                    }
+                });
+
+                this.$watch('i.personal.monthlySavings', (val, old) => {
+                    if (this.lockedBudget && old !== undefined) {
+                        this.syncInputs(val, (v) => {
+                            const delta = v - old;
+                            let newRent = this.i.personal.rent.current - delta;
+                            if (newRent < 0) newRent = 0;
+                            this.i.personal.rent.current = newRent;
+                        });
+                    }
+                });
+
                 this.$watch('inspectorYear', () => this.updateCharts());
                 this.$watch('valuationMode', () => { this.updateCharts(); });
             }

@@ -20,7 +20,7 @@
     - [ ] Link to the repository's `conductor/tracks.md` if public, or a generic status badge.
     - [ ] Ensure `README.md` reflects *shipped* features only.
 
-## Phase 4: Verification
+## Phase 4: Verification [checkpoint: abca513]
 - [x] Task: Simulate a track completion. 8efe196
     - [x] Verify the new protocol instructions appear when checking `workflow.md`.
     - [x] Verify `GEMINI.md` no longer contains conflicting roadmap info.

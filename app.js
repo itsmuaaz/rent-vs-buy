@@ -37,6 +37,19 @@ function calculatorLogic() {
         inspectorYear: 10,
         valuationMode: 'liquid',
         copied: false,
+        lockedBudget: true,
+        
+        get totalBudget() {
+            return (this.i.personal.rent.current || 0) + (this.i.personal.monthlySavings || 0);
+        },
+
+        get homeDepositAmount() {
+            return (this.i.home.price || 0) * ((this.i.home.depositPct || 0) / 100);
+        },
+
+        get btlRentAmount() {
+            return ((this.i.btl.price || 0) * ((this.i.btl.rentYield || 0) / 100)) / 12;
+        },
         
         // Audit State
         auditData: window.AuditLogic ? window.AuditLogic.dictionary : [],

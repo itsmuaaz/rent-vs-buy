@@ -15,6 +15,9 @@
   ],
   "exclude": [
     "node_modules",
-    "**/*.test.js"
+    "**/*.test.js",
+    "app.js",
+    "audit.js",
+    "scripts"
   ]
 }

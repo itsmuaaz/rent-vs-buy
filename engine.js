@@ -8,7 +8,7 @@
 
 /**
  * @typedef {Object} PersonalConfig
- * @property {number} taxBand - Tax band ('basic', 'higher', 'additional')
+ * @property {string} taxBand - Tax band ('basic', 'higher', 'additional')
  * @property {number} liquidAssets - Total liquid assets (£)
  * @property {number} isaBalance - Amount held in ISA (£)
  * @property {number} monthlySavings - Monthly savings contribution (£)
@@ -91,6 +91,7 @@
  * @property {number[]} breakdown.tax
  * @property {number[]} breakdown.rent
  * @property {number[]} breakdown.fees
+ * @property {number[]} [totalInterest] - Alias for breakdown.interest (legacy)
  */
 
 /**
@@ -122,6 +123,7 @@ Engine.Strategy = class Strategy {
         if (new.target === Engine.Strategy) {
             throw new Error("Cannot instantiate abstract class Strategy directly.");
         }
+        /** @type {string} */
         this.name = name;
         /** @type {number[]} */
         this.netWorth = [];
@@ -131,7 +133,16 @@ Engine.Strategy = class Strategy {
         this.liquidHistory = [];
         /** @type {number[]} */
         this.deadMoney = [];
-        /** @type {Object} */
+        
+        /** 
+         * @type {{
+         *   interest: number[],
+         *   maintenance: number[],
+         *   tax: number[],
+         *   rent: number[],
+         *   fees: number[]
+         * }} 
+         */
         this.breakdown = {
             interest: [],
             maintenance: [],
@@ -139,6 +150,17 @@ Engine.Strategy = class Strategy {
             rent: [],
             fees: []
         };
+
+        /** @type {number[]} */
+        this.totalInterest = [];
+
+        // Investment State (Common across strategies)
+        /** @type {number} */
+        this.isa = 0;
+        /** @type {number} */
+        this.gia = 0;
+        /** @type {number} */
+        this.giaBasis = 0;
     }
 
     /**
@@ -170,6 +192,11 @@ Engine.Strategy = class Strategy {
      * @param {number} liquidity - Liquid Assets available
      * @param {number} dead - Cumulative Dead Money
      * @param {Object} breakdown - Annual breakdown of costs
+     * @param {number} [breakdown.interest]
+     * @param {number} [breakdown.maintenance]
+     * @param {number} [breakdown.rent]
+     * @param {number} [breakdown.tax]
+     * @param {number} [breakdown.fees]
      */
     recordYear(gross, liquid, liquidity, dead, breakdown) {
         this.netWorth.push(gross);
@@ -223,10 +250,15 @@ Engine.RentStrategy = class RentStrategy extends Engine.Strategy {
      */
     constructor(name, personal) {
         super(name);
+        /** @type {number} */
         this.isa = personal.isaBalance;
+        /** @type {number} */
         this.gia = personal.liquidAssets - personal.isaBalance;
+        /** @type {number} */
         this.giaBasis = this.gia;
+        /** @type {number} */
         this.cumulativeRent = 0;
+        /** @type {number} */
         this.cumulativeDead = 0;
     }
 
@@ -315,21 +347,32 @@ Engine.BuyStrategy = class BuyStrategy extends Engine.Strategy {
             isa = Math.max(0, isa - rem);
         }
         
+        /** @type {number} */
         this.isa = isa;
+        /** @type {number} */
         this.gia = gia;
+        /** @type {number} */
         this.giaBasis = gia; 
         
         // 3. Setup Mortgage
+        /** @type {number} */
         this.debt = H.price - deposit;
+        /** @type {number} */
         this.houseValue = H.renoCost > 0 ? (H.postWorkValue || H.price + H.renoCost) : H.price;
+        /** @type {number} */
         this.propBasis = H.price + H.buyingCost + H.renoCost;
         
+        /** @type {number} */
         this.monthlyPayment = Engine.calculateMortgage(this.debt, H.rate, H.term);
         
         // 4. Initial Dead Money
+        /** @type {number} */
         this.cumulativeDead = acq.stamp + H.buyingCost;
+        /** @type {number} */
         this.cumulativeInterest = 0;
+        /** @type {number} */
         this.cumulativeMaint = 0;
+        /** @type {number} */
         this.cumulativeFees = acq.stamp + H.buyingCost;
     }
 
@@ -438,6 +481,7 @@ Engine.BTLStrategy = class BTLStrategy extends Engine.Strategy {
      */
     constructor(name, input, wrapperType) {
         super(name);
+        /** @type {string} */
         this.wrapperType = wrapperType;
         const P = input.personal;
         const B = input.btl;
@@ -461,33 +505,51 @@ Engine.BTLStrategy = class BTLStrategy extends Engine.Strategy {
             isa = Math.max(0, isa - rem);
         }
         
+        /** @type {number} */
         this.isa = isa;
+        /** @type {number} */
         this.gia = gia;
+        /** @type {number} */
         this.giaBasis = gia;
         
         // 3. Setup Mortgage
+        /** @type {number} */
         this.debt = B.price - deposit;
+        /** @type {number} */
         this.houseValue = B.price;
+        /** @type {number} */
         this.propBasis = B.price + (B.buyingCost || 2000);
         
         const rate = (wrapperType === 'company') ? B.rateCompany : B.ratePersonal;
         
         if (B.mortgageType === 'interestOnly') {
+            /** @type {number} */
             this.monthlyPayment = this.debt * (rate / 1200);
+            /** @type {boolean} */
             this.isInterestOnly = true;
         } else {
+            /** @type {number} */
             this.monthlyPayment = Engine.calculateMortgage(this.debt, rate, B.term);
+            /** @type {boolean} */
             this.isInterestOnly = false;
         }
+        /** @type {number} */
         this.rate = rate;
         
         // 4. State
+        /** @type {number} */
         this.coCash = 0; // Cash inside company
+        /** @type {number} */
         this.cumulativeDead = acq.stamp + (B.buyingCost || 2000);
+        /** @type {number} */
         this.cumulativeInterest = 0;
+        /** @type {number} */
         this.cumulativeMaint = 0;
+        /** @type {number} */
         this.cumulativeFees = acq.stamp + (B.buyingCost || 2000);
+        /** @type {number} */
         this.cumulativeRent = 0;
+        /** @type {number} */
         this.cumulativeTax = 0;
     }
 
@@ -629,35 +691,54 @@ Engine.HybridStrategy = class HybridStrategy extends Engine.Strategy {
             isa = Math.max(0, isa - rem);
         }
         
+        /** @type {number} */
         this.isa = isa;
+        /** @type {number} */
         this.gia = gia;
+        /** @type {number} */
         this.giaBasis = gia;
         
         // 3. Setup Mortgages
         // Home
+        /** @type {number} */
         this.debtHome = H.price - depH;
+        /** @type {number} */
         this.houseValueHome = H.renoCost > 0 ? (H.postWorkValue || H.price + H.renoCost) : H.price;
+        /** @type {number} */
         this.propBasisBTL = B.price + (B.buyingCost||2000);
+        /** @type {number} */
         this.propBasisHome = H.price + H.buyingCost + H.renoCost;
         
+        /** @type {number} */
         this.pmtHome = Engine.calculateMortgage(this.debtHome, H.rate, H.term);
         
         // BTL
+        /** @type {number} */
         this.debtBTL = B.price - depB;
+        /** @type {number} */
         this.houseValueBTL = B.price;
         if (B.mortgageType === 'interestOnly') {
+            /** @type {number} */
             this.pmtBTL = this.debtBTL * (B.rateCompany / 1200);
         } else {
+            /** @type {number} */
             this.pmtBTL = Engine.calculateMortgage(this.debtBTL, B.rateCompany, B.term);
         }
         
         // 4. State
+        /** @type {number} */
         this.coCash = 0;
+        /** @type {number} */
         this.cumulativeDead = acqH.stamp + H.buyingCost + acqB.stamp + (B.buyingCost||2000);
+        /** @type {number} */
         this.cumulativeInterest = 0;
+        /** @type {number} */
         this.cumulativeMaint = 0;
+        /** @type {number} */
         this.cumulativeFees = this.cumulativeDead; 
+        /** @type {number} */
         this.cumulativeRent = 0; 
+        /** @type {number} */
         this.cumulativeTax = 0;
     }
 
@@ -773,6 +854,10 @@ Engine.HybridStrategy = class HybridStrategy extends Engine.Strategy {
     }
 };
 
+/**
+ * @param {string} band - 'basic', 'higher', or 'additional'
+ * @returns {TaxRates}
+ */
 Engine.getTaxRates = function(band) {
     switch(band) {
         case 'basic': return { income: 0.20, cgt: 0.18, div: 0.0875, corp: 0.19 };
@@ -782,6 +867,12 @@ Engine.getTaxRates = function(band) {
     }
 };
 
+/**
+ * @param {number} price - Property Price
+ * @param {string} type - 'personal', 'company', or 'additional'
+ * @param {boolean} isFTB - First Time Buyer
+ * @returns {number} Stamp Duty Tax
+ */
 Engine.calculateStampDuty = function(price, type, isFTB) {
     if (type === 'personal' && isFTB && price <= 500000) return (price <= 300000) ? 0 : (price - 300000) * 0.05;
     const bands = [{limit: 125000, rate: 0.00}, {limit: 250000, rate: 0.02}, {limit: 925000, rate: 0.05}, {limit: 1500000, rate: 0.10}, {limit: Infinity, rate: 0.12}];
@@ -795,17 +886,38 @@ Engine.calculateStampDuty = function(price, type, isFTB) {
     return tax;
 };
 
+/**
+ * @param {number} principal - Loan amount
+ * @param {number} rate - Annual interest rate (%)
+ * @param {number} years - Loan term
+ * @returns {number} Monthly payment
+ */
 Engine.calculateMortgage = function(principal, rate, years) {
     const r = rate / 1200; const n = years * 12;
     if (r === 0) return principal / n;
     return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 };
 
+/**
+ * @param {number} price
+ * @param {string} stampType
+ * @param {boolean} isFTB
+ * @param {number} buyingCost
+ * @param {number} reno
+ * @returns {{stamp: number, total: number}}
+ */
 Engine.getAcquisitionCost = function(price, stampType, isFTB, buyingCost, reno) {
     const stamp = Engine.calculateStampDuty(price, stampType, isFTB);
     return { stamp, total: stamp + buyingCost + reno };
 };
 
+/**
+ * @param {number} debt - Current debt
+ * @param {number} rate - Annual interest rate (%)
+ * @param {number} scheduledPayment - Standard monthly payment
+ * @param {number} [overpayment] - Optional extra payment
+ * @returns {{interest: number, principal: number, totalPaid: number, newDebt: number, extra: number}}
+ */
 Engine.calculateMortgageStep = function(debt, rate, scheduledPayment, overpayment = 0) {
     if (debt <= 0) return { interest: 0, principal: 0, totalPaid: 0, newDebt: 0, extra: 0 };
     
@@ -834,6 +946,19 @@ Engine.calculateMortgageStep = function(debt, rate, scheduledPayment, overpaymen
     return { interest, principal: principal + extra, totalPaid, newDebt, extra };
 };
 
+/**
+ * @param {number} isa
+ * @param {number} gia
+ * @param {number} giaBasis
+ * @param {number} houseV
+ * @param {number} debt
+ * @param {string} type - 'home', 'btl', 'company', or 'none'
+ * @param {TaxRates} rates
+ * @param {number} [cashCo] - Cash inside Ltd Co
+ * @param {number} [sellCostPct] - Selling cost percentage (decimal)
+ * @param {number} [propBasis] - Base cost for CGT
+ * @returns {{gross: number, liquid: number}}
+ */
 Engine.getExitVal = function(isa, gia, giaBasis, houseV, debt, type, rates, cashCo=0, sellCostPct=0.015, propBasis=0) {
     const stockGross = isa + gia;
     const propGross = Math.max(0, houseV - debt);
@@ -881,6 +1006,10 @@ Engine.getExitVal = function(isa, gia, giaBasis, houseV, debt, type, rates, cash
     return { gross, liquid };
 };
 
+/**
+ * @param {SimulationInput} V
+ * @returns {SimulationResult}
+ */
 Engine.simulateStrategies = function(V) {
     const P = V.personal;
     const H = V.home;
@@ -888,7 +1017,7 @@ Engine.simulateStrategies = function(V) {
     const rates = Engine.getTaxRates(P.taxBand);
     const years = 40;
 
-    // Helper to create dummy result
+    /** @type {(name: string) => any} */
     const getDummy = (name) => ({
         name,
         netWorth: Array(years).fill(0),
@@ -903,7 +1032,9 @@ Engine.simulateStrategies = function(V) {
     const sA = new Engine.RentStrategy("Rent", V.personal);
 
     // Strategy B: Buy Home
-    let sB = null, possibleB = false;
+    /** @type {Engine.BuyStrategy | null} */
+    let sB = null;
+    let possibleB = false;
     let inputB = V; // Default
     if (H.active) {
         const isFTB = P.isFTB !== undefined ? P.isFTB : false;
@@ -917,18 +1048,22 @@ Engine.simulateStrategies = function(V) {
             sB = new Engine.BuyStrategy("Buy Home", inputB);
         }
     }
-    if (!possibleB) sB = getDummy("Buy Home");
+    if (!sB) sB = /** @type {Engine.BuyStrategy} */ (getDummy("Buy Home"));
 
     // Strategy C: Buy + Lodger
-    let sC = null, possibleC = false;
+    /** @type {Engine.BuyStrategy | null} */
+    let sC = null;
+    let possibleC = false;
     if (possibleB && H.lodger.active) {
         sC = new Engine.BuyStrategy("Buy Home + Lodger", V);
         possibleC = true;
     }
-    if (!possibleC) sC = getDummy("Buy Home + Lodger");
+    if (!sC) sC = /** @type {Engine.BuyStrategy} */ (getDummy("Buy Home + Lodger"));
 
     // Strategy D: BTL (Co)
-    let sD = null, possibleD = false;
+    /** @type {Engine.BTLStrategy | null} */
+    let sD = null;
+    let possibleD = false;
     if (B.active && B.wrappers.company) {
         const deposit = B.price * (B.depositPct / 100);
         const acq = Engine.getAcquisitionCost(B.price, 'company', false, B.buyingCost || 2000, 0);
@@ -937,10 +1072,12 @@ Engine.simulateStrategies = function(V) {
             possibleD = true;
         }
     }
-    if (!possibleD) sD = getDummy("BTL (Ltd Co)");
+    if (!sD) sD = /** @type {Engine.BTLStrategy} */ (getDummy("BTL (Ltd Co)"));
 
     // Strategy E: BTL (Personal)
-    let sE = null, possibleE = false;
+    /** @type {Engine.BTLStrategy | null} */
+    let sE = null;
+    let possibleE = false;
     if (B.active && B.wrappers.personal) {
         const deposit = B.price * (B.depositPct / 100);
         const acq = Engine.getAcquisitionCost(B.price, 'additional', false, B.buyingCost || 2000, 0);
@@ -949,10 +1086,12 @@ Engine.simulateStrategies = function(V) {
             possibleE = true;
         }
     }
-    if (!possibleE) sE = getDummy("BTL (Personal)");
+    if (!sE) sE = /** @type {Engine.BTLStrategy} */ (getDummy("BTL (Personal)"));
 
     // Strategy F: Home + BTL
-    let sF = null, possibleF = false;
+    /** @type {Engine.HybridStrategy | null} */
+    let sF = null;
+    let possibleF = false;
     let inputF = V;
     if (H.active && B.active && B.wrappers.company) {
         const isFTB = P.isFTB !== undefined ? P.isFTB : false;
@@ -969,7 +1108,7 @@ Engine.simulateStrategies = function(V) {
             sF = new Engine.HybridStrategy("Home + BTL", inputF);
         }
     }
-    if (!possibleF) sF = getDummy("Home + BTL");
+    if (!sF) sF = /** @type {Engine.HybridStrategy} */ (getDummy("Home + BTL"));
 
     // Simulation Loop
     for (let y = 1; y <= years; y++) {
@@ -992,13 +1131,24 @@ Engine.simulateStrategies = function(V) {
     }
 
     // Compat aliases
-    [sA, sB, sC, sD, sE, sF].forEach(s => s.totalInterest = s.breakdown.interest);
+    [sA, sB, sC, sD, sE, sF].forEach(s => {
+        if (s) s.totalInterest = s.breakdown.interest;
+    });
 
     return { stratA:sA, stratB:sB, stratC:sC, stratD:sD, stratE:sE, stratF:sF, possibleB, possibleD, possibleE, possibleF };
 };
 
+/**
+ * @param {SimulationResult} nominalResults
+ * @param {number} ratePct - Inflation rate (%)
+ * @returns {SimulationResult}
+ */
 Engine.adjustForInflation = function(nominalResults, ratePct) {
     const rate = ratePct / 100;
+    /**
+     * @param {number} val
+     * @param {number} year
+     */
     const adjust = (val, year) => val / Math.pow(1 + rate, year);
     
     // Deep clone results to avoid mutation
@@ -1008,13 +1158,18 @@ Engine.adjustForInflation = function(nominalResults, ratePct) {
     ['stratA', 'stratB', 'stratC', 'stratD', 'stratE', 'stratF'].forEach(s => {
         const strat = realResults[s];
         if(strat) {
-            if (strat.netWorth) strat.netWorth = strat.netWorth.map((v, i) => adjust(v, i + 1));
-            if (strat.netWorthLiquid) strat.netWorthLiquid = strat.netWorthLiquid.map((v, i) => adjust(v, i + 1));
+            if (strat.netWorth) strat.netWorth = strat.netWorth.map((/** @type {number} */ v, /** @type {number} */ i) => adjust(v, i + 1));
+            if (strat.netWorthLiquid) strat.netWorthLiquid = strat.netWorthLiquid.map((/** @type {number} */ v, /** @type {number} */ i) => adjust(v, i + 1));
         }
     });
     return realResults;
 };
 
+/**
+ * @param {SimulationInput} V
+ * @param {number} [targetYear]
+ * @returns {{xLabels: string[], yLabels: string[], rows: {val: number, winner: string, isCenter: boolean}[][]}}
+ */
 Engine.calculateSensitivityMatrix = function(V, targetYear = 10) {
     const years = targetYear; // Evaluation horizon
     const baseGrowth = V.personal.propertyGrowth || 3.0;
@@ -1035,6 +1190,7 @@ Engine.calculateSensitivityMatrix = function(V, targetYear = 10) {
             
             const results = Engine.simulateStrategies(clone);
             const rentNW = results.stratA.netWorthLiquid[years - 1];
+            // @ts-ignore
             const buyNW = results.stratB.netWorthLiquid[years - 1];
             
             const diff = buyNW - rentNW;
@@ -1057,5 +1213,6 @@ Engine.calculateSensitivityMatrix = function(V, targetYear = 10) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Engine;
 } else {
+    // @ts-ignore
     window.Engine = Engine;
 }

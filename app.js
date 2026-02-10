@@ -47,9 +47,23 @@ function calculatorLogic() {
         get homeDepositAmount() {
             return (this.i.home.price || 0) * ((this.i.home.depositPct || 0) / 100);
         },
+        
+        set homeDepositAmount(val) {
+             const price = this.i.home.price || 0;
+             if (price > 0) {
+                 this.i.home.depositPct = (val / price) * 100;
+             }
+        },
 
         get btlRentAmount() {
             return ((this.i.btl.price || 0) * ((this.i.btl.rentYield || 0) / 100)) / 12;
+        },
+        
+        set btlRentAmount(val) {
+             const price = this.i.btl.price || 0;
+             if (price > 0) {
+                 this.i.btl.rentYield = ((val * 12) / price) * 100;
+             }
         },
 
         syncInputs(val, callback) {

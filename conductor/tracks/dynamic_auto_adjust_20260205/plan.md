@@ -20,7 +20,7 @@
     - [x] Verify unlocking allows independent changes.
 
 ## Phase 3: Dual-Mode Inputs Implementation
-- [ ] Task: Update `index.html` for Home Section.
+- [~] Task: Update `index.html` for Home Section.
     - [ ] Add `Deposit (£)` input next to `%`.
     - [ ] Implement sync logic (Price * % = £).
 - [ ] Task: Update `index.html` for BTL Section.

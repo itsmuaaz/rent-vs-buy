@@ -77,6 +77,33 @@ describe('App Data Model Extensions', () => {
         expect(targetVal).toBe(20); // Should not have changed
     });
 
+    test('homeDepositAmount setter updates depositPct', () => {
+        app.i.home.price = 300000;
+        // Set Deposit £ to 30,000 (10%)
+        app.homeDepositAmount = 30000;
+        expect(app.i.home.depositPct).toBe(10);
+    });
+
+    test('btlRentAmount setter updates rentYield', () => {
+        app.i.btl.price = 200000;
+        // Set Rent £ to 1000/mo -> 12k/yr -> 6% Yield
+        // 12000 / 200000 = 0.06 = 6%
+        app.btlRentAmount = 1000;
+        expect(app.i.btl.rentYield).toBe(6.0);
+    });
+
+    test('Precision Round Trip', () => {
+        app.i.home.price = 300000;
+        // User types 31,000
+        app.homeDepositAmount = 31000;
+        
+        // Pct should be 10.333...
+        expect(app.i.home.depositPct).toBeCloseTo(10.333333, 4);
+        
+        // Getter should return 31,000 (or very close)
+        expect(app.homeDepositAmount).toBeCloseTo(31000, 5);
+    });
+
     describe('Budget Lock Logic', () => {
         let watchers = {};
         

@@ -134,7 +134,8 @@ All tasks follow a strict lifecycle:
 
 10. **Synchronize Project Documentation (GEMINI.md, README.md):**
     - **Trigger:** Check if the completed phase introduced new features, architectural changes, or completed a major track.
-    - **Action (GEMINI.md):** Ensure the "Active Development Context" section (if present) points to the current active track. Remove any completed items from legacy roadmap sections.
+    - **Action (GEMINI.md - Active Context):** Ensure the "Active Development Context" section points to the current active track.
+    - **Action (GEMINI.md - Architecture):** Review the "Architecture", "Key Files", and "Core Mandates" sections. If file names, responsibilities, or core rules have changed, update these sections to reflect the current codebase state.
     - **Action (README.md):** If a user-facing feature was completed, update the "Key Features" or "Status" section.
     - **Commit:** If changes are made, stage and commit with message `docs: Synchronize project context for phase '<PHASE NAME>'`.
 

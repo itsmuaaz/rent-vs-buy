@@ -70,14 +70,12 @@ function calculatorLogic() {
         syncInputs(val, callback) {
             if (this.isSyncing) return;
             this.isSyncing = true;
-            try {
-                callback(val);
-            } finally {
-                // If using Alpine $watch, the change propagates async usually?
-                // But setting isSyncing = false immediately might allow immediate re-entry if the callback triggers sync watchers.
-                // However, the watchers usually run after the current stack.
-                // Let's keep it simple for now.
-                this.isSyncing = false;
+            callback(val);
+            // Defer releasing the lock until Alpine processes the reactive queue
+            if (this.$nextTick) {
+                this.$nextTick(() => { this.isSyncing = false; });
+            } else {
+                setTimeout(() => { this.isSyncing = false; }, 20);
             }
         },
         
@@ -303,6 +301,14 @@ function calculatorLogic() {
                 colorClass: winner.color,
                 icon: winner.icon
             };
+        },
+
+        calculateDebounced() {
+            if (this.calcTimer) clearTimeout(this.calcTimer);
+            this.calcTimer = setTimeout(() => {
+                this.calculate();
+                this.save();
+            }, 50);
         },
 
         calculateMatrixDebounced() {

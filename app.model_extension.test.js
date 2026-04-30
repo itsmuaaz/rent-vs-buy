@@ -25,6 +25,7 @@ describe('App Data Model Extensions', () => {
 
     beforeEach(() => {
         app = calculatorLogic();
+        app.$nextTick = (cb) => cb(); // Mock $nextTick for tests to run synchronously
     });
 
     test('lockedBudget exists and defaults to true', () => {

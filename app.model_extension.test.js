@@ -59,25 +59,6 @@ describe('App Data Model Extensions', () => {
         expect(Math.round(app.btlRentAmount)).toBe(833);
     });
 
-    test('syncInputs performs update and respects isSyncing flag', () => {
-        // Setup
-        app.isSyncing = false;
-        let targetVal = 0;
-        const updateFn = (val) => { targetVal = val * 2; };
-        
-        // Execute
-        app.syncInputs(10, updateFn);
-        
-        // Assert
-        expect(targetVal).toBe(20);
-        expect(app.isSyncing).toBe(false);
-
-        // Test Loop Prevention
-        app.isSyncing = true;
-        app.syncInputs(50, updateFn);
-        expect(targetVal).toBe(20); // Should not have changed
-    });
-
     test('homeDepositAmount setter updates depositPct', () => {
         app.i.home.price = 300000;
         // Set Deposit £ to 30,000 (10%)
@@ -115,6 +96,11 @@ describe('App Data Model Extensions', () => {
             });
             app.updateCharts = jest.fn(); // Mock to prevent Chart errors
             app.calculateMatrixDebounced = jest.fn();
+            
+            // Set specific values before init so lockedTotal is correct
+            app.i.personal.rent.current = 1000;
+            app.i.personal.monthlySavings = 500;
+            
             // Trigger init to register watchers
             app.init();
         });
@@ -122,9 +108,7 @@ describe('App Data Model Extensions', () => {
         test('Changing Rent updates Savings when Locked', () => {
             // Setup
             app.lockedBudget = true;
-            app.i.personal.rent.current = 1000;
-            app.i.personal.monthlySavings = 500;
-            // Total Budget = 1500
+            // Total Budget = 1500 (from beforeEach)
             
             // Simulate Rent Change: 1000 -> 1200
             // Expected Savings: 1500 - 1200 = 300
@@ -132,24 +116,13 @@ describe('App Data Model Extensions', () => {
             const rentWatcher = watchers['i.personal.rent.current'];
             expect(rentWatcher).toBeDefined();
 
-            // Manually trigger watcher
-            // Note: In Alpine, watcher receives (newVal, oldVal)
-            // But my logic might rely on current state or arguments.
-            // If I implemented syncInputs correctly, it uses current state? 
-            // Or passed value?
-            
-            // Let's assume the implementation uses the new value passed to watcher.
             rentWatcher(1200, 1000);
             
             expect(app.i.personal.monthlySavings).toBe(300);
         });
 
         test('Changing Savings updates Rent when Locked', () => {
-            // Setup
             app.lockedBudget = true;
-            app.i.personal.rent.current = 1000;
-            app.i.personal.monthlySavings = 500;
-            // Total Budget = 1500
             
             const savingsWatcher = watchers['i.personal.monthlySavings'];
             expect(savingsWatcher).toBeDefined();
@@ -162,10 +135,7 @@ describe('App Data Model Extensions', () => {
         });
 
         test('Unlocked changes are independent', () => {
-             // Setup
             app.lockedBudget = false;
-            app.i.personal.rent.current = 1000;
-            app.i.personal.monthlySavings = 500;
             
             const rentWatcher = watchers['i.personal.rent.current'];
             rentWatcher(1200, 1000);
@@ -174,11 +144,7 @@ describe('App Data Model Extensions', () => {
         });
         
         test('Savings cannot go below zero', () => {
-            // Setup
             app.lockedBudget = true;
-            app.i.personal.rent.current = 1000;
-            app.i.personal.monthlySavings = 500;
-            // Total = 1500
             
             const rentWatcher = watchers['i.personal.rent.current'];
             // Increase Rent to 2000 (Over budget)

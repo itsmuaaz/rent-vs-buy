@@ -194,6 +194,8 @@ function calculatorLogic() {
                 if (saved) { try { const parsed = JSON.parse(saved); if(parsed.personal) this.i = parsed; } catch(e){} }
             }
             
+            this.lockedTotal = this.i.personal.rent.current + this.i.personal.monthlySavings;
+
             if (this.$watch) {
                 this.$watch('i', () => { 
                     this.calculate(); 
@@ -219,23 +221,39 @@ function calculatorLogic() {
                 // Budget Lock Logic
                 this.$watch('i.personal.rent.current', (val, old) => {
                     if (this.lockedBudget && old !== undefined) {
-                        this.syncInputs(val, (v) => {
-                            const delta = v - old;
-                            let newSavings = this.i.personal.monthlySavings - delta;
-                            if (newSavings < 0) newSavings = 0;
-                            this.i.personal.monthlySavings = newSavings;
-                        });
+                        if (this.ignoreWatch) return;
+                        this.ignoreWatch = true;
+                        let newSavings = this.lockedTotal - val;
+                        if (newSavings < 0) {
+                            newSavings = 0;
+                            this.lockedTotal = val; // expand budget
+                        }
+                        this.i.personal.monthlySavings = newSavings;
+                        setTimeout(() => { this.ignoreWatch = false; }, 0);
+                    } else if (!this.lockedBudget) {
+                        this.lockedTotal = val + this.i.personal.monthlySavings;
                     }
                 });
 
                 this.$watch('i.personal.monthlySavings', (val, old) => {
                     if (this.lockedBudget && old !== undefined) {
-                        this.syncInputs(val, (v) => {
-                            const delta = v - old;
-                            let newRent = this.i.personal.rent.current - delta;
-                            if (newRent < 0) newRent = 0;
-                            this.i.personal.rent.current = newRent;
-                        });
+                        if (this.ignoreWatch) return;
+                        this.ignoreWatch = true;
+                        let newRent = this.lockedTotal - val;
+                        if (newRent < 0) {
+                            newRent = 0;
+                            this.lockedTotal = val; // expand budget
+                        }
+                        this.i.personal.rent.current = newRent;
+                        setTimeout(() => { this.ignoreWatch = false; }, 0);
+                    } else if (!this.lockedBudget) {
+                        this.lockedTotal = val + this.i.personal.rent.current;
+                    }
+                });
+                
+                this.$watch('lockedBudget', (val) => {
+                    if (val) {
+                        this.lockedTotal = this.i.personal.rent.current + this.i.personal.monthlySavings;
                     }
                 });
 
@@ -308,7 +326,7 @@ function calculatorLogic() {
             this.calcTimer = setTimeout(() => {
                 this.calculate();
                 this.save();
-            }, 50);
+            }, 300);
         },
 
         calculateMatrixDebounced() {

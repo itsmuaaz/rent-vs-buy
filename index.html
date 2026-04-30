@@ -281,7 +281,7 @@
                             </div>
                             <div>
                                 <label class="input-label">Post-Work Value</label>
-                                 <input type="text" inputmode="numeric" x-money="i.home.postWorkValue" class="input-field">
+                                 <input type="text" inputmode="numeric" x-money="i.home.postWorkValue" class="input-field" @input="i.home.postWorkValueDirty = true">
                             </div>
                         </div>
                         
@@ -729,7 +729,7 @@
                 </p>
                 <p class="mt-3 text-[10px] opacity-75">
                     Data updated Jan 2026 (v2026.1.1). <strong>Not financial advice.</strong><br>
-                    Last updated: <span id="last-updated-timestamp">2026-04-30 12:32:40 UTC</span>
+                    Last updated: <span id="last-updated-timestamp">2026-04-30 12:38:43 UTC</span>
                 </p>
             </footer>
         </main>

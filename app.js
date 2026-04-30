@@ -18,7 +18,8 @@ function calculatorLogic() {
             repairRate: 1.0, serviceCharge: 0, buyingCost: 3000, sellingCostPct: 1.5,
             renoCost: 0, postWorkValue: 300000, overpayment: 0,
             lodger: { active: false, income: 625, years: 2 },
-            buyingCostDirty: false
+            buyingCostDirty: false,
+            postWorkValueDirty: false
         },
         btl: {
             active: false, price: 200000, depositPct: 25, term: 30,
@@ -751,6 +752,11 @@ function calculatorLogic() {
         },
         
         updateCharts() {
+            if (this.chartTimer) clearTimeout(this.chartTimer);
+            this.chartTimer = setTimeout(() => { this.renderCharts(); }, 16);
+        },
+
+        renderCharts() {
             if (!this.results) return;
             const r = this.results;
             const len = this.simYears;

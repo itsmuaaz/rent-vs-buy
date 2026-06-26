@@ -90,14 +90,10 @@
                 </div>
                 
                 <div x-show="open" x-collapse class="pl-8 space-y-3" x-data="{ showAdv: true }">
-                     <div class="input-group">
-                        <label class="input-label">Current Rent (£/mo)</label>
-                        <input type="text" inputmode="numeric" x-money="i.personal.rent.current" class="input-field">
-                    </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="input-label"><span class="has-tooltip">Total Liquid Assets (£)<span class="tooltip">The sum of all your available money: Cash Savings + ISAs + General Investments.</span></span></label>
-                            <input type="text" inputmode="numeric" x-money="i.personal.liquidAssets" class="input-field">
+                        <div class="input-group mb-0">
+                            <label class="input-label">Current Rent (£/mo)</label>
+                            <input type="text" inputmode="numeric" x-money="i.personal.rent.current" class="input-field">
                         </div>
                         <div>
                             <div class="flex justify-between items-end mb-1">
@@ -115,6 +111,31 @@
                                 </div>
                             </div>
                             <input type="text" inputmode="numeric" x-money="i.personal.monthlySavings" class="input-field">
+                        </div>
+                    </div>
+
+                    <!-- Total Budget Display -->
+                    <div class="p-3 bg-indigo-50 border border-indigo-100 rounded text-xs text-indigo-800">
+                        <div class="font-bold flex justify-between">
+                            <span>Total Monthly Budget:</span>
+                            <span x-text="`£${(i.personal.monthlySavings + i.personal.rent.current).toLocaleString()}`"></span>
+                        </div>
+                        <div class="mt-1 opacity-90">
+                            Fixed budget assumption. If buying is cheaper than rent, the surplus is <strong>automatically invested</strong>.
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="input-label"><span class="has-tooltip">Total Liquid Assets (£)<span class="tooltip">The sum of all your available money: Cash Savings + ISAs + General Investments.</span></span></label>
+                            <input type="text" inputmode="numeric" x-money="i.personal.liquidAssets" class="input-field">
+                        </div>
+                        <div>
+                            <label class="input-label"><span class="has-tooltip">Of which, held in ISA (£)<span class="tooltip">The portion of your liquid assets currently wrapped in an ISA (Tax-free).</span></span></label>
+                            <input type="text" inputmode="numeric" x-money="i.personal.isaBalance" class="input-field" :class="{'border-red-500 ring-1 ring-red-500': i.personal.isaBalance > i.personal.liquidAssets}">
+                            <div class="text-[10px] mt-1 font-medium" 
+                                 :class="i.personal.isaBalance > i.personal.liquidAssets ? 'text-red-600' : 'text-gray-500'"
+                                 x-text="i.personal.isaBalance > i.personal.liquidAssets ? '⚠️ Error: Exceeds Total Assets' : 'ℹ️ Non-ISA Cash: £' + (i.personal.liquidAssets - i.personal.isaBalance).toLocaleString()"></div>
                         </div>
                     </div>
 
@@ -156,14 +177,7 @@
                         </div>
                         
                         <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="input-label"><span class="has-tooltip">Of which, held in ISA (£)<span class="tooltip">The portion of your liquid assets currently wrapped in an ISA (Tax-free).</span></span></label>
-                                <input type="text" inputmode="numeric" x-money="i.personal.isaBalance" class="input-field" :class="{'border-red-500 ring-1 ring-red-500': i.personal.isaBalance > i.personal.liquidAssets}">
-                                <div class="text-[10px] mt-1 font-medium" 
-                                     :class="i.personal.isaBalance > i.personal.liquidAssets ? 'text-red-600' : 'text-gray-500'"
-                                     x-text="i.personal.isaBalance > i.personal.liquidAssets ? '⚠️ Error: Exceeds Total Assets' : 'ℹ️ Non-ISA Cash: £' + (i.personal.liquidAssets - i.personal.isaBalance).toLocaleString()"></div>
-                            </div>
-                            <div class="input-group">
+                            <div class="input-group mb-0">
                                 <label class="input-label">Tax Band</label>
                                 <select x-model="i.personal.taxBand" class="input-field">
                                     <option value="basic">Basic (20%)</option>
@@ -171,22 +185,10 @@
                                     <option value="additional">Additional (45%)</option>
                                 </select>
                             </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                             <label class="input-label mb-0">First Time Buyer?</label>
-                             <input type="checkbox" x-model="i.personal.isFTB" class="w-5 h-5 text-blue-600 rounded">
-                        </div>
-                    </div>
-                    
-                    <!-- Total Budget Display -->
-                    <div class="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded text-xs text-indigo-800">
-                        <div class="font-bold flex justify-between">
-                            <span>Total Monthly Budget:</span>
-                            <span x-text="`£${(i.personal.monthlySavings + i.personal.rent.current).toLocaleString()}`"></span>
-                        </div>
-                        <div class="mt-1 opacity-90">
-                            Fixed budget assumption. If buying is cheaper than rent, the surplus is <strong>automatically invested</strong>.
+                            <div class="flex items-center justify-between">
+                                 <label class="input-label mb-0">First Time Buyer?</label>
+                                 <input type="checkbox" x-model="i.personal.isFTB" class="w-5 h-5 text-blue-600 rounded">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -729,7 +731,7 @@
                 </p>
                 <p class="mt-3 text-[10px] opacity-75">
                     Data updated Jan 2026 (v2026.1.1). <strong>Not financial advice.</strong><br>
-                    Last updated: <span id="last-updated-timestamp">2026-04-30 12:38:43 UTC</span>
+                    Last updated: <span id="last-updated-timestamp">2026-06-26 20:01:03 UTC</span>
                 </p>
             </footer>
         </main>
